@@ -1,0 +1,39 @@
+.page { min-height: 100vh; }
+.header { background: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 48px 0 40px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 40px 0 60px; }
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+
+.blogCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  text-decoration: none;
+  display: block;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s;
+}
+.blogCard:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--border-subtle); }
+
+.cardImg { position: relative; height: 200px; background: var(--bg-secondary); }
+.imgPlaceholder { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 40px; }
+.cardBody { padding: 20px; }
+.postMeta { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+.cardTitle { font-size: 18px; font-weight: 700; font-family: var(--font-serif); color: var(--text-primary); margin-bottom: 8px; line-height: 1.3; }
+.cardExcerpt { font-size: 13px; color: var(--text-secondary); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tagRow { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.tag { padding: 3px 8px; background: var(--bg-secondary); color: var(--text-secondary); font-size: 11px; border-radius: 999px; }
+
+/* List view */
+.listView { display: flex; flex-direction: column; gap: 16px; padding: 40px 0 60px; }
+.listItem { display: flex; gap: 20px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; text-decoration: none; transition: box-shadow 0.2s; }
+.listItem:hover { box-shadow: var(--shadow-md); }
+.listImg { position: relative; width: 200px; flex-shrink: 0; background: var(--bg-secondary); }
+.listBody { padding: 20px; flex: 1; }
+.postTitle { font-size: 20px; font-weight: 700; font-family: var(--font-serif); color: var(--text-primary); margin-bottom: 8px; }
+.postExcerpt { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+.readMore { margin-top: 12px; color: var(--amber); font-size: 14px; font-weight: 600; }
+
+.empty { text-align: center; padding: 80px 0; color: var(--text-secondary); }

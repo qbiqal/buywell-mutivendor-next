@@ -1,0 +1,66 @@
+.article { min-height: 100vh; }
+
+.cover {
+  position: relative;
+  height: 460px;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+.coverImg    { object-fit: cover; }
+.coverOverlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.4) 100%);
+}
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.meta {
+  display: flex; gap: 8px; align-items: center;
+  font-size: 13px; color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.excerpt {
+  font-size: 18px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-style: italic;
+  margin-bottom: 20px;
+  padding-left: 16px;
+  border-left: 3px solid var(--amber);
+}
+
+.tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 32px; }
+.tag { padding: 4px 10px; background: var(--honey); color: var(--amber-dk); border-radius: 999px; font-size: 12px; font-weight: 600; }
+
+.content {
+  font-size: 17px;
+  line-height: 1.85;
+  color: var(--text-primary);
+}
+.content h2 { font-size: 26px; font-weight: 700; font-family: var(--font-serif); margin: 32px 0 12px; }
+.content h3 { font-size: 20px; font-weight: 700; font-family: var(--font-serif); margin: 24px 0 8px; }
+.content p  { margin-bottom: 16px; }
+.content ul, .content ol { padding-left: 28px; margin-bottom: 16px; }
+.content li { margin-bottom: 6px; }
+.content hr { border: none; border-top: 1px solid var(--border-color); margin: 32px 0; }
+.content strong { font-weight: 700; }
+.content em { font-style: italic; }
+.content blockquote { padding: 16px 20px; border-left: 4px solid var(--amber); background: var(--honey); border-radius: 0 8px 8px 0; margin: 20px 0; font-style: italic; color: var(--muted); }
+
+.backWrap { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border-color); }
+.backLink { color: var(--amber); font-weight: 600; text-decoration: none; font-size: 15px; }
+.backLink:hover { text-decoration: underline; }

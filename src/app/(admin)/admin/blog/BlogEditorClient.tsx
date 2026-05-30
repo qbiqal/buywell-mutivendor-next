@@ -1,0 +1,194 @@
+"use client";
+/**
+ * Blog Editor — used for both new and edit flows.
+ * Rich text editing via contenteditable + toolbar.
+ * Cover image via MediaUploader (16:9, 1600x900 recommended).
+ */
+import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Input, Select, Textarea } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { MediaUploader } from "@/components/media/MediaUploader";
+import { useToast } from "@/components/ui/Toast";
+import type { BlogPost } from "@/lib/db/schema";
+import styles from "./blog-editor.module.css";
+
+interface BlogEditorProps {
+  postId?: string;
+}
+
+const STATUS_OPTS = [
+  { value: "draft",     label: "Draft" },
+  { value: "published", label: "Published" },
+  { value: "archived",  label: "Archived" },
+];
+
+export default function BlogEditorClient({ postId }: BlogEditorProps) {
+  const router = useRouter();
+  const { success, error: showError } = useToast();
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  const [title,         setTitle]         = useState("");
+  const [excerpt,       setExcerpt]       = useState("");
+  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [status,        setStatus]        = useState("draft");
+  const [metaTitle,     setMetaTitle]     = useState("");
+  const [metaDesc,      setMetaDesc]      = useState("");
+  const [tags,          setTagsRaw]       = useState("");
+  const [readTime,      setReadTime]      = useState("5");
+  const [isFeatured,    setIsFeatured]    = useState(false);
+  const [saving,        setSaving]        = useState(false);
+  const [loading,       setLoading]       = useState(!!postId);
+
+  useEffect(() => {
+    if (!postId) return;
+    fetch(`/api/admin/blog/${postId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.success) return;
+        const p: BlogPost = d.data;
+        setTitle(p.title);
+        setExcerpt(p.excerpt ?? "");
+        setCoverImageUrl(p.coverImageUrl ?? "");
+        setStatus(p.status);
+        setMetaTitle(p.metaTitle ?? "");
+        setMetaDesc(p.metaDesc ?? "");
+        setTagsRaw((p.tags ?? []).join(", "));
+        setReadTime(String(p.readTime ?? 5));
+        setIsFeatured(p.isFeatured);
+        if (editorRef.current) editorRef.current.innerHTML = p.content;
+      })
+      .finally(() => setLoading(false));
+  }, [postId]);
+
+  function formatText(command: string, value?: string) {
+    document.execCommand(command, false, value);
+    editorRef.current?.focus();
+  }
+
+  async function handleSave(saveStatus = status) {
+    const content = editorRef.current?.innerHTML ?? "";
+    if (!title.trim()) { showError("Title is required"); return; }
+    if (!content.trim()) { showError("Content is required"); return; }
+
+    setSaving(true);
+    try {
+      const body = {
+        title, content, excerpt, coverImageUrl, status: saveStatus,
+        metaTitle, metaDesc, readTime: parseInt(readTime), isFeatured,
+        tags: tagsRaw.split(",").map((t) => t.trim()).filter(Boolean),
+      };
+
+      const res = postId
+        ? await fetch(`/api/admin/blog/${postId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+        : await fetch("/api/admin/blog", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+      const data = await res.json();
+      if (!data.success) { showError(data.error ?? "Save failed"); return; }
+      success(postId ? "Post updated!" : "Post created!");
+      router.push("/admin/blog");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const tagsRaw = tags;
+
+  if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
+
+  return (
+    <div className={styles.editor}>
+      <div className={styles.toolbar}>
+        <button onClick={() => router.back()} className={styles.backBtn}>← Back</button>
+        <h1 className={styles.editorTitle}>{postId ? "Edit Post" : "New Blog Post"}</h1>
+        <div className={styles.toolbarActions}>
+          <Button variant="ghost" size="sm" loading={saving} onClick={() => handleSave("draft")}>Save Draft</Button>
+          <Button variant="primary" size="sm" loading={saving} onClick={() => handleSave("published")}>Publish</Button>
+        </div>
+      </div>
+
+      <div className={styles.layout}>
+        {/* Main content */}
+        <div className={styles.main}>
+          <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Post title..." className={styles.titleInput} />
+
+          {/* Cover image */}
+          <div className={styles.section}>
+            <label className={styles.sectionLabel}>Cover Image</label>
+            {coverImageUrl && (
+              <div className={styles.coverPreview}>
+                <img src={coverImageUrl} alt="Cover" style={{ width: "100%", height: 200, objectFit: "cover", borderRadius: 8 }} />
+                <button onClick={() => setCoverImageUrl("")} className={styles.removeCover}>✕ Remove</button>
+              </div>
+            )}
+            <MediaUploader
+              accept={["image/jpeg", "image/png", "image/webp"]}
+              aspectRatio={16 / 9}
+              recommendedDimensions={{ width: 1600, height: 900, label: "Cover image: 1600×900px (16:9)" }}
+              folder="blog"
+              onUpload={(files) => { if (files[0]) setCoverImageUrl(files[0].url); }}
+            />
+          </div>
+
+          {/* Rich text editor */}
+          <div className={styles.section}>
+            <label className={styles.sectionLabel}>Content</label>
+            {/* Toolbar */}
+            <div className={styles.rtToolbar}>
+              {[
+                { label: "B", cmd: "bold",        title: "Bold" },
+                { label: "I", cmd: "italic",      title: "Italic" },
+                { label: "U", cmd: "underline",   title: "Underline" },
+                { label: "H2", cmd: "formatBlock", val: "h2", title: "Heading 2" },
+                { label: "H3", cmd: "formatBlock", val: "h3", title: "Heading 3" },
+                { label: "•",  cmd: "insertUnorderedList", title: "Bullet List" },
+                { label: "1.", cmd: "insertOrderedList",   title: "Numbered List" },
+                { label: "⁠—⁠", cmd: "insertHorizontalRule", title: "Divider" },
+              ].map((btn) => (
+                <button key={btn.cmd + (btn.val ?? "")} title={btn.title} className={styles.rtBtn}
+                  onMouseDown={(e) => { e.preventDefault(); formatText(btn.cmd, btn.val); }}>
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+            <div
+              ref={editorRef}
+              contentEditable
+              suppressContentEditableWarning
+              className={styles.rtEditor}
+              data-placeholder="Write your blog post content here..."
+            />
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className={styles.sidebar}>
+          <div className={styles.sideCard}>
+            <label className={styles.sectionLabel}>Status</label>
+            <Select value={status} onChange={(e) => setStatus(e.target.value)} options={STATUS_OPTS} />
+
+            <div style={{ marginTop: 12 }}>
+              <label className={styles.checkLabel}>
+                <input type="checkbox" checked={isFeatured} onChange={(e) => setIsFeatured(e.target.checked)} />
+                Featured post
+              </label>
+            </div>
+          </div>
+
+          <div className={styles.sideCard}>
+            <Input label="Excerpt" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} placeholder="Short summary..." />
+            <Input label="Tags (comma-separated)" value={tagsRaw} onChange={(e) => setTagsRaw(e.target.value)} placeholder="wellness, honey, health" style={{ marginTop: 12 }} />
+            <Input label="Read Time (minutes)" type="number" value={readTime} onChange={(e) => setReadTime(e.target.value)} style={{ marginTop: 12 }} />
+          </div>
+
+          <div className={styles.sideCard}>
+            <p className={styles.sectionLabel}>SEO</p>
+            <Input label="Meta Title" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder={title} />
+            <Textarea label="Meta Description" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Search engine description..." rows={2} style={{ marginTop: 12 }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

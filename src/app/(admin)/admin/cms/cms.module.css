@@ -1,0 +1,28 @@
+.content { padding: 32px; max-width: 900px; }
+.header  { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+
+.sectionList { display: flex; flex-direction: column; gap: 8px; }
+.sectionRow {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  transition: border-color 0.2s;
+}
+.sectionRow:hover { border-color: var(--border-subtle); }
+.sectionInfo { display: flex; align-items: center; gap: 12px; }
+.sectionName { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.sectionKey  { font-size: 12px; color: var(--text-secondary); }
+.sectionActions { display: flex; gap: 10px; align-items: center; }
+.editBtn { color: var(--amber); font-size: 13px; font-weight: 600; text-decoration: none; padding: 6px 12px; border-radius: var(--radius-md); transition: background 0.15s; }
+.editBtn:hover { background: rgba(217,119,6,0.08); }
+.toggle {
+  padding: 6px 16px; border-radius: 999px;
+  border: 1px solid var(--border-color);
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+}
+.toggleOn  { background: rgba(16,185,129,0.12); color: #059669; border-color: rgba(16,185,129,0.3); }
+.toggleOff { background: var(--bg-secondary); color: var(--text-secondary); }
+.toggle:disabled { opacity: 0.5; cursor: not-allowed; }
