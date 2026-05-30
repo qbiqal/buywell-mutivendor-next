@@ -1,0 +1,106 @@
+.footer {
+  background: #0f0800;
+  padding: 60px 24px 32px;
+  border-top: 1px solid rgba(217,119,6,0.12);
+}
+
+.inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.logoIcon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #D97706, #FBBF24);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.logoName {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+.desc {
+  font-size: 14px;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.7;
+  max-width: 280px;
+}
+
+.colTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 16px;
+}
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.links a {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.links a:hover { color: #FBBF24; }
+
+.contact p {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  line-height: 2;
+}
+.contact a {
+  color: #FBBF24;
+  text-decoration: none;
+}
+
+.bottom {
+  max-width: 1240px;
+  margin: 40px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.bottom p { font-size: 13px; color: rgba(255,255,255,0.2); }
+
+.partnerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(217,119,6,0.1);
+  border: 1px solid rgba(217,119,6,0.2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #FBBF24;
+}
+
+@media (max-width: 900px) {
+  .inner { grid-template-columns: 1fr 1fr; gap: 32px; }
+}
+@media (max-width: 560px) {
+  .inner { grid-template-columns: 1fr; }
+  .bottom { justify-content: center; text-align: center; }
+}

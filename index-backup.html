@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>APRAS Naturals - Pure Prakvedaa Honey &amp; Ghee</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=Lato:wght@300;400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#F2994A",
+                        "background-light": "#FFFDF8",
+                        "background-dark": "#1A1A1A",
+                    },
+                    fontFamily: {
+                        display: ["Playfair Display", "serif"],
+                        body: ["Lato", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        'lg': "1rem",
+                        'xl': "1.5rem"
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body { font-family: 'Lato', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Playfair Display', serif; }
+    </style>
+</head>
+<body class="bg-background-light text-gray-800 antialiased">
+<nav class="sticky top-0 z-50 bg-white/90 backdrop-blur shadow-sm border-b border-gray-100">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between h-20 items-center">
+<div class="flex-shrink-0 flex items-center gap-2">
+<span class="material-icons text-primary text-3xl">spa</span>
+<span class="font-display font-bold text-2xl tracking-tight text-gray-900">APRAS Naturals</span>
+</div>
+<div class="hidden md:flex space-x-8 items-center">
+<a class="text-gray-600 hover:text-primary transition-colors font-medium" href="#about">About</a>
+<a class="text-gray-600 hover:text-primary transition-colors font-medium" href="#honey">Honey</a>
+<a class="text-gray-600 hover:text-primary transition-colors font-medium" href="#ghee">Ghee</a>
+<a class="text-gray-600 hover:text-primary transition-colors font-medium" href="#gallery">Gallery</a>
+<a class="bg-primary text-white px-6 py-2 rounded-full font-medium hover:bg-orange-500 transition-colors shadow-sm" href="#order">Order Now</a>
+</div>
+</div>
+</div>
+</nav>
+<section id="canvas-hero" class="relative w-full bg-orange-50" style="height: 400vh;">
+<div class="sticky top-[80px] h-[calc(100vh-80px)] w-full overflow-hidden" id="sticky-container">
+<!-- Background styling: honeycomb pattern and glow -->
+<div class="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-100 via-orange-50 to-orange-200"></div>
+<div class="absolute inset-0 z-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\'28\' height=\'49\' viewBox=\'0 0 28 49\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23f2994a\' fill-opacity=\'1\' fill-rule=\'evenodd\'%3E%3Cpath d=\'M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z\'/%3E%3C/g%3E%3C/svg%3E'); background-size: 28px 49px;"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[100px] z-0"></div>
+
+<!-- Canvas for images -->
+<!-- Using mix-blend-multiply so the white background of JPEGs becomes transparent and reveals the honeycomb underneath -->
+<canvas id="hero-canvas" class="absolute inset-0 z-10 w-full h-full object-cover mix-blend-multiply"></canvas>
+
+<!-- Overlay Text -->
+<div id="hero-text" class="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4 pointer-events-none transition-opacity duration-100">
+<h1 class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold text-gray-900 leading-tight mb-4 drop-shadow-md">
+Pure Prakveda Honey
+</h1>
+<p class="text-2xl sm:text-3xl md:text-4xl text-primary font-display italic drop-shadow-sm">
+Nature's Liquid Gold
+</p>
+</div>
+</div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('hero-canvas');
+    const context = canvas.getContext('2d');
+    const heroSection = document.getElementById('canvas-hero');
+    const heroText = document.getElementById('hero-text');
+
+    const frameCount = 240;
+    const currentFrame = index => (
+      `./frames/ezgif-frame-${index.toString().padStart(3, '0')}.jpg`
+    );
+
+    const images = [];
+    let loadedImages = 0;
+
+    const renderFrame = (index) => {
+        if (!images[index]) return;
+        
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const img = images[index];
+        const canvasRatio = canvas.width / canvas.height;
+        const imgRatio = img.width / img.height;
+        
+        let drawWidth = canvas.width;
+        let drawHeight = canvas.height;
+        let drawX = 0;
+        let drawY = 0;
+        
+        if (canvasRatio > imgRatio) {
+            drawHeight = canvas.width / imgRatio;
+            drawY = (canvas.height - drawHeight) / 2;
+        } else {
+            drawWidth = canvas.height * imgRatio;
+            drawX = (canvas.width - drawWidth) / 2;
+        }
+        
+        context.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+    };
+
+    const resizeCanvas = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 80; // 80px for nav
+        renderFrame(Math.round(canvas.dataset.currentFrame || 1));
+    };
+
+    // Preload all images
+    for (let i = 1; i <= frameCount; i++) {
+        const img = new Image();
+        img.src = currentFrame(i);
+        img.onload = () => {
+            loadedImages++;
+            if (i === 1) resizeCanvas();
+        };
+        images[i] = img;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    window.addEventListener('scroll', () => {
+        const sectionTop = heroSection.offsetTop;
+        const sectionHeight = heroSection.scrollHeight;
+        const windowHeight = window.innerHeight;
+        
+        // 80 is the top offset due to sticky nav
+        const maxScroll = sectionHeight - windowHeight + 80;
+        let scrollTop = window.scrollY - sectionTop;
+        
+        if (scrollTop < 0) scrollTop = 0;
+        if (scrollTop > maxScroll) scrollTop = maxScroll;
+        
+        let scrollFraction = maxScroll > 0 ? scrollTop / maxScroll : 0;
+        
+        const frameIndex = Math.min(
+            frameCount - 1,
+            Math.floor(scrollFraction * frameCount)
+        ) + 1;
+        
+        canvas.dataset.currentFrame = frameIndex;
+        
+        requestAnimationFrame(() => {
+            renderFrame(frameIndex);
+            
+            let textOpacity = 1;
+            if (scrollFraction > 0.05) {
+                textOpacity = 1 - ((scrollFraction - 0.05) / 0.25);
+            }
+            if (textOpacity < 0) textOpacity = 0;
+            if (textOpacity > 1) textOpacity = 1;
+            
+            heroText.style.opacity = textOpacity;
+            heroText.style.transform = `translateY(${scrollFraction * 150}px)`;
+        });
+    });
+});
+</script>
+<section class="py-20 bg-white" id="about">
+<div class="max-w-4xl mx-auto px-4 text-center">
+<span class="text-primary font-bold tracking-wider uppercase text-sm mb-4 block">The APRAS Promise</span>
+<h2 class="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-6">Authorized Partner of Prakvedaa</h2>
+<p class="text-lg text-gray-600 leading-relaxed mb-8">
+                At APRAS Naturals, we believe in delivering nature's finest to your doorstep. As an authorized partner of Prakvedaa, we guarantee that every jar of honey and ghee is sourced ethically, prepared traditionally, and delivered with uncompromised quality. We stand by purity, authenticity, and the well-being of our customers.
+            </p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+<div class="p-6 rounded-2xl bg-orange-50 border border-orange-100">
+<span class="material-icons text-primary text-4xl mb-4">verified</span>
+<h3 class="font-display font-bold text-xl mb-2 text-gray-900">100% Authentic</h3>
+<p class="text-gray-600 text-sm">Directly sourced from trusted traditional makers.</p>
+</div>
+<div class="p-6 rounded-2xl bg-orange-50 border border-orange-100">
+<span class="material-icons text-primary text-4xl mb-4">eco</span>
+<h3 class="font-display font-bold text-xl mb-2 text-gray-900">Ethically Sourced</h3>
+<p class="text-gray-600 text-sm">Supporting sustainable practices and local farmers.</p>
+</div>
+<div class="p-6 rounded-2xl bg-orange-50 border border-orange-100">
+<span class="material-icons text-primary text-4xl mb-4">health_and_safety</span>
+<h3 class="font-display font-bold text-xl mb-2 text-gray-900">Lab Tested</h3>
+<p class="text-gray-600 text-sm">Every batch verified for purity and quality.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-20 bg-gray-50 border-t border-b border-gray-200">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="order-2 lg:order-1 relative rounded-2xl overflow-hidden shadow-xl">
+<img alt="Not All Honey is Real. Prakvedaa is." class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_hjr7AKVqoKjQb8k4JJ7LjbY3qUSnHiMi-z6BI0FGoY2tPpW2QAmlWwuMQKrI8cvHPJwPYJIYPVV68ymk2t3Psqouf_4ySo9hpNiXbfU_yY2-5XKpF3rjOT_yTR72oRmnBmiNjp1R4sh4TKtGkrqQ9Dyb11ekaIhW4yd_xirJGgvZTsTfs4p5jLPUTQe30P9eX-MM-kh7YQcIzscKWvDCIDf53Tck1q6o023kTUsFTW7FvDRyuSKsiaDoFCQEdM66zqS9PsUjrSVi"/>
+</div>
+<div class="order-1 lg:order-2">
+<h2 class="text-3xl md:text-4xl font-display font-bold text-gray-900 mb-6">Not All Honey is Real. <br/><span class="text-primary">Prakvedaa is.</span></h2>
+<h3 class="text-xl text-gray-700 font-medium mb-8 border-l-4 border-primary pl-4">Mono Floral. Raw. Uncompromised.</h3>
+<ul class="space-y-6">
+<li class="flex items-start gap-4">
+<span class="material-icons text-red-500 mt-1">cancel</span>
+<div>
+<h4 class="font-bold text-gray-900">We Don't Sell:</h4>
+<p class="text-gray-600 mt-1">Sugar syrup, Flavoured blends, or Infused nonsense.</p>
+</div>
+</li>
+<li class="flex items-start gap-4">
+<span class="material-icons text-green-500 mt-1">check_circle</span>
+<div>
+<h4 class="font-bold text-gray-900">What We Offer:</h4>
+<p class="text-gray-600 mt-1">Pure mono-floral honey sourced from natural nectar. Not infused. Not flavoured.</p>
+</div>
+</li>
+<li class="flex items-start gap-4">
+<span class="material-icons text-primary mt-1">info</span>
+<div>
+<h4 class="font-bold text-gray-900">The Mark of Purity</h4>
+<p class="text-gray-600 mt-1">If it doesn't crystallize, question it. Real honey naturally crystallizes over time.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-white" id="honey">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-display font-bold text-gray-900 mb-4">Our Pure Honey Collection</h2>
+<p class="text-lg text-gray-600 max-w-2xl mx-auto">Discover our range of raw, mono-floral honeys. Available in 500g and 1kg jars.</p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+<div class="bg-gray-50 rounded-2xl p-6 text-center hover:shadow-lg transition-shadow border border-gray-100 group relative">
+<div class="h-64 mb-6 relative flex justify-center items-center">
+<img alt="Tulsi Honey Jar" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe2G67YA58KuNyirOFJUpn8ClwjT8hd4MhMGP1tMcZSkxJVEwAdFZtwIIYKZpnsvt0QX3HqvZNI_SxGQfjhJagIej0BJOHp5j4l_OW0sBhBKnURcOGECS5Pt09rz6-mybDjJUBsJEeOG8-ZLKu5KeJoVZe4_rGM_RgWxUATRwKCy8pT9o0LMSh8hjyiMt4ADzZRVKhm48mJh-98zIgIDHxu-rwy-9dSZtemxeuAcPWiZHdEb5ERwDjKAvwNe45VbAJvTZskOYrDtSf"/>
+</div>
+<h3 class="font-display font-bold text-2xl text-gray-900 mb-2">Tulsi Honey</h3>
+<p class="text-gray-600 text-sm mb-4">Sourced from Tulsi blossoms. Known for its distinct herbal notes.</p>
+<div class="flex justify-center gap-2 mb-4">
+<span class="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700">100% Natural</span>
+<span class="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700">Lab Tested</span>
+</div>
+</div>
+<div class="bg-gray-50 rounded-2xl p-6 text-center hover:shadow-lg transition-shadow border border-gray-100 group relative">
+<div class="h-64 mb-6 relative flex justify-center items-center">
+<img alt="Karanj Honey Jar" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzEAXz5aUNTHavAEhN3iEOT4JQ7kw7t-QA_ZM7I1kr6GlVSmAsc8brQM2TmKfaUtov7fnNuKI_R1YHAu-gH8iGhjEkFshESjUjJZZmUfeaftrmdMFB432wD50ZGqVTwoHXyqyHccmemtf6gHEhusU7UdWRQdGpTS8va2ETff-P6ErWnvxO7gb9zWtV0zpu0pSqy6rr2BBSXJJQbQmNmzYvBddud6jhqovNO-E-3rIexj-twbCZSKkqBtKk7vMPP6DOKmnQEUKh-1CO"/>
+</div>
+<h3 class="font-display font-bold text-2xl text-gray-900 mb-2">Karanj Honey</h3>
+<p class="text-gray-600 text-sm mb-4">A unique, earthy flavor profile from Karanj tree nectar.</p>
+<div class="flex justify-center gap-2 mb-4">
+<span class="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700">No Added Sugar</span>
+<span class="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700">Mono Floral</span>
+</div>
+</div>
+<div class="bg-gray-50 rounded-2xl p-6 text-center hover:shadow-lg transition-shadow border border-gray-100 group relative">
+<div class="h-64 mb-6 relative flex justify-center items-center">
+<img alt="Moringa Honey Jar" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPcCh0MFbdHlxReFFTi91R8GflKDY1d6JgTWxrg0tYLZlJKEmNQ9_3XyeCoIwetZVHYmBEHG8iYQhqbJyqRZZfHlKZkqsrM_Wj4tIZhmu-QdsiL1f7dJdL5_3a3ToGoe-2SxzCYyJqpnJwYdiJHshUTzXzpzGwQUgJWz3YMokGjEqLlWpiTI5K84T2_csBjPZZjlamruCJu759zyhHbTG86iXNzbMYBzYq_QNYQCvot2g9-8IhX8n1XSEGFCF7el5DkT-fFlR-O_Bk"/>
+</div>
+<h3 class="font-display font-bold text-2xl text-gray-900 mb-2">Moringa Honey</h3>
+<p class="text-gray-600 text-sm mb-4">Rich and robust, collected from the blossoms of the 'Miracle Tree'.</p>
+<div class="flex justify-center gap-2 mb-4">
+<span class="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700">Raw</span>
+<span class="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-semibold text-gray-700">Uncompromised</span>
+</div>
+</div>
+</div>
+<div class="hidden">
+<img alt="Honey variety" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEwUnhIFoIn6fu549wZJh8OzPdhpO_mt5b86yQHh23NhbzgGVZ6C6detBE9p8OjaIxUEMRbQcWP9B8_emqEKhSW2jdNV-GWJsFCUIbjX_K4ItA-AV6dJOm_DqHxSupm3xTrreC5XDGnVzzsekhVqu_n0fECFynSTGHQrWWMrfmhW_cShtguW0OxuanrR0lfjPfYTmdnTSvEfw4gyUrsGREL9tr-z5maJ45G1taZGjsbRQdUDIkLqqthYxTz-Z8TqY967gkG7p6CuF1"/>
+<img alt="Honey variety" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAD0dVV8CZ7endUASieZn1VqC1-h2R8aFAKGCNvsHwYE1nWpWaJQwHIyd1O43FMaClIIaSScF3wk8rGc1ozijaNkGmwdRflZYNH-M3d2KIETi4WtBFmiO7VicPmFTRyYvdEZJ4H-vKW9XBa7IOMDLOD7UmydEfuPsyDMytD5oXUpBickxyVkuQtmq8ZUhvyZOaP8160iY6zG6qp1e5hWkmb4lYR7FCKreHqV7DWwhilMlH-y7nRlBW3f-3yFdPZuorwExGeuywKllXm"/>
+</div>
+</div>
+</section>
+<section class="py-24 bg-[#FFF8E7] relative overflow-hidden" id="ghee">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div>
+<span class="text-orange-600 font-bold tracking-wider uppercase text-sm mb-4 block">Crafted the Old Way. Trusted Today.</span>
+<h2 class="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-6">Prakvedaa A2 Bilona Ghee</h2>
+<h3 class="text-xl text-gray-800 font-medium mb-6">This Is Ghee — Not Factory Fat.</h3>
+<p class="text-gray-700 mb-8 leading-relaxed">
+                        Made traditionally from the milk of indigenous Kankrej cows. We follow the authentic process: 
+                        <strong class="text-orange-700">Curd → Churned → Slow Heated</strong>.
+                    </p>
+<div class="bg-white rounded-xl p-6 shadow-sm border border-orange-100 mb-8">
+<h4 class="font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Why It's Different:</h4>
+<ul class="space-y-3">
+<li class="flex items-center gap-3 text-gray-700"><span class="material-icons text-primary text-sm">done</span> A2 Milk (Indigenous Kankrej Cows)</li>
+<li class="flex items-center gap-3 text-gray-700"><span class="material-icons text-primary text-sm">done</span> Bilona Method (Not Cream-Based)</li>
+<li class="flex items-center gap-3 text-gray-700"><span class="material-icons text-primary text-sm">done</span> Wooden-Churned, Small Batch</li>
+<li class="flex items-center gap-3 text-gray-700"><span class="material-icons text-primary text-sm">done</span> No Chemicals. No Shortcuts.</li>
+</ul>
+</div>
+</div>
+<div class="relative">
+<div class="grid grid-cols-2 gap-4">
+<img alt="A2 Bilona Ghee Advertisement" class="rounded-2xl shadow-lg w-full object-cover col-span-2 md:col-span-1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC46lQi9dE63mwE95ZFDmKsdMoWJKe3-ZA9ZVa_6p_0juwdLbCmhmkX1k2y3KJEboFOQSKTQBsCx4_y1AJva5o81uhzdskaXfkdiTBPyNUG8R7w_NpgdVSDb2jvhf5VJpjuCLkbl5aWUCZnnnCltiT4_KPvHehq_-uRrrFTim-bsiKG2aQwGNz8TGPZketRv72knUCWUfvYASNkxZmNdUmerw-wqdp6FsbIXw__IGJeB6V84l8I6k6WuBHg1wbtYMLKA6xS12YXoOKG"/>
+<img alt="A2 Bilona Ghee Jar Detail" class="rounded-2xl shadow-lg w-full object-cover hidden md:block" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdtCn6dteQZGEcfQZ_Z_XKkdziKxxWu4IQHjOQt_1jTg_Je-VUwsmQ2vYbA7YlbgABvaMYRCGIhDC4bgX4aYfDCNKtVbUdeajTgw78leMdGzdYsJVa4CdaSyZ060xjoTbwEifJwycBL4rqVzRoymwic5AijT6aPo4mEpNuV4igTa6e_lnrOTpCy_YGV5NF2i1CeHZqpFsY7NHXIB_sNIZeizBj5kq-bkBofCX2LONO5I2uUunyEPyL3l8F4YECcbvi4YIlcixlaJNp"/>
+</div>
+<img alt="Ghee Jar Close up" class="rounded-2xl shadow-lg w-full object-cover mt-4 hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwbsd9umTr6ocvvr5oLtw-xpRMewYxm-NbwBpoDcHYsSjb1dd6wEhV-8JBSEWLYVdDIJBJVd4ypucP-8WZchhRJZ_KCgvGJuhvVEspp9Ah3HmUP6OQVRRB8IfKF_5J41MRhGbGvPGdKgD8ur9n2d3bVm5TwwAL9v27__clsijSslxtuL4TZ4zInLDU_85IGjxMY7q02Mx9P5e204TvV0nND94-DfPM9nC9WOPzD4ct65Q-Fdr-J_9u5d_88YKEhL9_0znzo57RGlDn"/>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-white" id="gallery">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-display font-bold text-gray-900 mb-4">APRAS in the Community</h2>
+<p class="text-lg text-gray-600 max-w-2xl mx-auto">Connecting with you directly. Highlights from our recent exhibitions and fairs.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="rounded-2xl overflow-hidden shadow-md group relative h-64 lg:h-80">
+<img alt="APRAS Naturals stall at fair" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhj5dJ1UAUA7pwAufjkaR99rCBguYrU9278QqaSVYtvbOeUIEVnTPL3SZwhmR33mbOCSDp3Dt-PmdPVievTw3HO1401leK9CoF1JBtn6Oigf-p1FPGhXY1EmkYQCwgkqu7ZdQbBDKFe8EbgzgaeVCBn-sB4ZgDP6qkGpFMfF18bug1zQNRY_iYR5M2WRWk00qdIktW_hSuRgCXzhSWGczF4MGM1fSn-hehk5q52JBIWj9_kzBBQGDDv3uvNy_Hq2OUkDbwv2WcFv_q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<p class="text-white font-medium">Connecting with customers at the local fair.</p>
+</div>
+</div>
+<div class="rounded-2xl overflow-hidden shadow-md group relative h-64 lg:h-80">
+<img alt="APRAS Naturals exhibition setup" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBughlBVL7CJtkZTJU2BEgJZf70MIB0sZwFSuDbG50bsOQt-VXn7khJdAsRQMzKh1mPklRNN9t-o6eVGVoA2Nq5Y8kzum8ZMiKcxHi7sSz_LYVmKdkOtty3PuzgFXgj24lt7UPxtujmFGXZNUFKUqfhQRFsBmXh768drZ-3oGzMb6eC5Pxe2hzg3cK6C_WOZPaAdY9uVnawwbdA7coNFOiHBB8FgbdZQzyHXuFv-9OAoqoVYKVMjUwV5OAw1PdaIwNq_xm6oP4g85VN"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<p class="text-white font-medium">Showcasing our full range of natural products.</p>
+</div>
+</div>
+<div class="rounded-2xl overflow-hidden shadow-md group relative h-64 lg:h-80 md:col-span-2 lg:col-span-1">
+<img alt="VIP Visit at APRAS Stall" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2xz5IA9znSEvyyiEl-Ganap-21VirL8y0rQuSZFwz3yRG_REc-GdIfw0cMQEWCc0DdB1DLLix_8fyv-UQXwMRGJNbYtNGdM2Fc7WA2dYC_SJ1L0zhOMAyMmjia2A3PlgxeNyncXg05Z2krVKgyJTBgSQO94yNkEO7-3A3RQ93XFbyNjPeuLtveKQIYz6bhYbqXTdhwfJzym1t5u2nsk8e5uIsmfSsf3IE-vggeS54P9ZbSSwR9guQay0KCYKxjHghPXf7y3mbzgbr"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<p class="text-white font-medium">VIP Recognition.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-16 bg-gray-900 text-white relative overflow-hidden">
+<div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xMCAwbDEwIDEwLTEwIDEwTDAgMTB6IiBmaWxsPSJjdXJyZW50Q29sb3IiLz48L3N2Zz4=')]"></div>
+<div class="max-w-4xl mx-auto px-4 text-center relative z-10">
+<span class="material-icons text-primary text-5xl mb-6">workspace_premium</span>
+<h2 class="text-3xl md:text-4xl font-display font-bold mb-6">Honored by Leadership</h2>
+<p class="text-xl text-gray-300 font-light leading-relaxed mb-8">
+                We were privileged to welcome the <strong class="text-white font-bold border-b-2 border-primary pb-1">Health Minister of Jharkhand</strong> to our stall. His appreciation for our commitment to pure, unadulterated natural products strengthens our resolve to bring the best of Prakvedaa to every home.
+            </p>
+</div>
+</section>
+<section class="py-24 bg-gray-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-display font-bold text-gray-900 mb-4">Customer Stories</h2>
+<p class="text-lg text-gray-600 max-w-2xl mx-auto">Hear from those who have made the switch to real, authentic honey and ghee.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative aspect-video bg-gray-200 flex items-center justify-center group cursor-pointer hover:shadow-md transition-shadow">
+<span class="material-icons text-5xl text-gray-400 group-hover:text-primary transition-colors">play_circle_filled</span>
+<div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+<p class="text-white font-medium text-sm">"The difference in taste is unbelievable."</p>
+</div>
+</div>
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative aspect-video bg-gray-200 flex items-center justify-center group cursor-pointer hover:shadow-md transition-shadow">
+<span class="material-icons text-5xl text-gray-400 group-hover:text-primary transition-colors">play_circle_filled</span>
+<div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+<p class="text-white font-medium text-sm">"Finally, Ghee that reminds me of home."</p>
+</div>
+</div>
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative aspect-video bg-gray-200 flex items-center justify-center group cursor-pointer hover:shadow-md transition-shadow">
+<span class="material-icons text-5xl text-gray-400 group-hover:text-primary transition-colors">play_circle_filled</span>
+<div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+<p class="text-white font-medium text-sm">"My kids love the Karanj honey!"</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-20 bg-white border-t border-gray-100">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+<h2 class="text-3xl font-display font-bold text-gray-900 mb-12">How to Get Yours</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+<div class="hidden md:block absolute top-1/2 left-[16%] right-[16%] h-0.5 bg-gray-200 -z-10 -translate-y-12"></div>
+<div class="bg-white">
+<div class="w-20 h-20 mx-auto bg-orange-50 border-2 border-primary rounded-full flex items-center justify-center mb-6 shadow-sm">
+<span class="material-icons text-primary text-3xl">qr_code_scanner</span>
+</div>
+<h3 class="font-bold text-xl mb-2 text-gray-900">1. Scan or Browse</h3>
+<p class="text-gray-600 text-sm">Use our offline QR code at events or browse our products online.</p>
+</div>
+<div class="bg-white">
+<div class="w-20 h-20 mx-auto bg-orange-50 border-2 border-primary rounded-full flex items-center justify-center mb-6 shadow-sm">
+<span class="material-icons text-primary text-3xl">payment</span>
+</div>
+<h3 class="font-bold text-xl mb-2 text-gray-900">2. Easy Payment</h3>
+<p class="text-gray-600 text-sm">Pay securely via UPI or select Cash on Delivery where available.</p>
+</div>
+<div class="bg-white">
+<div class="w-20 h-20 mx-auto bg-orange-50 border-2 border-primary rounded-full flex items-center justify-center mb-6 shadow-sm">
+<span class="material-icons text-primary text-3xl">local_shipping</span>
+</div>
+<h3 class="font-bold text-xl mb-2 text-gray-900">3. Fast Delivery</h3>
+<p class="text-gray-600 text-sm">Register your details below, and we'll ship right to your door.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-20 bg-primary text-white">
+<div class="max-w-4xl mx-auto px-4 text-center">
+<h2 class="text-3xl font-display font-bold mb-8">Our Mission</h2>
+<p class="text-xl md:text-2xl font-light leading-relaxed">
+                "To reconnect people with the pure, untampered gifts of nature. By championing traditional methods and authentic sourcing, APRAS Naturals strives to bring uncompromising health and wellness to every table."
+            </p>
+</div>
+</section>
+<section class="py-24 bg-gray-50">
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="text-center mb-12">
+<h2 class="text-3xl font-display font-bold text-gray-900">Frequently Asked Questions</h2>
+</div>
+<div class="space-y-6">
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+<h3 class="font-bold text-lg text-gray-900 mb-2 flex items-start gap-3">
+<span class="material-icons text-primary mt-0.5">help_outline</span>
+                        Why does my honey look crystallized or solid?
+                    </h3>
+<p class="text-gray-600 ml-9">
+                        Crystallization is a natural process and a sign of pure, raw honey! Real honey contains natural sugars that crystallize over time. If your honey never crystallizes, you should question its purity. To soften it, gently place the jar in warm water.
+                    </p>
+</div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+<h3 class="font-bold text-lg text-gray-900 mb-2 flex items-start gap-3">
+<span class="material-icons text-primary mt-0.5">help_outline</span>
+                        What does "Mono-Floral" mean?
+                    </h3>
+<p class="text-gray-600 ml-9">
+                        Mono-floral means the bees primarily collected nectar from one specific type of flower (like Tulsi, Karanj, or Moringa). This gives each honey a distinct, natural flavor profile without any added artificial flavors.
+                    </p>
+</div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+<h3 class="font-bold text-lg text-gray-900 mb-2 flex items-start gap-3">
+<span class="material-icons text-primary mt-0.5">help_outline</span>
+                        What is Bilona Ghee?
+                    </h3>
+<p class="text-gray-600 ml-9">
+                        Bilona is the traditional Indian method of making ghee. Instead of just melting cream, we turn A2 milk into curd, hand-churn it with a wooden churner to extract butter (makkhan), and then slow-heat it. It's labor-intensive but results in superior nutrition and taste.
+                    </p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 bg-white relative" id="order">
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+<div class="bg-gray-900 p-8 text-center text-white">
+<h2 class="text-3xl font-display font-bold mb-2">Ready to Switch to Real?</h2>
+<p class="text-gray-300">Register your order below or ask for a free sample.</p>
+</div>
+<div class="p-8 md:p-12">
+<form action="#" class="space-y-6" method="POST">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" for="first-name">First Name</label>
+<input class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-gray-50 h-11 px-4" id="first-name" name="first-name" placeholder="John" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" for="last-name">Last Name</label>
+<input class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-gray-50 h-11 px-4" id="last-name" name="last-name" placeholder="Doe" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" for="phone">Phone / WhatsApp Number</label>
+<input class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-gray-50 h-11 px-4" id="phone" name="phone" placeholder="+91 XXXXX XXXXX" type="tel"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" for="product">I'm interested in:</label>
+<select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-gray-50 h-11 px-4" id="product" name="product">
+<option>Tulsi Honey</option>
+<option>Karanj Honey</option>
+<option>Moringa Honey</option>
+<option>A2 Bilona Cow Ghee</option>
+<option>Request a Free Sample</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 mb-1" for="message">Message / Address (Optional)</label>
+<textarea class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm bg-gray-50 p-4" id="message" name="message" placeholder="Any specific requirements?" rows="4"></textarea>
+</div>
+<div>
+<button class="w-full flex justify-center py-4 px-4 border border-transparent rounded-md shadow-sm text-lg font-bold text-white bg-primary hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors" type="submit">
+                                Submit Order Inquiry
+                            </button>
+</div>
+<p class="text-xs text-center text-gray-500 mt-4">For immediate queries: WhatsApp <a class="text-primary hover:underline" href="tel:+919470309006">+91 9470309006</a></p>
+</form>
+</div>
+</div>
+</div>
+</section>
+<footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="material-icons text-primary text-2xl">spa</span>
+<span class="font-display font-bold text-xl tracking-tight">APRAS Naturals</span>
+</div>
+<div class="text-gray-400 text-sm text-center md:text-left">
+<p>Email: aprasnaturals@gmail.com</p>
+<p>Ranchi - 834005 | Jharkhand, India</p>
+</div>
+<div class="text-gray-500 text-sm">
+                    © 2024 APRAS Naturals. Authorized Prakvedaa Partner.
+                </div>
+</div>
+</div>
+</footer>
+
+</body></html>
