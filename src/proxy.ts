@@ -10,7 +10,7 @@ const PROTECTED_CUSTOMER_PREFIXES = ["/orders", "/profile", "/notifications"];
 const PROTECTED_ADMIN_PREFIXES    = ["/admin"];
 const AUTH_PAGES                  = ["/login", "/register"];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Customer routes — require any authenticated user

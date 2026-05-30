@@ -100,15 +100,21 @@ export default function LandingClient({ sections, siteConfig, featuredProducts, 
       {/* ── CINEMA HERO ─── */}
       <div className={styles.cinemaWrap} ref={cinemaRef}>
         <div className={styles.cinemaStage}>
-          <div className={styles.cinemaOverlay} />
+          {/* No full-screen overlay — video shows naturally */}
           <div className={styles.heroText} ref={heroTextRef}>
-            <div className={styles.heroBadge}><div className={styles.heroBadgeDot} />{heroBadge}</div>
-            <h1 className={styles.heroHeading}>{heroHeading}</h1>
-            <div className={styles.heroDivider} />
-            <p className={styles.heroSubheading}>{heroSubheading}</p>
-            <div className={styles.heroCtas}>
-              <Link href="/shop" className={styles.heroCtaPrimary}>Explore Collection</Link>
-              <Link href="/checkout?sample=true" className={styles.heroCtaGhost}>Request Free Sample</Link>
+            {/* Dark backdrop ONLY behind the text panel */}
+            <div className={styles.heroTextPanel}>
+              <div className={styles.heroBadge}><div className={styles.heroBadgeDot} />{heroBadge}</div>
+              <h1 className={styles.heroHeading}>
+                Nature&apos;s{" "}
+                <span className={styles.heroHeadingAccent}>Liquid Gold</span>
+              </h1>
+              <div className={styles.heroDivider} />
+              <p className={styles.heroSubheading}>{heroSubheading}</p>
+              <div className={styles.heroCtas}>
+                <Link href="/shop" className={styles.heroCtaPrimary}>Explore Collection</Link>
+                <Link href="/checkout?sample=true" className={styles.heroCtaGhost}>Request Free Sample</Link>
+              </div>
             </div>
           </div>
           <video ref={videoRef} className={styles.cinemaVideo} src={videoSrc} muted playsInline preload="auto" aria-hidden />

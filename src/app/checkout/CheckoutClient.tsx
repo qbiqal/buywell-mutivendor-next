@@ -5,7 +5,7 @@ import { useCart } from "@/components/shop/Cart/CartContext";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
-import { formatInr } from "@/lib/order-number";
+import { formatInr } from "@/lib/utils";
 import styles from "./checkout.module.css";
 
 type Step = "address" | "review";

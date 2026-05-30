@@ -8,9 +8,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.cloudflare.com" },
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ["pg"],
-  },
+  serverExternalPackages: ["pg"],
 };
 
 export default nextConfig;

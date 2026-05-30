@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import AdminDashboardClient from "./AdminDashboardClient";
 export const metadata: Metadata = { title: "Admin Dashboard" };

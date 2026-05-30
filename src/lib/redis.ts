@@ -7,8 +7,21 @@ declare global {
 
 function createRedisClient(): Redis {
   const url = process.env.REDIS_URL;
+
+  // During build (no REDIS_URL), return a no-op stub that gracefully degrades
   if (!url) {
-    throw new Error("REDIS_URL environment variable is not set");
+    const stub = {
+      get: async () => null,
+      set: async () => "OK",
+      setex: async () => "OK",
+      del: async () => 0,
+      keys: async () => [] as string[],
+      scan: async () => ["0", [] as string[]],
+      ping: async () => "PONG",
+      pipeline: () => ({ exec: async () => [] as unknown[], del: () => {} }),
+      on: () => stub,
+    } as unknown as Redis;
+    return stub;
   }
 
   const client = new Redis(url, {
@@ -17,13 +30,12 @@ function createRedisClient(): Redis {
     enableReadyCheck: false,
     lazyConnect: true,
     retryStrategy: (times) => {
-      if (times > 5) return null; // stop retrying
+      if (times > 5) return null;
       return Math.min(times * 200, 2000);
     },
   });
 
   client.on("error", (err) => {
-    // Log but don't crash — app continues without cache on Redis failure
     if (process.env.NODE_ENV !== "test") {
       console.error("[redis] Connection error:", err.message);
     }

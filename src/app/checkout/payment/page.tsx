@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import PaymentClient from "./PaymentClient";
 import { CustomerHeader } from "@/components/layout/CustomerHeader";

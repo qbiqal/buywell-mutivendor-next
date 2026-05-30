@@ -1,11 +1,11 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import styles from "./confirmation.module.css";
 
-export default function ConfirmationPage() {
+function ConfirmationContent() {
   const params      = useSearchParams();
   const orderNumber = params.get("orderNumber") ?? "Your Order";
 
@@ -15,7 +15,7 @@ export default function ConfirmationPage() {
         <div className={styles.icon}>✅</div>
         <h1 className={styles.title}>Payment Proof Submitted!</h1>
         <p className={styles.sub}>
-          Order <strong>{orderNumber}</strong> — We've received your payment screenshot.
+          Order <strong>{orderNumber}</strong> — We&apos;ve received your payment screenshot.
         </p>
         <div className={styles.steps}>
           <div className={styles.step}>
@@ -24,7 +24,7 @@ export default function ConfirmationPage() {
           </div>
           <div className={styles.step}>
             <span className={styles.stepNum}>2</span>
-            <span>You'll receive a WhatsApp confirmation once verified.</span>
+            <span>You&apos;ll receive a WhatsApp confirmation once verified.</span>
           </div>
           <div className={styles.step}>
             <span className={styles.stepNum}>3</span>
@@ -40,5 +40,13 @@ export default function ConfirmationPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh" }} />}>
+      <ConfirmationContent />
+    </Suspense>
   );
 }

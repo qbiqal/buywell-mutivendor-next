@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./CustomerHeader.module.css";
 import { useCart } from "@/components/shop/Cart/CartContext";
+import { LogoIcon, LeafLogo } from "@/components/ui/Logo";
 
 const NAV_LINKS = [
   { label: "Shop",   href: "/shop" },
@@ -39,7 +40,7 @@ export function CustomerHeader({ user }: CustomerHeaderProps) {
       <div className={styles.inner}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <div className={styles.logoIcon}>🍯</div>
+          <LogoIcon size={36} />
           <span>APRAS <span className={styles.logoAccent}>Naturals</span></span>
         </Link>
 

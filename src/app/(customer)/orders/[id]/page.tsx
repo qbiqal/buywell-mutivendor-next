@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import OrderDetailClient from "./OrderDetailClient";
 export const metadata: Metadata = { title: "Order Details" };
