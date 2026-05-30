@@ -1,0 +1,107 @@
+"use client";
+import React, { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { useCart } from "@/components/shop/Cart/CartContext";
+import { useToast } from "@/components/ui/Toast";
+import type { ProductWithVariants } from "@/types";
+import styles from "./ProductCard.module.css";
+
+interface ProductCardProps {
+  product: ProductWithVariants;
+}
+
+const CATEGORY_COLORS: Record<string, string> = {
+  honey: "warning",
+  ghee:  "success",
+  other: "info",
+};
+
+export function ProductCard({ product }: ProductCardProps) {
+  const { addItem }           = useCart();
+  const { success: showToast } = useToast();
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
+
+  const activeVariants = product.variants.filter((v) => v.isActive);
+  const variant        = activeVariants[selectedVariantIdx];
+  const primaryImage   = product.images.find((i) => i.isPrimary)?.url ?? product.images[0]?.url;
+
+  function handleAddToCart() {
+    if (!variant) return;
+    addItem({
+      variantId:    variant.id,
+      productId:    product.id,
+      productName:  product.name,
+      variantName:  variant.name,
+      imageUrl:     primaryImage,
+      slug:         product.slug,
+      quantity:     1,
+      unitPriceInr: variant.priceInr,
+    });
+    showToast(`${product.name} (${variant.name}) added to cart`);
+  }
+
+  const discount = variant?.mrpInr && variant.mrpInr > variant.priceInr
+    ? Math.round(((variant.mrpInr - variant.priceInr) / variant.mrpInr) * 100)
+    : 0;
+
+  return (
+    <div className={styles.card}>
+      {/* Image */}
+      <Link href={`/shop/${product.slug}`} className={styles.imageWrap}>
+        {primaryImage ? (
+          <Image src={primaryImage} alt={product.name} fill className={styles.img} sizes="(max-width: 640px) 100vw, 33vw" />
+        ) : (
+          <div className={styles.imagePlaceholder}>🍯</div>
+        )}
+        {discount > 0 && <span className={styles.discountBadge}>-{discount}%</span>}
+        {product.isFeatured && <span className={styles.featuredBadge}>Featured</span>}
+      </Link>
+
+      {/* Body */}
+      <div className={styles.body}>
+        <Badge variant={CATEGORY_COLORS[product.category] as never} className={styles.catBadge}>
+          {product.subCategory ?? product.category}
+        </Badge>
+
+        <Link href={`/shop/${product.slug}`} className={styles.nameLink}>
+          <h3 className={styles.name}>{product.name}</h3>
+        </Link>
+
+        <p className={styles.desc}>{product.description}</p>
+
+        {/* Variant selector */}
+        {activeVariants.length > 1 && (
+          <div className={styles.variants}>
+            {activeVariants.map((v, i) => (
+              <button
+                key={v.id}
+                onClick={() => setSelectedVariantIdx(i)}
+                className={[styles.variantBtn, i === selectedVariantIdx ? styles.variantActive : ""].join(" ")}
+              >
+                {v.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Price row */}
+        {variant && (
+          <div className={styles.priceRow}>
+            <div className={styles.price}>
+              <span className={styles.priceMain}>₹{(variant.priceInr / 100).toLocaleString("en-IN")}</span>
+              {variant.mrpInr && variant.mrpInr > variant.priceInr && (
+                <span className={styles.priceMrp}>₹{(variant.mrpInr / 100).toLocaleString("en-IN")}</span>
+              )}
+            </div>
+            <Button variant="primary" size="sm" onClick={handleAddToCart} disabled={variant.stock <= 0}>
+              {variant.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

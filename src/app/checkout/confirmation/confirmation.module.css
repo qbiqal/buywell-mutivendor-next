@@ -1,0 +1,55 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: var(--bg-primary);
+}
+.card {
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 48px 40px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+}
+.icon { font-size: 56px; margin-bottom: 16px; }
+.title {
+  font-size: 28px; font-weight: 700;
+  font-family: var(--font-serif);
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.sub {
+  font-size: 15px; color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+.steps {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 32px;
+  background: var(--bg-secondary);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+}
+.step { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: var(--text-primary); }
+.stepNum {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+.contact { font-size: 13px; color: var(--text-secondary); }
+.contact a { color: var(--amber); font-weight: 600; text-decoration: none; }

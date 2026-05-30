@@ -1,0 +1,87 @@
+.page {
+  min-height: 100vh;
+  padding: 40px 0 80px;
+  background: var(--bg-primary);
+}
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.title {
+  font-size: 28px; font-weight: 700;
+  font-family: var(--font-serif);
+  color: var(--text-primary);
+  margin-bottom: 32px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+}
+.sectionTitle {
+  font-size: 18px; font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 560px) { .formGrid { grid-template-columns: 1fr; } }
+
+/* Summary */
+.summaryCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  position: sticky; top: 96px;
+}
+.orderItem {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.orderItemInfo { flex: 1; }
+.orderItemName { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.orderItemVariant { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.orderItemPrice { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.divider { height: 1px; background: var(--border-color); margin: 12px 0; }
+.summaryRow {
+  display: flex; justify-content: space-between;
+  font-size: 14px; color: var(--text-secondary);
+  padding: 4px 0;
+}
+.totalRow {
+  font-size: 18px; font-weight: 700;
+  color: var(--text-primary);
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+  margin-top: 4px;
+}
+.paymentNote {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 12px;
+}
+
+.sampleBox {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+}

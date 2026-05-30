@@ -1,0 +1,66 @@
+.content { padding: 32px; max-width: 1400px; }
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 1024px) { .statsGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .statsGrid { grid-template-columns: 1fr; } }
+
+.statCard { position: relative; overflow: hidden; }
+.urgentCard { border-color: rgba(239,68,68,0.3); }
+.urgentCard::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: #EF4444;
+}
+.statLabel  { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin-bottom: 8px; }
+.statValue  { font-size: 32px; font-weight: 800; color: var(--text-primary); font-family: var(--font-serif); margin-bottom: 4px; }
+.statMeta   { font-size: 12px; color: var(--text-secondary); }
+
+.tableCard { margin-bottom: 24px; }
+.tableHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+.tableTitle  { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.viewAll     { font-size: 14px; color: var(--amber); font-weight: 600; text-decoration: none; }
+
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  padding: 12px 20px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-secondary); text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+.table td {
+  padding: 14px 20px;
+  font-size: 14px; color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--bg-secondary); }
+.emptyRow { text-align: center; color: var(--text-secondary); }
+.orderNum  { font-weight: 700; }
+.phone     { font-size: 12px; color: var(--text-secondary); }
+.date      { color: var(--text-secondary); }
+.viewLink  { color: var(--amber); font-weight: 600; text-decoration: none; font-size: 13px; }
+
+.quickActions { display: flex; gap: 12px; flex-wrap: wrap; }
+.qaBtn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: 14px; font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.qaBtn:hover { border-color: var(--amber); color: var(--amber); background: rgba(217,119,6,0.04); }
