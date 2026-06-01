@@ -8,28 +8,43 @@
 
 ## Universal Credentials (use these for EVERY new app — never change)
 
+### Coolify
+
 | Item | Value |
 |---|---|
-| Coolify URL | `http://178.104.149.128:8000` |
+| Coolify dashboard | `http://178.104.149.128:8000` |
 | Coolify login | `qbiqal.official@gmail.com` / `Abcd_1234@` |
-| **COOLIFY_TOKEN** (GitHub secret) | `25|pM6PTqSOYIxGUJXvO0MTB7GbPLgsWHk9fMQ3ItMe4fb8b6ec` |
-| **COOLIFY_BASE_URL** (GitHub secret) | `http://178.104.149.128:8000` |
-| GitHub App name | `qbiqal-hetzner` (already has access to ALL repos — no per-repo config needed) |
-| GitHub App UUID in Coolify | `hmqdx11tborokgdudn2a5zql` |
-| App server UUID in Coolify | `p5zh8gtblt2wy4g747bvlhyu` |
+| App server UUID | `p5zh8gtblt2wy4g747bvlhyu` (qbiqal-apps) |
 | Client Projects UUID | `x6t42bpwzaxjwn3pmzokvuiy` |
 | Personal Projects UUID | `ijmlynb275zich1olbk3uj6n` |
+| GitHub App UUID | `hmqdx11tborokgdudn2a5zql` (qbiqal-hetzner) |
 
-**GitHub Secrets strategy:**
+### GitHub Actions Secrets
 
-| Secret | Scope | Notes |
-|---|---|---|
-| `COOLIFY_TOKEN` | ✅ Universal — set once per account | Same value in every repo |
-| `COOLIFY_BASE_URL` | ✅ Universal — set once per account | `http://178.104.149.128:8000` |
-| `COOLIFY_APP_UUID` | ⚡ Per-app — set per repo | Different UUID per Coolify resource |
-| `DEPLOY_SECRET` | ⚡ Per-app — set per repo | Must match `DEPLOY_SECRET` env var in Coolify |
+**2 universal secrets** — copy-paste same values into every new repo:
 
-> If GitHub ever supports org-level secrets for your account, set `COOLIFY_TOKEN` and `COOLIFY_BASE_URL` there so they auto-inherit to every repo.
+| Secret | Value |
+|---|---|
+| `COOLIFY_TOKEN` | `25|pM6PTqSOYIxGUJXvO0MTB7GbPLgsWHk9fMQ3ItMe4fb8b6ec` |
+| `COOLIFY_BASE_URL` | `http://178.104.149.128:8000` |
+
+**2 per-app secrets** — unique per repo:
+
+| Secret | Notes |
+|---|---|
+| `COOLIFY_APP_UUID` | The UUID from Coolify when you create the resource (Step 3.2) |
+| `DEPLOY_SECRET` | Random string — must match the `DEPLOY_SECRET` env var set in Coolify |
+
+> **GitHub App access**: `qbiqal-hetzner` is installed with **All repositories** access. Every new repo you push to GitHub is automatically accessible to Coolify — no per-repo configuration step needed.
+
+### Cloudflare R2 (shared across apps — each app gets its own bucket)
+
+| Item | Value |
+|---|---|
+| Cloudflare login | `qbiqal.official@gmail.com` via Google login |
+| Cloudflare Account ID | `cda9aed67cb854ed4375d1faea9c77da` |
+| R2 S3 endpoint | `https://cda9aed67cb854ed4375d1faea9c77da.r2.cloudflarestorage.com` |
+| R2 dashboard | `https://dash.cloudflare.com/cda9aed67cb854ed4375d1faea9c77da/r2` |
 
 ---
 
@@ -374,6 +389,97 @@ Set these **4 secrets** — 2 are the same value every time, 2 are app-specific:
 | `DEPLOY_SECRET` | Random string — same as what you put in Coolify env vars | ⚡ Different per app |
 
 > **GitHub App access**: The `qbiqal-hetzner` app is already configured for **all repositories** in your account. You do NOT need to grant access per-repo. It works automatically for every new repo you push to GitHub.
+
+---
+
+## Phase 4b — Cloudflare R2 Storage Setup (for file uploads)
+
+Every app that accepts file uploads (payment proofs, product images, media library) needs its own R2 bucket. Cloudflare R2 account is `cda9aed67cb854ed4375d1faea9c77da`.
+
+### Programmatic method (LLM does this — preferred)
+
+```bash
+# 1. Log into Cloudflare via browser (Google login: qbiqal.official@gmail.com)
+# Navigate to: https://dash.cloudflare.com/cda9aed67cb854ed4375d1faea9c77da/r2
+
+# 2. Create bucket via Cloudflare API (needs existing CF API token)
+CF_API_TOKEN="<existing token from Security > API Tokens>"
+ACCOUNT_ID="cda9aed67cb854ed4375d1faea9c77da"
+BUCKET="yourapp-media"
+
+curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/r2/buckets" \
+  -H "Authorization: Bearer $CF_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"name\": \"$BUCKET\", \"location_hint\": \"apac\"}" | python3 -m json.tool
+
+# 3. Enable public development URL (browser only — no API for this)
+# Dashboard: https://dash.cloudflare.com/$ACCOUNT_ID/r2/default/buckets/$BUCKET/settings
+# → Public Development URL → Enable → type "allow" → Allow
+
+# 4. Create R2 API token (Object Read & Write, specific bucket)
+# Dashboard: https://dash.cloudflare.com/$ACCOUNT_ID/r2/api-tokens
+# → Create Account API token → name: yourapp-media
+# → Permissions: Object Read & Write
+# → Specify bucket(s): yourapp-media
+# → TTL: Forever → Create
+# SAVE: Access Key ID and Secret Access Key (shown only once)
+```
+
+### Manual method (human in browser)
+
+1. Go to `https://dash.cloudflare.com` → sign in with Google (`qbiqal.official@gmail.com`)
+2. Left nav → **R2 Object Storage** → **Create bucket**
+3. Name: `yourapp-media` → Location: Automatic → Create
+4. Go to bucket **Settings** → **Public Development URL** → **Enable** → type `allow` → Allow
+5. Go to **R2 → API Tokens** → **Create Account API token**
+   - Token name: `yourapp-media`
+   - Permission: **Object Read & Write**
+   - Buckets: **Apply to specific buckets only** → select `yourapp-media`
+   - TTL: **Forever**
+   - Click **Create Account API Token**
+   - **Copy and save Access Key ID and Secret Access Key** (shown only once!)
+
+### Set R2 credentials in Coolify env vars
+
+After creating the token, add these 5 env vars to the Coolify app (API or UI):
+
+```bash
+CLOUDFLARE_ACCOUNT_ID       = cda9aed67cb854ed4375d1faea9c77da
+CLOUDFLARE_R2_BUCKET_NAME   = yourapp-media
+CLOUDFLARE_R2_ACCESS_KEY_ID = <Access Key ID from step above>
+CLOUDFLARE_R2_SECRET_ACCESS_KEY = <Secret Access Key from step above>
+CLOUDFLARE_R2_PUBLIC_URL    = https://pub-<hash>.r2.dev   # from settings page
+```
+
+```bash
+# Programmatic via Coolify API:
+APP_UUID="<your-app-uuid>"
+COOLIFY_TOKEN="25|pM6PTqSOYIxGUJXvO0MTB7GbPLgsWHk9fMQ3ItMe4fb8b6ec"
+
+for KV in \
+  "CLOUDFLARE_ACCOUNT_ID=cda9aed67cb854ed4375d1faea9c77da" \
+  "CLOUDFLARE_R2_BUCKET_NAME=yourapp-media" \
+  "CLOUDFLARE_R2_ACCESS_KEY_ID=<key-id>" \
+  "CLOUDFLARE_R2_SECRET_ACCESS_KEY=<secret>" \
+  "CLOUDFLARE_R2_PUBLIC_URL=https://pub-xxx.r2.dev"; do
+  K="${KV%%=*}"; V="${KV#*=}"
+  curl -s -X POST "http://178.104.149.128:8000/api/v1/applications/$APP_UUID/envs" \
+    -H "Authorization: Bearer $COOLIFY_TOKEN" \
+    -H "Content-Type: application/json" \
+    --data-raw "{\"key\": \"$K\", \"value\": \"$V\", \"is_preview\": false}"
+done
+```
+
+### APRAS Naturals R2 reference values
+
+| Item | Value |
+|---|---|
+| Bucket name | `apras-naturals-media` |
+| Public URL | `https://pub-247bd7bddc43440aa2f82b3bfe2d9b20.r2.dev` |
+| Access Key ID | `d31f2ac430e557f84c59022958bf1aa4` |
+| Secret (in Coolify) | set as `CLOUDFLARE_R2_SECRET_ACCESS_KEY` |
+
+> **Custom domain (recommended for production)**: In bucket Settings → Custom Domains → Add → point a Cloudflare-proxied subdomain like `media.aprasnaturals.com` to the bucket. This removes the `r2.dev` rate-limit and enables caching. Update `CLOUDFLARE_R2_PUBLIC_URL` to the custom domain after setting it up.
 
 ---
 
