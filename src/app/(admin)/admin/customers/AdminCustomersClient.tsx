@@ -183,6 +183,20 @@ export default function AdminCustomersClient() {
                       <div className={styles.actions}>
                         <Link href={`/admin/customers/${customer.id}`} className={styles.viewLink} onClick={(e) => e.stopPropagation()}>View</Link>
                         <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!confirm(`Impersonate ${customer.email}? Your admin session will be paused.`)) return;
+                            const res = await fetch(`/api/admin/customers/${customer.id}/impersonate`, { method: "POST" });
+                            const data = await res.json();
+                            if (data.success) { window.location.href = "/"; }
+                          }}
+                          title="Login as this customer"
+                        >
+                          🎭 Impersonate
+                        </Button>
+                        <Button
                           variant={customer.isActive ? "outline" : "secondary"}
                           size="sm"
                           onClick={(e) => {

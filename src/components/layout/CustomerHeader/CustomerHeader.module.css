@@ -153,6 +153,23 @@
 }
 .registerBtn:hover { background: var(--green); transform: translateY(-1px); }
 
+.adminBtn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #1B4332, #2D7D46);
+  color: #fff;
+  border-radius: var(--radius-full);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+.adminBtn:hover { opacity: 0.88; transform: translateY(-1px); }
+
 /* Mobile */
 .mobileMenu {
   display: none;

@@ -1,0 +1,29 @@
+# Dev tooling
+.git
+.gitignore
+.github
+.codegraph
+.cursor
+.playwright-mcp
+*.md
+!README.md
+
+# Local env (never commit secrets)
+.env*
+
+# Node
+node_modules
+
+# Next.js build artifacts (rebuilt inside Docker)
+.next
+
+# Large local video/asset files — served from public/ which IS copied
+# but the raw source videos folder is not needed
+videos/
+
+# Dev/test scripts that don't run in production
+scripts/smoke.ts
+scripts/e2e.ts
+
+# Local test files
+test-proof.jpg

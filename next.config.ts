@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
       { protocol: "https", hostname: "*.cloudflare.com" },
+      { protocol: "https", hostname: "media.aprasnaturals.com" },
+      { protocol: "https", hostname: "pub-*.r2.dev" },
     ],
   },
   serverExternalPackages: ["pg"],

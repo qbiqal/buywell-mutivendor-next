@@ -21,9 +21,10 @@ interface CustomerHeaderProps {
   navLinks?: PublicNavItem[];
   ecommerceEnabled?: boolean;
   cartSlot?: React.ReactNode;
+  topOffset?: number;
 }
 
-export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = true, cartSlot = null }: CustomerHeaderProps) {
+export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = true, cartSlot = null, topOffset = 0 }: CustomerHeaderProps) {
   const pathname = usePathname();
   const router   = useRouter();
   const [scrolled,     setScrolled]     = useState(false);
@@ -57,7 +58,7 @@ export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = 
 
   return (
     <>
-    <header className={[styles.header, scrolled ? styles.scrolled : ""].join(" ")}>
+    <header className={[styles.header, scrolled ? styles.scrolled : ""].join(" ")} style={topOffset ? { top: topOffset } : undefined}>
       <div className={styles.inner}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
@@ -79,35 +80,54 @@ export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = 
           {ecommerceEnabled && cartSlot}
 
           {user ? (
-            <div className={styles.userMenu} ref={dropdownRef}>
-              <button
-                className={styles.userBtn}
-                onClick={() => setDropdownOpen((o) => !o)}
-                aria-expanded={dropdownOpen}
-              >
-                <div className={styles.avatar}>{user.firstName[0].toUpperCase()}</div>
-                <span className={styles.userName}>{user.firstName}</span>
-                <span className={styles.chevron}>{dropdownOpen ? "▴" : "▾"}</span>
-              </button>
-              {dropdownOpen && (
-                <div className={styles.dropdown}>
-                  {ecommerceEnabled && (
-                    <>
-                      <Link href="/orders" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>📦 My Orders</Link>
-                      <Link href="/profile" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>👤 Profile</Link>
-                    </>
-                  )}
-                  <Link href="/notifications" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>🔔 Notifications</Link>
-                  {user.role === "admin" && (
-                    <Link href="/admin/dashboard" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>⚙️ Admin Panel</Link>
-                  )}
-                  <div className={styles.dropdownDivider} />
-                  <button onClick={handleLogout} className={[styles.dropdownItem, styles.logoutBtn].join(" ")}>
-                    🚪 Logout
-                  </button>
-                </div>
+            <>
+              {/* Admin shortcut — always visible in topbar for admins */}
+              {user.role === "admin" && (
+                <Link href="/admin/dashboard" className={styles.adminBtn}>⚙️ Admin Panel</Link>
               )}
-            </div>
+              <div className={styles.userMenu} ref={dropdownRef}>
+                <button
+                  className={styles.userBtn}
+                  onClick={() => setDropdownOpen((o) => !o)}
+                  aria-expanded={dropdownOpen}
+                >
+                  <div className={styles.avatar}>{user.firstName[0].toUpperCase()}</div>
+                  <span className={styles.userName}>{user.firstName}</span>
+                  <span className={styles.chevron}>{dropdownOpen ? "▴" : "▾"}</span>
+                </button>
+                {dropdownOpen && (
+                  <div className={styles.dropdown}>
+                    {user.role === "admin" ? (
+                      /* Admin dropdown — no customer-specific links */
+                      <>
+                        <Link href="/admin/dashboard" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>📊 Dashboard</Link>
+                        <Link href="/admin/orders" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>📦 Orders</Link>
+                        <Link href="/admin/settings" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>⚙️ Settings</Link>
+                        <div className={styles.dropdownDivider} />
+                        <button onClick={handleLogout} className={[styles.dropdownItem, styles.logoutBtn].join(" ")}>
+                          🚪 Logout
+                        </button>
+                      </>
+                    ) : (
+                      /* Customer dropdown */
+                      <>
+                        {ecommerceEnabled && (
+                          <>
+                            <Link href="/orders" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>📦 My Orders</Link>
+                            <Link href="/profile" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>👤 Profile</Link>
+                          </>
+                        )}
+                        <Link href="/notifications" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>🔔 Notifications</Link>
+                        <div className={styles.dropdownDivider} />
+                        <button onClick={handleLogout} className={[styles.dropdownItem, styles.logoutBtn].join(" ")}>
+                          🚪 Logout
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <div className={styles.authBtns}>
               <Link href="/login" className={styles.loginBtn}>Login</Link>

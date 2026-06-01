@@ -33,6 +33,7 @@ export const APP_MODULES: AppModule[] = [
       { label: "Media", href: "/admin/media", icon: "🖼️" },
       { label: "WhatsApp", href: "/admin/whatsapp", icon: "💬" },
       { label: "Settings", href: "/admin/settings", icon: "⚙️" },
+      { label: "Change Password", href: "/admin/settings/password", icon: "🔑" },
     ],
     publicNav: [],
   },
