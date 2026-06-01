@@ -6,6 +6,33 @@
 
 ---
 
+## Universal Credentials (use these for EVERY new app — never change)
+
+| Item | Value |
+|---|---|
+| Coolify URL | `http://178.104.149.128:8000` |
+| Coolify login | `qbiqal.official@gmail.com` / `Abcd_1234@` |
+| **COOLIFY_TOKEN** (GitHub secret) | `25|pM6PTqSOYIxGUJXvO0MTB7GbPLgsWHk9fMQ3ItMe4fb8b6ec` |
+| **COOLIFY_BASE_URL** (GitHub secret) | `http://178.104.149.128:8000` |
+| GitHub App name | `qbiqal-hetzner` (already has access to ALL repos — no per-repo config needed) |
+| GitHub App UUID in Coolify | `hmqdx11tborokgdudn2a5zql` |
+| App server UUID in Coolify | `p5zh8gtblt2wy4g747bvlhyu` |
+| Client Projects UUID | `x6t42bpwzaxjwn3pmzokvuiy` |
+| Personal Projects UUID | `ijmlynb275zich1olbk3uj6n` |
+
+**GitHub Secrets strategy:**
+
+| Secret | Scope | Notes |
+|---|---|---|
+| `COOLIFY_TOKEN` | ✅ Universal — set once per account | Same value in every repo |
+| `COOLIFY_BASE_URL` | ✅ Universal — set once per account | `http://178.104.149.128:8000` |
+| `COOLIFY_APP_UUID` | ⚡ Per-app — set per repo | Different UUID per Coolify resource |
+| `DEPLOY_SECRET` | ⚡ Per-app — set per repo | Must match `DEPLOY_SECRET` env var in Coolify |
+
+> If GitHub ever supports org-level secrets for your account, set `COOLIFY_TOKEN` and `COOLIFY_BASE_URL` there so they auto-inherit to every repo.
+
+---
+
 ## Infrastructure Map
 
 | Server | Private IP | Public IP | Role |
@@ -184,7 +211,7 @@ jobs:
       - name: Trigger Coolify Deploy
         run: |
           HTTP_STATUS=$(curl -s -o /tmp/resp.txt -w "%{http_code}" -X POST \
-            "${{ secrets.COOLIFY_DEPLOY_WEBHOOK_URL }}" \
+            "${{ secrets.COOLIFY_BASE_URL }}/api/v1/deploy?uuid=${{ secrets.COOLIFY_APP_UUID }}&force=false" \
             -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
             -H "Content-Type: application/json")
           cat /tmp/resp.txt
@@ -337,20 +364,16 @@ http://178.104.149.128:8000/api/v1/deploy?uuid=<APP_UUID>&force=false
 
 Go to: `https://github.com/qbiqal/<repo>/settings/secrets/actions`
 
-| Secret Name | Value |
-|---|---|
-| `COOLIFY_DEPLOY_WEBHOOK_URL` | `http://178.104.149.128:8000/api/v1/deploy?uuid=<APP_UUID>&force=false` |
-| `COOLIFY_TOKEN` | The deploy-only token from Step 3.5 |
-| `DEPLOY_SECRET` | Same value you set in Coolify env vars |
+Set these **4 secrets** — 2 are the same value every time, 2 are app-specific:
 
-### Grant GitHub App Access to the Repo
+| Secret | Value | Same for all apps? |
+|---|---|---|
+| `COOLIFY_TOKEN` | `25|pM6PTqSOYIxGUJXvO0MTB7GbPLgsWHk9fMQ3ItMe4fb8b6ec` | ✅ Yes — copy/paste every time |
+| `COOLIFY_BASE_URL` | `http://178.104.149.128:8000` | ✅ Yes — copy/paste every time |
+| `COOLIFY_APP_UUID` | The UUID from Step 3.2 (e.g. `gs856v98p5925c8nzcey68f3`) | ⚡ Different per app |
+| `DEPLOY_SECRET` | Random string — same as what you put in Coolify env vars | ⚡ Different per app |
 
-The `qbiqal-hetzner` GitHub App must have access to each new repo:
-
-1. Go to `https://github.com/settings/installations`
-2. Find **qbiqal-hetzner** → click **Configure**
-3. Under "Repository access" → add the new repo
-4. Save
+> **GitHub App access**: The `qbiqal-hetzner` app is already configured for **all repositories** in your account. You do NOT need to grant access per-repo. It works automatically for every new repo you push to GitHub.
 
 ---
 

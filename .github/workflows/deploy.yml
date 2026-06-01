@@ -6,38 +6,40 @@ on:
   pull_request:
     branches: [main]
 
+# ─── Secret Reference ──────────────────────────────────────────────────────────
+#
+# UNIVERSAL secrets (set once in GitHub org/account — same value for ALL repos):
+#   COOLIFY_TOKEN    → 25|pM6PTqSOYIxGUJXvO0MTB7GbPLgsWHk9fMQ3ItMe4fb8b6ec
+#   COOLIFY_BASE_URL → http://178.104.149.128:8000
+#
+# PER-APP secrets (set per repo — different value for each app):
+#   COOLIFY_APP_UUID → gs856v98p5925c8nzcey68f3   (this app's Coolify UUID)
+#   DEPLOY_SECRET    → NXcD4I2XDac0p7Io6775DfmqmQ9Nz3hI  (matches env var in Coolify)
+#
+# ──────────────────────────────────────────────────────────────────────────────
+
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
-  # Job 1: Lint & Type-check
-  # Runs on every push and PR. Blocks deploy if it fails.
+  # Job 1: Type-check — runs on every push and PR; blocks deploy if it fails
   # ─────────────────────────────────────────────────────────────────────────────
   test:
-    name: Lint & Type-check
+    name: Type-check
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type-check
-        run: npm run typecheck
+      - run: npm ci
+      - run: npm run typecheck
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Job 2: Deploy
-  # Only runs on push to main (not PRs). Requires test job to pass.
-  # Flow:
-  #   1. Trigger Coolify to pull repo & build new Docker image
-  #   2. Container starts → startup.js runs migrations + config seed automatically
-  #   3. Poll /api/health until app is live (up to 6 min)
-  #   4. POST /api/deploy-hook to flush Redis query cache
+  # Job 2: Deploy — only on push to main after test passes
+  # Flow: trigger Coolify → startup.js runs migrations + config seed →
+  #       poll /api/health → flush Redis cache
   # ─────────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Production
@@ -52,7 +54,7 @@ jobs:
         run: |
           echo "🚀 Triggering Coolify deployment..."
           HTTP_STATUS=$(curl -s -o /tmp/coolify_response.txt -w "%{http_code}" -X POST \
-            "${{ secrets.COOLIFY_DEPLOY_WEBHOOK_URL }}" \
+            "${{ secrets.COOLIFY_BASE_URL }}/api/v1/deploy?uuid=${{ secrets.COOLIFY_APP_UUID }}&force=false" \
             -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
             -H "Content-Type: application/json")
           echo "HTTP Status: $HTTP_STATUS"
@@ -63,16 +65,12 @@ jobs:
           fi
           echo "✅ Deploy triggered"
 
-      # Wait up to 6 minutes (24 attempts × 15 seconds) for the new container
-      # to start and the health check to pass.
-      # Covers: Coolify queue + Docker build + image push + startup.js migrations + Next.js boot
       - name: Wait for App to be Healthy
         run: |
-          echo "⏳ Waiting for app to come up..."
+          echo "⏳ Waiting for app to come up (up to 6 min)..."
           for i in $(seq 1 24); do
             echo "  Attempt $i/24 ($(date -u '+%H:%M:%S'))..."
-            if curl -sf \
-              --max-time 10 \
+            if curl -sf --max-time 10 \
               "https://aprasnaturals.com/api/health" \
               | grep -q '"success":true'; then
               echo "✅ App is healthy!"
@@ -83,16 +81,11 @@ jobs:
           echo "❌ App did not become healthy after 6 minutes"
           exit 1
 
-      # Flush Redis query cache so users see fresh content immediately.
-      # config:* keys are NOT flushed — DB config is the source of truth.
-      - name: Flush Cache
+      - name: Flush Redis Cache
         run: |
           echo "🔄 Flushing query cache..."
-          RESPONSE=$(curl -sf \
-            --max-time 30 \
-            -X POST \
+          curl -sf --max-time 30 -X POST \
             "https://aprasnaturals.com/api/deploy-hook" \
             -H "x-deploy-secret: ${{ secrets.DEPLOY_SECRET }}" \
-            -H "Content-Type: application/json")
-          echo "Response: $RESPONSE"
-          echo "✅ Cache flush complete"
+            -H "Content-Type: application/json" || echo "⚠️ Cache flush failed (non-fatal)"
+          echo "✅ Done"
