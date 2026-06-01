@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./CustomerHeader.module.css";
@@ -26,14 +26,28 @@ interface CustomerHeaderProps {
 export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = true, cartSlot = null }: CustomerHeaderProps) {
   const pathname = usePathname();
   const router   = useRouter();
-  const [scrolled,    setScrolled]    = useState(false);
-  const [menuOpen,    setMenuOpen]    = useState(false);
+  const [scrolled,     setScrolled]     = useState(false);
+  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    function handle(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [dropdownOpen]);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -65,28 +79,34 @@ export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = 
           {ecommerceEnabled && cartSlot}
 
           {user ? (
-            <div className={styles.userMenu}>
-              <button className={styles.userBtn}>
+            <div className={styles.userMenu} ref={dropdownRef}>
+              <button
+                className={styles.userBtn}
+                onClick={() => setDropdownOpen((o) => !o)}
+                aria-expanded={dropdownOpen}
+              >
                 <div className={styles.avatar}>{user.firstName[0].toUpperCase()}</div>
                 <span className={styles.userName}>{user.firstName}</span>
-                <span className={styles.chevron}>▾</span>
+                <span className={styles.chevron}>{dropdownOpen ? "▴" : "▾"}</span>
               </button>
-              <div className={styles.dropdown}>
-                {ecommerceEnabled && (
-                  <>
-                    <Link href="/orders" className={styles.dropdownItem}>📦 My Orders</Link>
-                    <Link href="/profile" className={styles.dropdownItem}>👤 Profile</Link>
-                  </>
-                )}
-                <Link href="/notifications" className={styles.dropdownItem}>Notifications</Link>
-                {user.role === "admin" && (
-                  <Link href="/admin/dashboard" className={styles.dropdownItem}>⚙️ Admin Panel</Link>
-                )}
-                <div className={styles.dropdownDivider} />
-                <button onClick={handleLogout} className={[styles.dropdownItem, styles.logoutBtn].join(" ")}>
-                  🚪 Logout
-                </button>
-              </div>
+              {dropdownOpen && (
+                <div className={styles.dropdown}>
+                  {ecommerceEnabled && (
+                    <>
+                      <Link href="/orders" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>📦 My Orders</Link>
+                      <Link href="/profile" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>👤 Profile</Link>
+                    </>
+                  )}
+                  <Link href="/notifications" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>🔔 Notifications</Link>
+                  {user.role === "admin" && (
+                    <Link href="/admin/dashboard" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>⚙️ Admin Panel</Link>
+                  )}
+                  <div className={styles.dropdownDivider} />
+                  <button onClick={handleLogout} className={[styles.dropdownItem, styles.logoutBtn].join(" ")}>
+                    🚪 Logout
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className={styles.authBtns}>

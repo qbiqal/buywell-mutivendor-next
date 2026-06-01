@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import styles from "./AdminSidebar.module.css";
 
 export interface AdminNavItem {
@@ -23,13 +23,20 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS, viewSiteHref = "/" }: AdminSidebarProps) {
-  const pathname = usePathname();
+  const pathname  = usePathname();
+  const router    = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <>
       <aside className={[styles.sidebar, collapsed ? styles.collapsed : ""].join(" ")}>
-        {/* Logo */}
+        {/* Logo + collapse toggle */}
         <div className={styles.logo}>
           <div className={styles.logoIcon}>🍯</div>
           {!collapsed && (
@@ -38,14 +45,16 @@ export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS,
               <span className={styles.logoSub}>Admin Panel</span>
             </div>
           )}
-          <button
-            className={styles.collapseBtn}
-            onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? "→" : "←"}
-          </button>
         </div>
+        {/* Collapse / expand button — always visible outside logo so it's clickable in both states */}
+        <button
+          className={styles.collapseBtn}
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand" : "Collapse"}
+        >
+          {collapsed ? "›" : "‹"}
+        </button>
 
         {/* Nav */}
         <nav className={styles.nav}>
@@ -74,6 +83,14 @@ export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS,
             <span>🌐</span>
             {!collapsed && <span>View Site</span>}
           </Link>
+          <button
+            onClick={handleLogout}
+            className={styles.logoutBtn}
+            title="Logout"
+          >
+            <span>🚪</span>
+            {!collapsed && <span>Logout</span>}
+          </button>
         </div>
       </aside>
     </>

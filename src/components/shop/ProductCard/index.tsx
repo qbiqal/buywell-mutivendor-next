@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/components/shop/Cart/CartContext";
@@ -20,8 +21,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { addItem }           = useCart();
+  const { addItem }            = useCart();
   const { success: showToast } = useToast();
+  const router                 = useRouter();
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
 
   const activeVariants = product.variants.filter((v) => v.isActive);
@@ -41,6 +43,21 @@ export function ProductCard({ product }: ProductCardProps) {
       unitPriceInr: variant.priceInr,
     });
     showToast(`${product.name} (${variant.name}) added to cart`);
+  }
+
+  function handleBuyNow() {
+    if (!variant) return;
+    addItem({
+      variantId:    variant.id,
+      productId:    product.id,
+      productName:  product.name,
+      variantName:  variant.name,
+      imageUrl:     primaryImage,
+      slug:         product.slug,
+      quantity:     1,
+      unitPriceInr: variant.priceInr,
+    });
+    router.push("/checkout");
   }
 
   const discount = variant?.mrpInr && variant.mrpInr > variant.priceInr
@@ -87,19 +104,28 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Price row */}
+        {/* Price + actions */}
         {variant && (
-          <div className={styles.priceRow}>
-            <div className={styles.price}>
-              <span className={styles.priceMain}>₹{(variant.priceInr / 100).toLocaleString("en-IN")}</span>
-              {variant.mrpInr && variant.mrpInr > variant.priceInr && (
-                <span className={styles.priceMrp}>₹{(variant.mrpInr / 100).toLocaleString("en-IN")}</span>
+          <>
+            <div className={styles.priceRow}>
+              <div className={styles.price}>
+                <span className={styles.priceMain}>₹{(variant.priceInr / 100).toLocaleString("en-IN")}</span>
+                {variant.mrpInr && variant.mrpInr > variant.priceInr && (
+                  <span className={styles.priceMrp}>₹{(variant.mrpInr / 100).toLocaleString("en-IN")}</span>
+                )}
+              </div>
+            </div>
+            <div className={styles.cardActions}>
+              <Button variant="secondary" size="sm" onClick={handleAddToCart} disabled={variant.stock <= 0} fullWidth>
+                {variant.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+              </Button>
+              {variant.stock > 0 && (
+                <Button variant="primary" size="sm" onClick={handleBuyNow} fullWidth>
+                  Buy Now
+                </Button>
               )}
             </div>
-            <Button variant="primary" size="sm" onClick={handleAddToCart} disabled={variant.stock <= 0}>
-              {variant.stock <= 0 ? "Out of Stock" : "Add to Cart"}
-            </Button>
-          </div>
+          </>
         )}
       </div>
     </div>
