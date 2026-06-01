@@ -393,8 +393,8 @@
   z-index: 1;
   width: 100%;
   height: 100%;
-  /* VIDEO FIT MODE — change "contain" ↔ "cover" here to switch layout */
-  object-fit: contain;
+  /* VIDEO FIT MODE — change "cover" ↔ "contain" here to switch layout */
+  object-fit: cover;
   object-position: center;
   pointer-events: none;
   background: #000;

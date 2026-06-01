@@ -1,5 +1,15 @@
-// startup.js — runs on every container start
+// startup.js — runs on every container start (via Dockerfile CMD)
 // Order: DB migrations → config seed → Next.js server
+//
+// DATA-SAFETY GUARANTEE:
+//   1. migrate()       — Drizzle tracks applied migrations in __drizzle_migrations.
+//                        Only NEW, unapplied SQL files are executed. Existing
+//                        migrations are never re-run. Zero data loss on redeploy.
+//   2. config-seed.js  — Every INSERT uses ON CONFLICT DO NOTHING.
+//                        Admin-configured values are NEVER overwritten.
+//
+// ⚠️  DO NOT add npm run db:seed here. That script is a one-time local-only
+//      bootstrap and will truncate/duplicate production data if run on deploy.
 'use strict';
 
 const path = require('path');
