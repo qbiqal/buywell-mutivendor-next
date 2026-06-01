@@ -53,6 +53,7 @@ jobs:
           echo "🚀 Triggering Coolify deployment..."
           HTTP_STATUS=$(curl -s -o /tmp/coolify_response.txt -w "%{http_code}" -X POST \
             "${{ secrets.COOLIFY_DEPLOY_WEBHOOK_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
             -H "Content-Type: application/json")
           echo "HTTP Status: $HTTP_STATUS"
           cat /tmp/coolify_response.txt || true
