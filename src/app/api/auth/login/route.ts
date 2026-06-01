@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { signToken, getTokenCookieOptions } from "@/lib/auth";
 import { handleApiError, ValidationError, AppError } from "@/lib/errors";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +16,17 @@ export async function POST(req: NextRequest) {
       throw new ValidationError("Email and password are required");
     }
 
-    const rows = await db.select().from(users).where(eq(users.email, email.toLowerCase().trim()));
+    const normalizedEmail = email.toLowerCase().trim();
+    const ip = getClientIp(req);
+    const [ipLimit, emailLimit] = await Promise.all([
+      rateLimit({ key: `rate:auth:login:ip:${ip}`, limit: 20, windowSeconds: 15 * 60 }),
+      rateLimit({ key: `rate:auth:login:email:${normalizedEmail}`, limit: 8, windowSeconds: 15 * 60 }),
+    ]);
+    if (!ipLimit.allowed || !emailLimit.allowed) {
+      throw new AppError("Too many login attempts. Please try again later.", 429, "RATE_LIMITED");
+    }
+
+    const rows = await db.select().from(users).where(eq(users.email, normalizedEmail));
     const user = rows[0];
 
     if (!user) {

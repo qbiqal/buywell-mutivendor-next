@@ -5,6 +5,7 @@ import { eq, asc } from "drizzle-orm";
 import { createAdminGuard, getAuthPayload } from "@/lib/middleware";
 import { handleApiError, NotFoundError, ValidationError } from "@/lib/errors";
 import { notifyCustomerOrderConfirmed, notifyCustomerOrderShipped } from "@/lib/whatsapp";
+import { requireModuleApi } from "@/lib/modules";
 
 export async function GET(
   req: NextRequest,
@@ -13,6 +14,8 @@ export async function GET(
   try {
     const authResult = await createAdminGuard()(req);
     if (authResult) return authResult;
+    const moduleResult = await requireModuleApi("ecommerce");
+    if (moduleResult) return moduleResult;
 
     const { id } = await params;
     const rows = await db.select().from(orders).where(eq(orders.id, id));
@@ -36,6 +39,8 @@ export async function PATCH(
   try {
     const authResult = await createAdminGuard()(req);
     if (authResult) return authResult;
+    const moduleResult = await requireModuleApi("ecommerce");
+    if (moduleResult) return moduleResult;
 
     const payload = await getAuthPayload(req);
     const { id }  = await params;

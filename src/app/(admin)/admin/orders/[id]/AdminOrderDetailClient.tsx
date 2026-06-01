@@ -42,6 +42,7 @@ export default function AdminOrderDetailClient() {
   const [order,   setOrder]   = useState<AdminOrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
+  const [whatsAppSending, setWhatsAppSending] = useState<string | null>(null);
 
   const [statusModal,   setStatusModal]   = useState(false);
   const [trackingModal, setTrackingModal] = useState(false);
@@ -86,6 +87,25 @@ export default function AdminOrderDetailClient() {
       setTrackingModal(false);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function sendOrderWhatsApp(templateKey: "order_confirmed" | "order_shipped" | "payment_rejected") {
+    setWhatsAppSending(templateKey);
+    try {
+      const res = await fetch(`/api/admin/orders/${params.id}/whatsapp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateKey }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        showError(data.error ?? "WhatsApp send failed");
+        return;
+      }
+      showSuccess(data.data.status === "sent" ? "WhatsApp sent" : "WhatsApp logged");
+    } finally {
+      setWhatsAppSending(null);
     }
   }
 
@@ -201,14 +221,40 @@ export default function AdminOrderDetailClient() {
               {order.guestEmail && <div className={styles.infoRow}><span>Email:</span><span>{order.guestEmail}</span></div>}
             </div>
             {order.guestPhone && (
-              <a
-                href={`https://wa.me/${order.guestPhone?.replace(/[^0-9]/g, "")}?text=Hi ${order.guestName}, regarding your order ${order.orderNumber}...`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.waBtn}
-              >
-                💬 Message on WhatsApp
-              </a>
+              <div className={styles.waActions}>
+                <a
+                  href={`https://wa.me/${order.guestPhone?.replace(/[^0-9]/g, "")}?text=Hi ${order.guestName}, regarding your order ${order.orderNumber}...`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.waBtn}
+                >
+                  💬 Open WhatsApp
+                </a>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  loading={whatsAppSending === "order_confirmed"}
+                  onClick={() => sendOrderWhatsApp("order_confirmed")}
+                >
+                  Resend Confirmed
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  loading={whatsAppSending === "order_shipped"}
+                  onClick={() => sendOrderWhatsApp("order_shipped")}
+                >
+                  Resend Shipped
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  loading={whatsAppSending === "payment_rejected"}
+                  onClick={() => sendOrderWhatsApp("payment_rejected")}
+                >
+                  Send Payment Issue
+                </Button>
+              </div>
             )}
           </div>
 

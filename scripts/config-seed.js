@@ -23,24 +23,73 @@ module.exports = async function seedConfig() {
     { key: 'site_logo_url',        value: '',                      category: 'general' },
     { key: 'maintenance_mode',     value: 'false',                 category: 'general' },
 
+    // Module flags
+    { key: 'module_core_enabled',      value: 'true',              category: 'modules' },
+    { key: 'module_cms_enabled',       value: 'true',              category: 'modules' },
+    { key: 'module_ecommerce_enabled', value: 'true',              category: 'modules' },
+    { key: 'module_blog_enabled',      value: 'true',              category: 'modules' },
+
     // Payment gateways
     { key: 'payment_default_gateway', value: 'offline_qr',        category: 'payment' },
     { key: 'payment_offline_enabled', value: 'true',              category: 'payment' },
+    { key: 'payment_offline_qr_enabled', value: 'true',           category: 'payment' },
     { key: 'payment_razorpay_enabled',value: 'false',             category: 'payment' },
+    { key: 'payment_razorpay_key_id', value: '',                  category: 'payment' },
+    { key: 'payment_razorpay_key_secret', value: '',              category: 'payment' },
     { key: 'payment_stripe_enabled',  value: 'false',             category: 'payment' },
+    { key: 'payment_stripe_publishable_key', value: '',           category: 'payment' },
+    { key: 'payment_stripe_secret_key', value: '',                category: 'payment' },
+    { key: 'payment_stripe_webhook_secret', value: '',            category: 'payment' },
     { key: 'payment_qr_url',          value: '',                  category: 'payment' },
     { key: 'payment_upi_id',          value: '',                  category: 'payment' },
     { key: 'payment_company_name',    value: 'APRAS Naturals',    category: 'payment' },
 
     // Shipping
-    { key: 'shipping_free_above',  value: '999',                  category: 'shipping' },
-    { key: 'shipping_flat_rate',   value: '60',                   category: 'shipping' },
+    { key: 'shipping_free_above',  value: '99900',                category: 'shipping' },
+    { key: 'shipping_flat_rate',   value: '6000',                 category: 'shipping' },
     { key: 'shipping_free_enabled', value: 'true',               category: 'shipping' },
+
+    // Notification gateway control plane
+    { key: 'notification_in_app_enabled', value: 'true',          category: 'notification' },
+    { key: 'notification_email_enabled', value: 'true',           category: 'notification' },
+    { key: 'notification_email_provider', value: 'resend',        category: 'notification' },
+    { key: 'notification_email_from', value: 'APRAS Naturals <aprasnaturals@gmail.com>', category: 'notification' },
+    { key: 'notification_resend_enabled', value: 'true',          category: 'notification' },
+    { key: 'notification_resend_api_key', value: '',              category: 'notification' },
+    { key: 'notification_sms_enabled', value: 'false',            category: 'notification' },
+    { key: 'notification_sms_provider', value: '',                category: 'notification' },
+    { key: 'notification_sms_api_key', value: '',                 category: 'notification' },
+    { key: 'notification_sms_sender_id', value: '',               category: 'notification' },
+    { key: 'notification_sms_auth_token', value: '',              category: 'notification' },
+    { key: 'notification_whatsapp_enabled', value: 'true',        category: 'notification' },
+    { key: 'notification_telegram_enabled', value: 'false',       category: 'notification' },
+    { key: 'notification_telegram_bot_token', value: '',          category: 'notification' },
+    { key: 'notification_telegram_chat_id', value: '',            category: 'notification' },
+    { key: 'notification_push_enabled', value: 'false',           category: 'notification' },
+    { key: 'notification_push_provider', value: 'web_push',       category: 'notification' },
+    { key: 'notification_push_vapid_public_key', value: '',       category: 'notification' },
+    { key: 'notification_push_vapid_private_key', value: '',      category: 'notification' },
+    { key: 'notification_push_vapid_subject', value: '',          category: 'notification' },
+
+    // OTP / auth recovery
+    { key: 'otp_email_enabled', value: 'true',                    category: 'otp' },
+    { key: 'otp_email_verification_enabled', value: 'true',       category: 'otp' },
+    { key: 'otp_password_reset_enabled', value: 'true',           category: 'otp' },
+    { key: 'otp_email_verification_ttl_minutes', value: '60',     category: 'otp' },
+    { key: 'otp_password_reset_ttl_minutes', value: '30',         category: 'otp' },
+    { key: 'otp_max_attempts', value: '5',                        category: 'otp' },
 
     // WhatsApp
     { key: 'whatsapp_admin_number', value: '+919470309006',       category: 'whatsapp' },
     { key: 'whatsapp_enabled',      value: 'true',               category: 'whatsapp' },
     { key: 'whatsapp_order_notify', value: 'true',               category: 'whatsapp' },
+    { key: 'whatsapp_phone_number_id', value: '',                category: 'whatsapp' },
+    { key: 'whatsapp_access_token', value: '',                   category: 'whatsapp' },
+    { key: 'whatsapp_template_manual', value: 'Hi {{customerName}},\\n\\n{{message}}\\n\\n- APRAS Naturals', category: 'whatsapp' },
+    { key: 'whatsapp_template_order_confirmed', value: 'Hi {{customerName}},\\n\\nYour order {{orderNumber}} has been confirmed. We will ship within 24-48 hours.\\n\\nThank you for choosing APRAS Naturals.', category: 'whatsapp' },
+    { key: 'whatsapp_template_order_shipped', value: 'Hi {{customerName}},\\n\\nYour order {{orderNumber}} has been shipped.{{trackingLine}}{{deliveryLine}}\\n\\nThank you for choosing APRAS Naturals.', category: 'whatsapp' },
+    { key: 'whatsapp_template_payment_rejected', value: 'Hi {{customerName}},\\n\\nWe could not verify payment for order {{orderNumber}}.{{reasonLine}}\\n\\nPlease upload a clear payment screenshot or contact us.', category: 'whatsapp' },
+    { key: 'whatsapp_template_admin_new_order', value: 'New order {{orderNumber}}\\nCustomer: {{customerName}} ({{customerPhone}})\\nItems: {{items}}\\nTotal: {{totalFormatted}}\\nView: {{orderUrl}}', category: 'whatsapp' },
 
     // Blog
     { key: 'blog_enabled',         value: 'true',                 category: 'blog' },
@@ -56,11 +105,28 @@ module.exports = async function seedConfig() {
     // Media
     { key: 'media_max_size_mb',    value: '10',                   category: 'media' },
     { key: 'media_storage',        value: 'local',                category: 'media' }, // local | r2
+    { key: 'media_r2_account_id',  value: '',                     category: 'media' },
+    { key: 'media_r2_access_key_id', value: '',                   category: 'media' },
+    { key: 'media_r2_secret_access_key', value: '',               category: 'media' },
+    { key: 'media_r2_bucket_name', value: '',                     category: 'media' },
+    { key: 'media_r2_public_url',  value: '',                     category: 'media' },
 
     // Orders
     { key: 'orders_guest_checkout', value: 'true',               category: 'orders' },
     { key: 'orders_sample_enabled', value: 'true',               category: 'orders' },
     { key: 'orders_prefix',         value: 'AN',                  category: 'orders' },
+
+    // Localization and currency
+    { key: 'locale_default',       value: 'en',                   category: 'localization' },
+    { key: 'locales_enabled',      value: 'en,hi',                category: 'localization' },
+    { key: 'currency_default',     value: 'INR',                  category: 'localization' },
+    { key: 'currencies_enabled',   value: 'INR',                  category: 'localization' },
+    { key: 'currency_rates_json',  value: '{"INR":1}',            category: 'localization' },
+
+    // Observability
+    { key: 'sentry_enabled',       value: 'false',                category: 'observability' },
+    { key: 'sentry_dsn',           value: '',                     category: 'observability' },
+    { key: 'sentry_environment',   value: 'production',           category: 'observability' },
   ];
 
   for (const row of defaults) {

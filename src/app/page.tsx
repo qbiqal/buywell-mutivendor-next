@@ -1,5 +1,7 @@
-import ComingSoon from "@/components/ComingSoon";
+import LandingPage from "@/app/(public)/LandingPage";
 
-export default function RootPage() {
-  return <ComingSoon />;
-}
+export const metadata = {
+  title: "APRAS Naturals — Pure Prakvedaa Honey & A2 Bilona Ghee",
+};
+
+export default LandingPage;

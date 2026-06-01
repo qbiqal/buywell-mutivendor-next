@@ -11,7 +11,12 @@
     "db:push": "drizzle-kit push",
     "db:seed": "tsx src/lib/db/seed.ts",
     "db:indexes": "tsx src/lib/db/indexes.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "lint": "echo 'lint: no eslint configured — skipped'",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
+    "smoke": "tsx scripts/smoke.ts",
+    "e2e": "tsx scripts/e2e.ts",
+    "verify": "npm run build && npm run smoke && npm run e2e"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

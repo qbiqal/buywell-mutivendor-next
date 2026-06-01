@@ -88,3 +88,9 @@
   transition: opacity 0.2s;
 }
 .waBtn:hover { opacity: 0.9; }
+.waActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

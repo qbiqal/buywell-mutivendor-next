@@ -1,0 +1,97 @@
+name: CI/CD — APRAS Naturals
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1: Lint & Type-check
+  # Runs on every push and PR. Blocks deploy if it fails.
+  # ─────────────────────────────────────────────────────────────────────────────
+  test:
+    name: Lint & Type-check
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2: Deploy
+  # Only runs on push to main (not PRs). Requires test job to pass.
+  # Flow:
+  #   1. Trigger Coolify to pull repo & build new Docker image
+  #   2. Container starts → startup.js runs migrations + config seed automatically
+  #   3. Poll /api/health until app is live (up to 6 min)
+  #   4. POST /api/deploy-hook to flush Redis query cache
+  # ─────────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Trigger Coolify Deploy
+        run: |
+          echo "🚀 Triggering Coolify deployment..."
+          HTTP_STATUS=$(curl -s -o /tmp/coolify_response.txt -w "%{http_code}" -X POST \
+            "${{ secrets.COOLIFY_DEPLOY_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json")
+          echo "HTTP Status: $HTTP_STATUS"
+          cat /tmp/coolify_response.txt || true
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -gt 299 ]; then
+            echo "❌ Deploy webhook returned HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          echo "✅ Deploy triggered"
+
+      # Wait up to 6 minutes (24 attempts × 15 seconds) for the new container
+      # to start and the health check to pass.
+      # Covers: Coolify queue + Docker build + image push + startup.js migrations + Next.js boot
+      - name: Wait for App to be Healthy
+        run: |
+          echo "⏳ Waiting for app to come up..."
+          for i in $(seq 1 24); do
+            echo "  Attempt $i/24 ($(date -u '+%H:%M:%S'))..."
+            if curl -sf \
+              --max-time 10 \
+              "https://aprasnaturals.com/api/health" \
+              | grep -q '"success":true'; then
+              echo "✅ App is healthy!"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "❌ App did not become healthy after 6 minutes"
+          exit 1
+
+      # Flush Redis query cache so users see fresh content immediately.
+      # config:* keys are NOT flushed — DB config is the source of truth.
+      - name: Flush Cache
+        run: |
+          echo "🔄 Flushing query cache..."
+          RESPONSE=$(curl -sf \
+            --max-time 30 \
+            -X POST \
+            "https://aprasnaturals.com/api/deploy-hook" \
+            -H "x-deploy-secret: ${{ secrets.DEPLOY_SECRET }}" \
+            -H "Content-Type: application/json")
+          echo "Response: $RESPONSE"
+          echo "✅ Cache flush complete"

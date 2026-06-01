@@ -4,11 +4,14 @@ import { orders, orderItems } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { createAuthGuard, getAuthPayload } from "@/lib/middleware";
 import { handleApiError } from "@/lib/errors";
+import { requireModuleApi } from "@/lib/modules";
 
 export async function GET(req: NextRequest) {
   try {
     const authResult = await createAuthGuard()(req);
     if (authResult) return authResult;
+    const moduleResult = await requireModuleApi("ecommerce");
+    if (moduleResult) return moduleResult;
 
     const payload = await getAuthPayload(req);
     const { searchParams } = req.nextUrl;

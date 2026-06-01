@@ -43,3 +43,12 @@ next-env.d.ts
 # uploads (local dev only — prod uses R2)
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# dev tooling
+.codegraph/
+.cursor/
+.playwright-mcp/
+*.png
+
+# large local video assets (served from public/landing-assets in prod)
+/videos/

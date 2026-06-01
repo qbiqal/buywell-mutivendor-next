@@ -1,0 +1,162 @@
+.content {
+  padding: 32px;
+  max-width: 1200px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.searchInput { width: 280px; }
+.catFilters  { display: flex; gap: 8px; flex-wrap: wrap; }
+.filterBtn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filterBtn:hover  { border-color: var(--accent); color: var(--accent); }
+.filterActive     { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* Loading / empty */
+.loadingWrap { display: flex; justify-content: center; padding: 60px 0; }
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Table */
+.tableWrap {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.table th {
+  background: var(--bg-secondary);
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+.table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tr:hover td { background: var(--bg-primary); }
+
+/* Product cell */
+.productCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+}
+.productImg {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.img { object-fit: cover; }
+.imgPlaceholder { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 20px; }
+.productName  { font-weight: 600; color: var(--text-primary); text-decoration: none; display: block; }
+.productName:hover { color: var(--accent); }
+.productPrice { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.productMeta  { min-width: 0; }
+
+.featuredBadge { margin-left: 6px; }
+
+.variantCount { display: block; font-weight: 600; color: var(--text-primary); }
+.stockIn  { display: block; font-size: 12px; color: #16a34a; margin-top: 2px; }
+.stockOut { display: block; font-size: 12px; color: #ef4444; margin-top: 2px; }
+
+.sku { font-size: 12px; background: var(--bg-secondary); padding: 2px 8px; border-radius: 4px; color: var(--text-secondary); }
+
+/* Toggle active */
+.toggleBtn {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.toggleActive   { background: #dcfce7; color: #16a34a; }
+.toggleInactive { background: #fee2e2; color: #ef4444; }
+
+/* Actions */
+.actions { display: flex; gap: 8px; align-items: center; }
+.actionBtn {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+.actionBtn:hover { background: var(--bg-secondary); }
+.deleteBtn:hover { background: #fee2e2; }
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+.pageBtn {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pageBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.pageBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pageInfo { font-size: 14px; color: var(--text-secondary); }

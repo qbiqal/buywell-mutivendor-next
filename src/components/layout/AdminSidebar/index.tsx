@@ -4,24 +4,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./AdminSidebar.module.css";
 
-const NAV_ITEMS = [
-  { label: "Dashboard",   href: "/admin/dashboard",  icon: "📊" },
-  { label: "Orders",      href: "/admin/orders",      icon: "📦", badge: "orders" },
-  { label: "Products",    href: "/admin/products",    icon: "🛍️" },
-  { label: "Customers",   href: "/admin/customers",   icon: "👥" },
-  { label: "Blog",        href: "/admin/blog",        icon: "📝" },
-  { label: "Media",       href: "/admin/media",       icon: "🖼️" },
-  { label: "CMS",         href: "/admin/cms",         icon: "🎨" },
-  { label: "WhatsApp",    href: "/admin/whatsapp",    icon: "💬" },
-  { label: "Analytics",   href: "/admin/analytics",   icon: "📈" },
-  { label: "Settings",    href: "/admin/settings",    icon: "⚙️" },
+export interface AdminNavItem {
+  label: string;
+  href: string;
+  icon?: string;
+  badge?: string;
+}
+
+const FALLBACK_NAV_ITEMS: AdminNavItem[] = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: "📊" },
+  { label: "Settings", href: "/admin/settings", icon: "⚙️" },
 ];
 
 interface AdminSidebarProps {
   pendingOrders?: number;
+  navItems?: AdminNavItem[];
+  viewSiteHref?: string;
 }
 
-export function AdminSidebar({ pendingOrders = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS, viewSiteHref = "/" }: AdminSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -48,7 +49,7 @@ export function AdminSidebar({ pendingOrders = 0 }: AdminSidebarProps) {
 
         {/* Nav */}
         <nav className={styles.nav}>
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
@@ -69,7 +70,7 @@ export function AdminSidebar({ pendingOrders = 0 }: AdminSidebarProps) {
 
         {/* Bottom */}
         <div className={styles.bottom}>
-          <Link href="/" className={styles.viewSiteLink} title="View Site">
+          <Link href={viewSiteHref} className={styles.viewSiteLink} title="View Site">
             <span>🌐</span>
             {!collapsed && <span>View Site</span>}
           </Link>

@@ -32,6 +32,22 @@ const indexes = [
   `CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)`,
   `CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read)`,
   `CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_notification_deliveries_notification_id ON notification_deliveries(notification_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_notification_deliveries_user_id ON notification_deliveries(user_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_notification_deliveries_channel ON notification_deliveries(channel)`,
+  `CREATE INDEX IF NOT EXISTS idx_notification_deliveries_status ON notification_deliveries(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_notification_deliveries_created_at ON notification_deliveries(created_at DESC)`,
+  // OTP / push
+  `CREATE INDEX IF NOT EXISTS idx_otp_codes_user_id ON otp_codes(user_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_otp_codes_purpose_target ON otp_codes(purpose, target)`,
+  `CREATE INDEX IF NOT EXISTS idx_otp_codes_expires_at ON otp_codes(expires_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_otp_codes_consumed_at ON otp_codes(consumed_at)`,
+  `CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user_id ON push_subscriptions(user_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_push_subscriptions_is_active ON push_subscriptions(is_active)`,
+  // WhatsApp logs
+  `CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_order_id ON whatsapp_logs(order_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_status ON whatsapp_logs(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_created_at ON whatsapp_logs(created_at DESC)`,
   // Addresses
   `CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id)`,
   // Testimonials

@@ -1,392 +1,332 @@
 # APRAS Naturals — Development Blueprint Part 1
-## Product Vision, Architecture & Project Setup
+## Product Vision, Route Policy, Architecture, and Local Setup
 
-> Next.js 16.2.2 · TypeScript · PostgreSQL 17 + PgBouncer · Redis 7 · Coolify CI/CD
-> Infrastructure: Shared Hetzner cluster (Coolify + App Server + PG + Redis)
-> **DO NOT START DEVELOPMENT UNTIL USER APPROVES ALL PARTS**
-
----
-
-## 1. PRODUCT OVERVIEW
-
-**APRAS Naturals** is a full-stack CMS + E-Commerce + Blog platform for an authorized Prakvedaa partner selling mono-floral honey (Tulsi, Karanj, Moringa — 500g/1kg) and A2 Bilona Ghee. The platform supports offline QR-code-based payment, WhatsApp order confirmation, admin-verified order management, and a configurable CMS for the landing page.
-
-```
-APRAS Naturals Platform
-├── Public Landing Page         (same hero + scroll video, all sections CMS-configurable)
-├── Shop / Product Pages        (listing, detail, cart)
-├── Checkout + Offline Payment  (QR code upload proof, WhatsApp notify)
-├── Customer Portal             (order tracking, roadmap, profile)
-├── Admin Panel                 (orders, products, CMS, blog, media, analytics)
-└── Blog                       (CMS-driven, grid/list/detail views)
-```
-
-**Business rules:**
-- No payment gateway — orders placed → customer scans QR → uploads payment proof ( create provison for payment gateway where we can add new payment gateways later , offline payment gatewaya is one of them..)
-- Admin verifies proof → confirms order via WhatsApp → fulfills
-- Free samples offered to select customers (admin-controlled feature)
-- Products: 3 honey variants × 2 sizes + Ghee variants
+> Last updated: 2026-05-30
+> Stack: Next.js 16.2.2, React 19, TypeScript 5.9, PostgreSQL 17, Redis 7, Drizzle ORM, CSS Modules.
+> Current route policy: `/` is the CMS landing page. `/home` is retained as an alias and the previous Coming Soon page is available at `/coming-soon`.
 
 ---
 
-## 2. TECH STACK
+## 1. Product Vision
 
-```
-Frontend
-├── Next.js 16.2.2 (App Router, Turbopack)
-├── React 19+ · TypeScript 6.0
-├── Custom CSS (NO shadcn, NO Radix, NO Tailwind UI libs)
-├── CSS Variables + CSS Modules pattern (like StockSense globals.css)
-├── Framer Motion (scroll/entrance animations)
-├── react-beautiful-dnd / dnd-kit (drag & drop uploader)
-└── react-image-crop (auto-crop utility)
+APRAS Naturals is a modular CMS + E-Commerce + Blog platform for an authorized Prakvedaa partner selling mono-floral honey and A2 Bilona Ghee.
 
-Backend
-├── Next.js API Routes (App Router route.ts convention)
-├── PostgreSQL 17 via Drizzle ORM 0.45+
-├── Redis 7 (ioredis) — namespace: an: (apras-naturals)
-├── JWT (jose) + bcryptjs — cookie-based sessions
-└── Nodemailer / Resend (order confirmation emails)
+The business flow is intentionally offline-payment first:
 
-Notifications
-├── WhatsApp via Meta Cloud API (order alerts to admin)
-├── SMS via MSG91 or Twilio (order status to customer)
-└── In-app notifications (customer portal)
+1. Customer browses products.
+2. Customer adds items to cart or requests a free sample.
+3. Customer checks out with delivery details.
+4. Customer pays via UPI/QR and uploads proof.
+5. Admin verifies the proof.
+6. Admin confirms, ships, and updates tracking.
+7. Customer follows order status in the portal.
 
-Media
-├── Local uploads → /public/uploads (dev)
-├── Cloudflare R2 (prod) — namespace: apras-naturals/
-└── Image processing: sharp (resize/crop on upload)
-
-Monitoring
-├── Sentry (client + server errors)
-└── Health endpoint: /api/health
-
-Deployment
-├── Coolify on qbiqal-app-server (178.104.105.31)
-├── GitHub repo: qbiqal/apras-naturals
-├── Namespace in PG: apras_naturals_db
-├── Namespace in Redis: an: prefix
-└── CI/CD: Coolify webhook on push to main
-```
+The platform must stay lightweight. Core must load on every deployment, but CMS, Blog, E-Commerce, and payment gateways should become modules that can be enabled or disabled from the admin panel.
 
 ---
 
-## 3. INFRASTRUCTURE MAPPING
+## 2. Current Route Policy
 
-```
-qbiqal-coolify:    10.0.0.2  | 178.104.149.128 | CX22 | Control plane
-qbiqal-app-server: 10.0.0.4  | 178.104.105.31  | CX32 | App (Docker via Coolify)
-qbiqal-postgres:   10.0.0.5  | 178.104.158.232 | CCX13| PG 17 + PgBouncer :6432
-qbiqal-redis:      10.0.0.3  | 178.104.158.112 | CX23 | Redis 7 :6379
+| Route | Purpose | Status |
+|---|---|---|
+| `/` | Full CMS homepage | ✅ Current root |
+| `/home` | Full CMS homepage alias | ✅ Active alias |
+| `/coming-soon` | Previous Coming Soon page | ✅ Retained |
+| `/shop` | Product listing | ✅ |
+| `/shop/[slug]` | Product detail | ✅ |
+| `/blog` | Blog listing | ✅ |
+| `/blog/[slug]` | Blog detail | ✅ |
+| `/checkout` | Checkout / sample request | ✅ |
+| `/checkout/payment` | QR payment proof upload | ✅ |
+| `/orders`, `/orders/[id]` | Customer order portal | ✅ |
+| `/profile` | Customer profile and addresses | ✅ |
+| `/admin/*` | Admin panel | ✅ Current modules built and gated |
 
-Current apps on shared infra:
-├── Blog Platform     → blog_db   (PG) | blog: (Redis)
-├── StockSense        → stock_research (PG) | ss: (Redis)
-└── APRAS Naturals    → apras_naturals_db (PG) | an: (Redis)  ← NEW
+Launch switch:
 
-PgBouncer additions needed: ( for this project we will not use pg bouncer ..later if we will need ..we will change the url so make everything pg bouncer ready..)
-  apras_naturals = host=127.0.0.1 port=5432 dbname=apras_naturals_db
-
-Redis isolation (automatic via ioredis keyPrefix):
-  an:*     → App cache, sessions, rate limits
-  bull:an:* → BullMQ queues (if any async jobs needed)
-```
-
----
-
-## 4. REPOSITORY STRUCTURE
-
-```
-apras-naturals/
-├── src/
-│   ├── app/
-│   │   ├── (public)/                    # Public routes (no auth)
-│   │   │   ├── page.tsx                 # Landing page (SSR, CMS-driven)
-│   │   │   ├── shop/page.tsx            # Product listing
-│   │   │   ├── shop/[slug]/page.tsx     # Product detail
-│   │   │   ├── blog/page.tsx            # Blog listing
-│   │   │   ├── blog/[slug]/page.tsx     # Blog post detail
-│   │   │   └── layout.tsx
-│   │   ├── (customer)/                  # Customer portal (auth required)
-│   │   │   ├── orders/page.tsx          # Order list
-│   │   │   ├── orders/[id]/page.tsx     # Order detail + tracking
-│   │   │   ├── profile/page.tsx
-│   │   │   └── layout.tsx              # Top nav (StockSense member style)
-│   │   ├── (admin)/                     # Admin panel (admin role)
-│   │   │   ├── admin/
-│   │   │   │   ├── dashboard/
-│   │   │   │   ├── orders/
-│   │   │   │   ├── products/
-│   │   │   │   ├── blog/
-│   │   │   │   ├── media/
-│   │   │   │   ├── cms/                 # Landing page config
-│   │   │   │   ├── customers/
-│   │   │   │   ├── analytics/
-│   │   │   │   ├── whatsapp/
-│   │   │   │   └── settings/
-│   │   │   └── layout.tsx              # Left sidebar (StockSense admin style)
-│   │   ├── (auth)/                      # Login/register
-│   │   │   ├── login/page.tsx
-│   │   │   └── register/page.tsx
-│   │   ├── checkout/                    # Checkout flow
-│   │   │   ├── page.tsx
-│   │   │   ├── payment/page.tsx         # QR code payment
-│   │   │   └── confirmation/page.tsx
-│   │   ├── api/                         # API routes
-│   │   │   ├── auth/
-│   │   │   ├── products/
-│   │   │   ├── orders/
-│   │   │   ├── blog/
-│   │   │   ├── cms/
-│   │   │   ├── media/
-│   │   │   ├── admin/
-│   │   │   └── health/route.ts
-│   │   └── layout.tsx                  # Root layout
-│   │
-│   ├── components/
-│   │   ├── ui/                          # Primitive components (no deps)
-│   │   │   ├── Button/
-│   │   │   ├── Card/
-│   │   │   ├── Modal/
-│   │   │   ├── Toast/
-│   │   │   ├── Badge/
-│   │   │   ├── Spinner/
-│   │   │   └── Input/
-│   │   ├── layout/
-│   │   │   ├── CustomerHeader/          # Top nav (StockSense member pattern)
-│   │   │   ├── AdminSidebar/            # Left sidebar (StockSense admin pattern)
-│   │   │   ├── PublicNav/               # Landing page nav
-│   │   │   └── Footer/
-│   │   ├── media/
-│   │   │   ├── MediaUploader/           # Drag & drop + auto-crop (dnd-kit)
-│   │   │   ├── ImageCropper/            # react-image-crop wrapper
-│   │   │   └── MediaGallery/
-│   │   ├── shop/
-│   │   │   ├── ProductCard/
-│   │   │   ├── ProductGrid/
-│   │   │   ├── ProductDetail/
-│   │   │   ├── Cart/
-│   │   │   └── CartDrawer/
-│   │   ├── checkout/
-│   │   │   ├── CheckoutForm/
-│   │   │   ├── PaymentQR/               # QR code display + upload proof
-│   │   │   └── OrderConfirmation/
-│   │   ├── blog/
-│   │   │   ├── BlogGrid/
-│   │   │   ├── BlogList/
-│   │   │   ├── BlogCard/
-│   │   │   └── BlogDetail/
-│   │   ├── landing/                     # CMS-driven landing sections
-│   │   │   ├── HeroSection/
-│   │   │   ├── ProductsSection/
-│   │   │   ├── AboutSection/
-│   │   │   ├── TestimonialsSection/
-│   │   │   └── CTASection/
-│   │   └── admin/
-│   │       ├── OrderTable/
-│   │       ├── ProductForm/
-│   │       ├── BlogEditor/              # Rich text + media uploader
-│   │       ├── CMSEditor/               # Landing page CMS blocks editor
-│   │       └── AnalyticsWidget/
-│   │
-│   ├── lib/
-│   │   ├── db/
-│   │   │   ├── schema.ts                # All table definitions (Drizzle)
-│   │   │   ├── seed.ts                  # Idempotent seeder
-│   │   │   ├── indexes.ts               # Performance indexes
-│   │   │   └── migrations/              # Auto-generated SQL files
-│   │   ├── redis.ts                     # ioredis client (keyPrefix: "an:")
-│   │   ├── cache.ts                     # 3-layer cache (L1/L2/L3)
-│   │   ├── auth.ts                      # JWT helpers (jose)
-│   │   ├── middleware.ts                # Auth guards
-│   │   ├── errors.ts                    # AppError, handleApiError
-│   │   ├── media.ts                     # Upload + sharp processing
-│   │   ├── whatsapp.ts                  # Meta Cloud API integration
-│   │   ├── email.ts                     # Resend / Nodemailer
-│   │   └── config.ts                    # DB-backed KV config store
-│   │
-│   ├── types/
-│   │   └── index.ts
-│   └── proxy.ts                         # Route protection (Next.js 16 pattern)
-│
-├── scripts/
-│   ├── startup.js                       # migrations → seed → server
-│   └── config-seed.js                   # Idempotent config defaults
-├── public/
-│   ├── uploads/                         # Local media (dev only)
-│   └── images/                          # Static assets
-├── Dockerfile                           # Multi-stage (deps→builder→runner)
-├── docker-compose.yml                   # Local dev
-├── drizzle.config.ts
-├── next.config.ts
-├── tsconfig.json
-├── CLAUDE.md                            # AI agent instructions
-└── agent.md                             # Development agent guide
-```
+- ✅ Move the `/home` experience to `/`.
+- ✅ Keep `/home` as an alias.
+- ✅ Repurpose the current Coming Soon page to `/coming-soon`.
 
 ---
 
-## 5. CSS / DESIGN SYSTEM
+## 3. Module Architecture Target
 
-**Philosophy**: Custom CSS Variables (no Tailwind, no shadcn). Same approach as StockSense globals.css.
+### 3.1 Architecture Decision
 
-```css
-/* globals.css structure */
-:root {
-  /* Brand */
-  --amber:         #D97706;
-  --amber-lt:      #F59E0B;
-  --amber-dk:      #92400E;
-  --honey:         #FEF3C7;
-  --ink:           #18110a;
-  --muted:         #6b5e50;
+Keep the main platform as a **Next.js-first modular monolith**.
 
-  /* Layout */
-  --header-height: 64px;
-  --sidebar-width: 240px;
+Do not add NestJS for the normal CMS, Blog, E-Commerce, admin, and checkout flows. Each client gets one install, so another backend runtime would make simple CMS-only deployments heavier. A separate NestJS service can be reconsidered later for heavy MLM/payout/ledger engines only if they need independent queues, workers, or API scaling.
 
-  /* UI */
-  --bg-primary:    #f8f8f8;
-  --bg-secondary:  #f2f2f2;
-  --bg-card:       #ffffff;
-  --text-primary:  #18110a;
-  --text-secondary:#6b5e50;
-  --border-color:  #e8e0d5;
-  --accent:        #D97706;
+### 3.2 Modules
 
-  /* Admin sidebar */
-  --sidebar-bg:    #1c0f03;
-  --sidebar-text:  rgba(255,255,255,0.7);
-  --sidebar-active:#FBBF24;
+| Module | Can Disable? | Responsibility |
+|---|---:|---|
+| Core | No | Auth, users, roles, settings, health, DB, Redis, cache, module registry, layout shell |
+| CMS | Yes | Homepage sections, testimonials, content blocks, public `/home`, admin CMS |
+| E-Commerce | Yes | Products, variants, cart, checkout, orders, customer orders, admin orders/products |
+| Blog | Yes | Public blog, blog admin, categories, post metadata |
+| Payment: Offline QR | Yes | QR config, UPI instructions, proof upload, manual admin verification |
 
-  /* Shadows */
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --card-shadow-hover: 0 8px 32px rgba(0,0,0,0.1);
+Core cannot be disabled. All other modules should eventually be switchable in admin settings.
+
+### 3.3 O(N) Loading Principle
+
+The target is simple and predictable:
+
+- The app reads enabled module keys once per request or from a short Redis cache.
+- Navigation is built by iterating over enabled module manifests.
+- Route/API handlers call `requireModule("module_key")` before running module work.
+- Heavy module services are imported lazily.
+- Disabled modules should not expose nav items, admin pages, public pages, API handlers, queues, or gateway registrations.
+- A CMS-only install should not wrap the app in cart/order/payment providers.
+- A Blog-only install should not load shop/cart/checkout/payment behavior.
+
+This means module loading scales with the number of enabled modules, not with every possible feature installed in the codebase.
+
+### 3.4 Proposed Module Manifest
+
+```ts
+export interface AppModule {
+  key: string;
+  name: string;
+  canDisable: boolean;
+  defaultEnabled: boolean;
+  dependencies?: string[];
+  adminNav?: Array<{ label: string; href: string; icon: string }>;
+  publicNav?: Array<{ label: string; href: string }>;
 }
 ```
 
-**Customer portal** uses **top navigation** (exactly like StockSense member layout):
-- Fixed top bar 64px, amber + white theme
-- Content area: full width with container
+### 3.5 First Implementation
 
-**Admin panel** uses **left sidebar** (exactly like StockSense admin layout):
-- 240px left sidebar, dark amber/brown theme
-- Content area: remainder of screen
+Use the existing DB-backed `site_config` table first:
 
----
-
-## 6. AUTHENTICATION
-
-```
-Two roles: customer | admin
-
-JWT (jose) — HS256 — stored in httpOnly cookie (an_token)
-- Expiry: 7 days
-- Payload: { sub: userId, role: "customer"|"admin", email }
-
-Auth pattern (same as StockSense):
-  createAuthGuard()  → protects customer routes
-  createAdminGuard() → protects admin routes
-  getAuthPayload()   → reads JWT from cookie
-
-Session store: Redis an:session:{userId} (TTL 7d) for revocation
+```txt
+module_core_enabled=true
+module_cms_enabled=true
+module_ecommerce_enabled=true
+module_blog_enabled=true
+payment_offline_qr_enabled=true
 ```
 
----
+Later, if this grows, add first-class `modules` and `payment_gateways` tables.
 
-## 7. API CONVENTIONS
+### 3.6 Multilingual and Multicurrency Baseline
 
-```typescript
-// Route: src/app/api/[resource]/route.ts
-export async function GET(req: NextRequest) {
-  const authResult = await createAuthGuard()(req);
-  if (authResult) return authResult;
-  // ...
-  return NextResponse.json({ success: true, data: result });
-}
+Core owns the global locale/currency settings:
 
-// Error: return NextResponse.json({ success: false, error: "msg" }, { status: 400 })
-
-// All paginated lists:
-{ success: true, data: [...], pagination: { page, limit, total, pages } }
+```txt
+locale_default=en
+locales_enabled=en,hi
+currency_default=INR
+currencies_enabled=INR
+currency_rates_json={"INR":1}
 ```
 
----
+Modules consume these settings only when enabled:
 
-## 8. KEY PATTERNS FROM STOCKSENSE TO REPLICATE
-
-| Pattern | StockSense | APRAS Naturals |
-|---------|-----------|----------------|
-| DB config store | `appConfig` table + `getAppConfigValue()` | `siteConfig` table + `getSiteConfig()` |
-| 3-layer cache | L1 (Redis) → L2 (DB materialized) → L3 (direct) | Same pattern for products/CMS/blog |
-| Auth guard | `createAuthGuard()` middleware | Same pattern |
-| Startup script | `startup.js` runs migrations → seed → server | Same pattern |
-| Dockerfile | Multi-stage node:24-alpine | Same |
-| Redis namespace | `ss:` prefix | `an:` prefix |
-| PG namespace | `stock_research` db | `apras_naturals_db` |
-| DB schema | Drizzle ORM, `schema.ts` | Same |
-| Idempotent seed | `ON CONFLICT DO NOTHING` | Same pattern |
-| Error handling | `AppError`, `handleApiError` | Same |
-| Dark/light toggle | CSS variables + `.dark` class | Admin panel supports dark mode |
+- CMS: translated section config.
+- Blog: localized posts/slugs.
+- E-Commerce: currency display and gateway support.
+- Payment modules: supported currency declaration.
 
 ---
 
-## 9. ENVIRONMENT VARIABLES
+## 4. Current Implementation Summary
+
+### Built
+
+- ✅ Next.js 16.2.2 App Router project.
+- ✅ PostgreSQL schema and Drizzle migration.
+- ✅ Redis with `an:` key prefix.
+- ✅ JWT cookie auth with `an_token`.
+- ✅ Admin/customer guards and Next 16 `proxy.ts`.
+- ✅ Public shop, product detail, blog, checkout, payment, and confirmation pages.
+- ✅ Customer orders and profile.
+- ✅ Admin dashboard, orders, products, customers, blog, CMS list, settings.
+- ✅ CMS section detail editor.
+- ✅ Blog category admin.
+- ✅ Module control plane: Core locked on, CMS/Blog/E-Commerce/Offline QR toggles, module-aware nav, page gates, API gates.
+- ✅ Dynamic cart provider/header imports so CMS-only and Blog-only installs do not load cart UI.
+- ✅ Core-owned localization and currency settings.
+- ✅ Admin analytics with range filters, revenue/order/product/customer charts, and CSV export.
+- ✅ Admin WhatsApp panel with manual send, templates, order resend, and delivery logs.
+- ✅ Auth recovery pages/APIs: forgot password, reset password, email verification, resend verification.
+- ✅ Core notification/OTP provider layer with Resend config, in-app notifications, delivery logs, and push subscription storage.
+- ✅ Admin provider key provisions for Resend, SMS, Telegram, Web Push, WhatsApp, R2, Razorpay, Stripe, and Sentry.
+- ✅ DB-first config with `.env` fallback for external keys.
+- ✅ Secret config encryption at rest for provider/API keys.
+- ✅ Rich HTML sanitization for blog content and product long descriptions.
+- ✅ Sitemap, robots, and Redis auth rate limiting.
+- ✅ Same-site API mutation hardening and Sentry server-side capture path.
+- ✅ Offline QR payment abstraction and gateway registry order flow.
+- ✅ Signed payment-proof upload tokens.
+- ✅ Server-side order price recalculation and stock decrement.
+- ✅ MediaUploader component and upload API.
+- ✅ Admin media library exists with upload, browse, preview, URL copy, metadata edit, and guarded delete.
+- ✅ Cloudflare R2 signed upload helper.
+- ✅ Dockerfile and startup script.
+
+### Partial
+
+- ✅ `/` is the real CMS homepage, `/home` is an alias, and `/coming-soon` keeps the old Coming Soon page.
+- 🟡 Actual SMS/Telegram/Web Push send adapters depend on final provider/vendor selection.
+- 🟡 Deeper module-folder/package splitting is reserved for future heavy MLM/payment engines; current modules are runtime-gated.
+
+### Pending
+
+- ✅ Production launch switch from `/home` to `/` completed for the current local build.
+- ❌ Seed admin password rotation or first-admin setup before production.
+
+---
+
+## 5. Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16.2.2 App Router |
+| Runtime UI | React 19 |
+| Language | TypeScript 5.9 |
+| Styling | CSS variables + CSS Modules |
+| ORM | Drizzle ORM |
+| Database | PostgreSQL 17 |
+| Cache | Redis 7 via ioredis |
+| Auth | JWT via jose + bcryptjs |
+| Media | Local dev uploads; Cloudflare R2 target for production |
+| Notifications | Resend email, in-app notifications, WhatsApp Meta Cloud API, provider slots for SMS/Telegram/Web Push |
+| Deployment | Docker through Coolify |
+
+Rules:
+
+- No shadcn, Radix, Tailwind UI, or external UI kits.
+- Config should come from `site_config` first, env fallback second.
+- External/API keys must be editable in Admin Settings; `.env` values are fallback only when DB config is empty.
+- Secret provider values must stay encrypted at rest when app secrets are configured.
+- Prices are stored in paise.
+- API responses use `{ success, data, error, pagination }`.
+- Public read-heavy queries should use Redis cache and admin mutations should invalidate relevant prefixes.
+
+---
+
+## 6. Infrastructure
+
+| Component | Host | Purpose |
+|---|---|---|
+| Coolify | `178.104.149.128:8000` | Control plane |
+| App server | `178.104.105.31` | Docker app runtime |
+| PostgreSQL | `178.104.158.232:5432` | `apras_naturals_db` |
+| Redis | `178.104.158.112:6379` | `an:` namespace |
+| Domain | `aprasnaturals.com` | Cloudflare configured |
+
+Current project decision: direct PostgreSQL on `:5432`. Keep code PgBouncer-compatible for later, but do not require PgBouncer now.
+
+---
+
+## 7. Local Development Setup
+
+Local services are already running.
+
+Completed locally:
+
+- ✅ PostgreSQL responds on local socket.
+- ✅ Redis responds with `PONG`.
+- ✅ Local role `apras_user` created.
+- ✅ Local DB `apras_naturals_db` created.
+- ✅ `.env.local` created with local DB/Redis/JWT/app URL.
+- ✅ `npm run db:migrate` applied migrations.
+- ✅ `npm run db:seed` seeded admin/products/CMS/blog categories.
+- ✅ `scripts/config-seed.js` seeded config defaults.
+- ✅ `npm run db:indexes` created 42 indexes.
+- ✅ `npm run verify` passes.
+
+Local counts after seed:
+
+| Table | Count |
+|---|---:|
+| users | 1 |
+| products | 4 |
+| product_variants | 9 |
+| cms_sections | 13 |
+| site_config | 90 |
+| otp_codes | 0 |
+| notification_deliveries | 0 |
+| push_subscriptions | 0 |
+| blog_categories | 4 |
+| whatsapp_logs | 0 |
+
+Local commands:
 
 ```bash
-# Core
-DATABASE_URL=postgresql://apras_user:PASSWORD@178.104.158.232:6432/apras_naturals_db
-PGBOUNCER=true
-REDIS_URL=redis://:PASSWORD@178.104.158.112:6379
-JWT_SECRET=<64 char hex>
-NEXT_PUBLIC_APP_URL=https://aprasnaturals.com
-NODE_ENV=production
-
-# Media
-CLOUDFLARE_R2_ACCOUNT_ID=
-CLOUDFLARE_R2_ACCESS_KEY_ID=
-CLOUDFLARE_R2_SECRET_ACCESS_KEY=
-CLOUDFLARE_R2_BUCKET_NAME=apras-naturals-media
-CLOUDFLARE_R2_PUBLIC_URL=https://media.aprasnaturals.com
-
-# Notifications
-WHATSAPP_PHONE_NUMBER_ID=        # Meta Cloud API
-WHATSAPP_ACCESS_TOKEN=           # Meta Cloud API
-ADMIN_WHATSAPP_NUMBER=+919470309006
-RESEND_API_KEY=                  # Email
-
-# Monitoring
-SENTRY_DSN=
-NEXT_PUBLIC_SENTRY_DSN=
-SENTRY_ORG=qbiqal
-SENTRY_PROJECT=apras-naturals
-INTERNAL_API_TOKEN=              # For health/internal routes
+set -a; . ./.env.local; set +a
+npm run db:migrate
+npm run db:seed
+node -e "require('./scripts/config-seed.js')().then(()=>console.log('config defaults seeded'))"
+npm run db:indexes
+npm run build
+npm run smoke
+npm run e2e
+npm run verify
 ```
 
 ---
 
-## 10. GITHUB REPO SETUP CHECKLIST
+## 8. Repository Structure
 
-```bash
-# 1. Create repo via GitHub API or UI
-gh repo create qbiqal/apras-naturals --private --description "APRAS Naturals CMS + E-Commerce Platform"
+```txt
+src/app/
+  page.tsx                         # CMS landing root
+  home/page.tsx                    # CMS landing alias
+  coming-soon/page.tsx             # Previous Coming Soon page
+  (public)/shop                    # Shop list/detail
+  (public)/blog                    # Blog list/detail
+  (auth)/login, register           # Auth
+  (customer)/orders, profile       # Customer portal
+  (admin)/admin                    # Admin panel
+  checkout                         # Checkout/payment/confirmation
+  api                              # Route handlers
 
-# 2. Install Next.js
-npx create-next-app@16.2.2 apras-naturals \
-  --typescript --app --no-tailwind --no-eslint --no-src-dir
+src/components/
+  ui                               # Button, Card, Input, Modal, Toast, Badge, Spinner, Logo
+  layout                           # CustomerHeader, AdminSidebar, Footer
+  shop                             # ProductCard, CartContext, CartDrawer
+  media                            # MediaUploader
+  checkout                         # OrderTimeline
 
-# Actually use src dir: --src-dir
-
-# 3. Install deps
-npm install drizzle-orm @neondatabase/serverless ioredis jose bcryptjs \
-  @anthropic-ai/sdk nodemailer resend \
-  framer-motion @dnd-kit/core @dnd-kit/sortable react-image-crop sharp \
-  sentry @sentry/nextjs
-
-npm install -D drizzle-kit tsx @types/bcryptjs @types/nodemailer
-
-# 4. Configure Coolify webhook (see Part 3)
-# 5. Add env vars in Coolify
-# 6. First deploy → run DB setup
+src/lib/
+  db                               # Drizzle connection, schema, seed, indexes, migrations
+  payment                          # Gateway abstraction and Offline QR
+  auth.ts, middleware.ts           # JWT and guards
+  cache.ts, redis.ts, config.ts    # Redis cache and DB-backed config
+  media.ts                         # R2/local media helper
+  whatsapp.ts, email.ts            # Notifications
 ```
+
+---
+
+## 9. Source Audit Notes
+
+Important findings from the audit:
+
+- ✅ `/` is the full CMS homepage and compiles.
+- ✅ `/home` is retained as a landing alias.
+- ✅ `/coming-soon` retains the old Coming Soon page.
+- ✅ Product detail, CartDrawer, admin product CRUD, and customer profile exist and compile.
+- ✅ Media upload now requires admin auth.
+- ✅ Order creation now uses a real Drizzle transaction.
+- ✅ Shipping config defaults now use paise.
+- ✅ Module enable/disable control plane is implemented and verified.
+- ✅ Admin customers list/detail is implemented and verified.
+- ✅ Auth recovery, notification/OTP, sitemap, robots, and Redis auth rate limiting are implemented and verified.
+
+---
+
+## 10. Next Development Rule
+
+After each roadmap phase is completed:
+
+1. Mark the phase ✅ in `docs/roadmap.md`.
+2. Update `CLAUDE.md` current status.
+3. Update `docs/mind-map.md`.
+4. Run `npm run verify`.
+5. If DB/schema changed, run migration and update local/production notes.

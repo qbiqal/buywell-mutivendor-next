@@ -1,22 +1,116 @@
 /**
  * WhatsApp notifications via Meta Cloud API.
- * Template messages are used for transactional order notifications.
+ * Local/dev without Meta credentials logs messages as "skipped" instead of failing.
  */
 
-import { getSiteConfig } from "./config";
+import { eq } from "drizzle-orm";
+import { getAllSiteConfig, getSiteConfig } from "./config";
+import { db } from "./db";
+import { orders, whatsappLogs } from "./db/schema";
+
+export type WhatsAppDeliveryStatus = "sent" | "skipped" | "failed";
+
+export interface WhatsAppSendResult {
+  success: boolean;
+  status: WhatsAppDeliveryStatus;
+  configured: boolean;
+  providerMessageId?: string;
+  error?: string;
+}
 
 interface WAMessage {
-  to: string;      // E.164 format: +919876543210
+  to: string;
   message: string;
 }
 
-async function sendWhatsApp({ to, message }: WAMessage): Promise<boolean> {
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+export const WHATSAPP_TEMPLATE_KEYS = [
+  "manual",
+  "order_confirmed",
+  "order_shipped",
+  "payment_rejected",
+  "admin_new_order",
+] as const;
+
+export type WhatsAppTemplateKey = typeof WHATSAPP_TEMPLATE_KEYS[number];
+
+export const DEFAULT_WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, string> = {
+  manual: "Hi {{customerName}},\n\n{{message}}\n\n- APRAS Naturals",
+  order_confirmed: "Hi {{customerName}},\n\nYour order {{orderNumber}} has been confirmed. We will ship within 24-48 hours.\n\nThank you for choosing APRAS Naturals.",
+  order_shipped: "Hi {{customerName}},\n\nYour order {{orderNumber}} has been shipped.{{trackingLine}}{{deliveryLine}}\n\nThank you for choosing APRAS Naturals.",
+  payment_rejected: "Hi {{customerName}},\n\nWe could not verify payment for order {{orderNumber}}.{{reasonLine}}\n\nPlease upload a clear payment screenshot or contact us.",
+  admin_new_order: "New order {{orderNumber}}\nCustomer: {{customerName}} ({{customerPhone}})\nItems: {{items}}\nTotal: {{totalFormatted}}\nView: {{orderUrl}}",
+};
+
+export interface WhatsAppConfig {
+  enabled: boolean;
+  orderNotify: boolean;
+  adminNumber: string;
+  phoneNumberId: string;
+  accessToken: string;
+  templates: Record<WhatsAppTemplateKey, string>;
+}
+
+export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
+  const config = await getAllSiteConfig("whatsapp");
+  return {
+    enabled: config.whatsapp_enabled !== "false",
+    orderNotify: config.whatsapp_order_notify !== "false",
+    adminNumber: config.whatsapp_admin_number ?? process.env.ADMIN_WHATSAPP_NUMBER ?? "",
+    phoneNumberId: config.whatsapp_phone_number_id || process.env.WHATSAPP_PHONE_NUMBER_ID || "",
+    accessToken: config.whatsapp_access_token || process.env.WHATSAPP_ACCESS_TOKEN || "",
+    templates: WHATSAPP_TEMPLATE_KEYS.reduce((templates, key) => {
+      templates[key] = config[`whatsapp_template_${key}`] ?? DEFAULT_WHATSAPP_TEMPLATES[key];
+      return templates;
+    }, {} as Record<WhatsAppTemplateKey, string>),
+  };
+}
+
+export function renderWhatsAppTemplate(template: string, values: Record<string, string | number | null | undefined>): string {
+  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, key: string) => {
+    const value = values[key];
+    return value === null || value === undefined ? "" : String(value);
+  });
+}
+
+export async function sendWhatsAppAndLog(params: {
+  to: string;
+  message: string;
+  templateKey: string;
+  recipientName?: string | null;
+  orderId?: string | null;
+  sentBy?: string | null;
+}): Promise<WhatsAppSendResult & { logId: string }> {
+  const result = await sendWhatsApp({ to: params.to, message: params.message });
+  const [log] = await db.insert(whatsappLogs).values({
+    orderId: params.orderId ?? null,
+    templateKey: params.templateKey,
+    recipientPhone: normalizePhone(params.to),
+    recipientName: params.recipientName ?? null,
+    message: params.message,
+    status: result.status,
+    providerMessageId: result.providerMessageId ?? null,
+    error: result.error ?? null,
+    sentBy: params.sentBy ?? null,
+  }).returning({ id: whatsappLogs.id });
+
+  if (params.orderId && result.success) {
+    await db.update(orders).set({ whatsappSentAt: new Date() }).where(eq(orders.id, params.orderId));
+  }
+
+  return { ...result, logId: log.id };
+}
+
+async function sendWhatsApp({ to, message }: WAMessage): Promise<WhatsAppSendResult> {
+  const config = await getWhatsAppConfig();
+  if (!config.enabled) {
+    return { success: false, status: "skipped", configured: false, error: "WhatsApp is disabled" };
+  }
+
+  const phoneNumberId = config.phoneNumberId;
+  const accessToken = config.accessToken;
 
   if (!phoneNumberId || !accessToken) {
-    console.warn("[whatsapp] Not configured — skipping notification");
-    return false;
+    return { success: false, status: "skipped", configured: false, error: "WhatsApp credentials are not configured" };
   }
 
   try {
@@ -30,23 +124,37 @@ async function sendWhatsApp({ to, message }: WAMessage): Promise<boolean> {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: to.replace(/\s+/g, "").replace(/^\+/, ""),
+          to: normalizePhone(to).replace(/^\+/, ""),
           type: "text",
           text: { body: message },
         }),
-      }
+      },
     );
 
+    const payload = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.error("[whatsapp] API error:", err);
-      return false;
+      const error = typeof payload?.error?.message === "string"
+        ? payload.error.message
+        : `WhatsApp API error: ${res.status}`;
+      console.error("[whatsapp] API error:", payload);
+      return { success: false, status: "failed", configured: true, error };
     }
-    return true;
+
+    return {
+      success: true,
+      status: "sent",
+      configured: true,
+      providerMessageId: payload?.messages?.[0]?.id,
+    };
   } catch (err) {
+    const error = err instanceof Error ? err.message : "WhatsApp network error";
     console.error("[whatsapp] Network error:", err);
-    return false;
+    return { success: false, status: "failed", configured: true, error };
   }
+}
+
+function normalizePhone(phone: string): string {
+  return phone.replace(/\s+/g, "");
 }
 
 // ── Order notification helpers ─────────────────────────────────────────────────
@@ -55,23 +163,20 @@ export async function notifyAdminNewOrder(params: {
   orderNumber: string;
   customerName: string;
   customerPhone: string;
-  items: string;        // "Tulsi Honey 500g ×2, Karanj Honey 1kg ×1"
-  totalFormatted: string; // "₹1,399"
+  items: string;
+  totalFormatted: string;
   orderUrl: string;
 }): Promise<boolean> {
-  const adminNumber = (await getSiteConfig("whatsapp_admin_number")) ?? process.env.ADMIN_WHATSAPP_NUMBER;
-  if (!adminNumber) return false;
+  const [adminNumber, config] = await Promise.all([
+    getSiteConfig("whatsapp_admin_number"),
+    getWhatsAppConfig(),
+  ]);
+  const to = adminNumber ?? config.adminNumber;
+  if (!to || !config.orderNotify) return false;
 
-  const message = `🆕 *New Order: ${params.orderNumber}*
-
-👤 Customer: ${params.customerName} (${params.customerPhone})
-🛍️ Items: ${params.items}
-💰 Total: ${params.totalFormatted}
-📸 Payment proof uploaded ✅
-
-View order: ${params.orderUrl}`;
-
-  return sendWhatsApp({ to: adminNumber, message });
+  const message = renderWhatsAppTemplate(config.templates.admin_new_order, params);
+  const result = await sendWhatsApp({ to, message });
+  return result.success;
 }
 
 export async function notifyCustomerOrderConfirmed(params: {
@@ -79,17 +184,11 @@ export async function notifyCustomerOrderConfirmed(params: {
   orderNumber: string;
   customerName: string;
 }): Promise<boolean> {
-  const message = `✅ *Order Confirmed!*
-
-Hi ${params.customerName},
-
-Your order *${params.orderNumber}* has been confirmed. We'll ship within 24–48 hours.
-
-Thank you for choosing APRAS Naturals! 🍯
-
-Questions? WhatsApp: ${process.env.ADMIN_WHATSAPP_NUMBER ?? "+919470309006"}`;
-
-  return sendWhatsApp({ to: params.phone, message });
+  const config = await getWhatsAppConfig();
+  if (!config.orderNotify) return false;
+  const message = renderWhatsAppTemplate(config.templates.order_confirmed, params);
+  const result = await sendWhatsApp({ to: params.phone, message });
+  return result.success;
 }
 
 export async function notifyCustomerOrderShipped(params: {
@@ -100,22 +199,15 @@ export async function notifyCustomerOrderShipped(params: {
   courier?: string;
   estimatedDelivery?: string;
 }): Promise<boolean> {
-  const tracking = params.trackingNumber
-    ? `\n📦 Tracking: *${params.trackingNumber}* (${params.courier ?? "Courier"})`
-    : "";
-  const delivery = params.estimatedDelivery
-    ? `\n📅 Expected: ${params.estimatedDelivery}`
-    : "";
-
-  const message = `📦 *Your order is on its way!*
-
-Hi ${params.customerName},
-
-Order *${params.orderNumber}* has been shipped.${tracking}${delivery}
-
-Thank you for choosing APRAS Naturals! 🍯`;
-
-  return sendWhatsApp({ to: params.phone, message });
+  const config = await getWhatsAppConfig();
+  if (!config.orderNotify) return false;
+  const message = renderWhatsAppTemplate(config.templates.order_shipped, {
+    ...params,
+    trackingLine: params.trackingNumber ? `\nTracking: ${params.trackingNumber} (${params.courier ?? "Courier"})` : "",
+    deliveryLine: params.estimatedDelivery ? `\nExpected: ${params.estimatedDelivery}` : "",
+  });
+  const result = await sendWhatsApp({ to: params.phone, message });
+  return result.success;
 }
 
 export async function notifyCustomerPaymentRejected(params: {
@@ -124,14 +216,12 @@ export async function notifyCustomerPaymentRejected(params: {
   customerName: string;
   reason?: string;
 }): Promise<boolean> {
-  const message = `⚠️ *Payment Verification Issue*
-
-Hi ${params.customerName},
-
-We couldn't verify your payment for order *${params.orderNumber}*.${params.reason ? `\n\nReason: ${params.reason}` : ""}
-
-Please re-upload a clear screenshot of your payment or contact us:
-📞 ${process.env.ADMIN_WHATSAPP_NUMBER ?? "+919470309006"}`;
-
-  return sendWhatsApp({ to: params.phone, message });
+  const config = await getWhatsAppConfig();
+  if (!config.orderNotify) return false;
+  const message = renderWhatsAppTemplate(config.templates.payment_rejected, {
+    ...params,
+    reasonLine: params.reason ? `\nReason: ${params.reason}` : "",
+  });
+  const result = await sendWhatsApp({ to: params.phone, message });
+  return result.success;
 }

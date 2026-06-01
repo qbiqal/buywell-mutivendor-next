@@ -6,10 +6,12 @@ import { getTokenFromCookies, verifyToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { getEnabledPublicNav, getModuleState, requireModulePage } from "@/lib/modules";
 
 export const metadata: Metadata = { title: "Checkout" };
 
 export default async function CheckoutPage() {
+  await requireModulePage("ecommerce");
   let user = null;
   const token = await getTokenFromCookies();
   if (token) {
@@ -20,9 +22,11 @@ export default async function CheckoutPage() {
       if (rows[0]) user = rows[0];
     }
   }
+  const modules = await getModuleState();
+  const navLinks = getEnabledPublicNav(modules);
   return (
     <>
-      <CustomerHeader user={user} />
+      <CustomerHeader user={user} navLinks={navLinks} ecommerceEnabled={modules.ecommerce} />
       <main style={{ paddingTop: "var(--header-height)" }}>
         <CheckoutClient />
       </main>

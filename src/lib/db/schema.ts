@@ -257,6 +257,62 @@ export const notifications = pgTable("notifications", {
   createdAt:  timestamp("created_at").defaultNow().notNull(),
 });
 
+export const notificationDeliveries = pgTable("notification_deliveries", {
+  id:                text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  notificationId:    text("notification_id").references(() => notifications.id, { onDelete: "set null" }),
+  userId:            text("user_id").references(() => users.id, { onDelete: "set null" }),
+  channel:           text("channel").notNull(), // email | sms | whatsapp | telegram | push | in_app
+  provider:          text("provider").notNull(), // resend | local | meta | future provider key
+  recipient:         text("recipient").notNull(),
+  subject:           text("subject"),
+  body:              text("body"),
+  status:            text("status").notNull(), // sent | skipped | failed
+  providerMessageId: text("provider_message_id"),
+  error:             text("error"),
+  metadata:          jsonb("metadata"),
+  createdAt:         timestamp("created_at").defaultNow().notNull(),
+});
+
+export const otpCodes = pgTable("otp_codes", {
+  id:         text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId:     text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  purpose:    text("purpose").notNull(), // email_verification | password_reset | login
+  channel:    text("channel").default("email").notNull(),
+  target:     text("target").notNull(),
+  codeHash:   text("code_hash").notNull(),
+  attempts:   integer("attempts").default(0).notNull(),
+  expiresAt:  timestamp("expires_at").notNull(),
+  consumedAt: timestamp("consumed_at"),
+  metadata:   jsonb("metadata"),
+  createdAt:  timestamp("created_at").defaultNow().notNull(),
+});
+
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId:    text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  endpoint:  text("endpoint").notNull().unique(),
+  p256dh:    text("p256dh").notNull(),
+  auth:      text("auth").notNull(),
+  provider:  text("provider").default("web_push").notNull(),
+  isActive:  boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const whatsappLogs = pgTable("whatsapp_logs", {
+  id:                text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  orderId:           text("order_id").references(() => orders.id, { onDelete: "set null" }),
+  templateKey:       text("template_key").notNull(),
+  recipientPhone:    text("recipient_phone").notNull(),
+  recipientName:     text("recipient_name"),
+  message:           text("message").notNull(),
+  status:            text("status").notNull(), // sent | skipped | failed
+  providerMessageId: text("provider_message_id"),
+  error:             text("error"),
+  sentBy:            text("sent_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt:         timestamp("created_at").defaultNow().notNull(),
+});
+
 // ── Order Sequence ─────────────────────────────────────────────────────────────
 // Generates sequential order numbers per year: AN-2024-0001
 
@@ -284,3 +340,7 @@ export type SiteConfig        = typeof siteConfig.$inferSelect;
 export type CmsSection        = typeof cmsSections.$inferSelect;
 export type Testimonial       = typeof testimonials.$inferSelect;
 export type Notification      = typeof notifications.$inferSelect;
+export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;
+export type OtpCode           = typeof otpCodes.$inferSelect;
+export type PushSubscription  = typeof pushSubscriptions.$inferSelect;
+export type WhatsappLog       = typeof whatsappLogs.$inferSelect;

@@ -34,12 +34,125 @@
   color: var(--text-primary);
   margin-bottom: 20px;
 }
+.formFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 @media (max-width: 560px) { .formGrid { grid-template-columns: 1fr; } }
+
+/* Account section */
+.accountToggleRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 0;
+}
+@media (max-width: 560px) { .accountToggleRow { grid-template-columns: 1fr; } }
+
+.accountOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+.accountOption input[type="radio"] {
+  margin-top: 2px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+.accountOptionActive {
+  border-color: var(--accent);
+  background: rgba(217, 119, 6, 0.04);
+}
+.accountOptionText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.accountOptionText strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.accountOptionText small {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.accountFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Password field */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.fieldHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.passwordWrap {
+  position: relative;
+}
+.passwordInput {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 44px 12px 16px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.passwordInput::placeholder { color: var(--text-secondary); opacity: 0.6; }
+.passwordInput:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+}
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.eyeBtn:hover { color: var(--text-primary); }
+.eyeBtn span { font-size: 20px; line-height: 1; }
 
 /* Summary */
 .summaryCard {

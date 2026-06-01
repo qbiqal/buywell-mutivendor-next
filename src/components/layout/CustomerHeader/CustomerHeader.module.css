@@ -7,7 +7,7 @@
   transition: background 0.3s, box-shadow 0.3s;
 }
 .header.scrolled {
-  background: rgba(255,255,255,0.95);
+  background: color-mix(in srgb, var(--header-bg) 94%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--header-border);
@@ -70,6 +70,8 @@
   display: flex; align-items: center; justify-content: center;
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
+  border: none;
+  cursor: pointer;
   text-decoration: none;
   transition: background 0.2s;
 }
@@ -161,7 +163,7 @@
 .mobileDrawer {
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--bg-card);
   padding: 16px 24px 24px;
   border-top: 1px solid var(--border-color);
   gap: 4px;

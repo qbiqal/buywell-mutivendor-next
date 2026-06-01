@@ -1,0 +1,31 @@
+services:
+  # ── APRAS Naturals — Next.js App ─────────────────────────────────────────────
+  # Postgres and Redis are NOT included here.
+  # They live on the shared Hetzner private-network servers:
+  #   Postgres → 10.0.0.5  (qbiqal-postgres)
+  #   Redis    → 10.0.0.3  (qbiqal-redis)
+  # All connection strings are injected as environment variables in Coolify.
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://aprasnaturals.com}
+    container_name: apras-naturals-app
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://aprasnaturals.com}
+      DEPLOY_SECRET: ${DEPLOY_SECRET}
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+      interval: 20s
+      timeout: 8s
+      start_period: 90s
+      retries: 5

@@ -1,661 +1,418 @@
 # APRAS Naturals — Development Blueprint Part 2
-## Database Schema, Cache Strategy & Feature Specifications
+## Database, Cache, API, Modules, and Feature Specifications
 
-> Continuation of Part 1. All schema uses Drizzle ORM. Redis namespace: `an:`
-> PostgreSQL DB: `apras_naturals_db` on 178.104.158.232 via PgBouncer :6432
-
----
-
-## 1. DATABASE SCHEMA (Drizzle ORM)
-
-### 1.1 — Users & Auth
-
-```typescript
-// users
-export const users = pgTable("users", {
-  id:            text("id").primaryKey().$defaultFn(() => createId()),
-  email:         text("email").notNull().unique(),
-  passwordHash:  text("password_hash").notNull(),
-  firstName:     text("first_name").notNull(),
-  lastName:      text("last_name"),
-  phone:         text("phone"),
-  role:          text("role").default("customer").notNull(), // customer | admin
-  isActive:      boolean("is_active").default(true).notNull(),
-  emailVerified: boolean("email_verified").default(false).notNull(),
-  createdAt:     timestamp("created_at").defaultNow().notNull(),
-  updatedAt:     timestamp("updated_at").defaultNow().notNull(),
-});
-
-// addresses
-export const addresses = pgTable("addresses", {
-  id:         text("id").primaryKey().$defaultFn(() => createId()),
-  userId:     text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  label:      text("label"),           // "Home", "Office"
-  name:       text("name").notNull(),
-  phone:      text("phone").notNull(),
-  line1:      text("line1").notNull(),
-  line2:      text("line2"),
-  city:       text("city").notNull(),
-  state:      text("state").notNull(),
-  pincode:    text("pincode").notNull(),
-  isDefault:  boolean("is_default").default(false),
-  createdAt:  timestamp("created_at").defaultNow().notNull(),
-});
-```
-
-### 1.2 — Products & Inventory
-
-```typescript
-// products
-export const products = pgTable("products", {
-  id:           text("id").primaryKey().$defaultFn(() => createId()),
-  name:         text("name").notNull(),
-  slug:         text("slug").notNull().unique(),
-  category:     text("category").notNull(),      // honey | ghee | other
-  subCategory:  text("sub_category"),            // tulsi | karanj | moringa | a2-bilona
-  description:  text("description"),
-  longDesc:     text("long_desc"),               // rich text HTML
-  sku:          text("sku").notNull().unique(),
-  isActive:     boolean("is_active").default(true).notNull(),
-  isFeatured:   boolean("is_featured").default(false).notNull(),
-  sortOrder:    integer("sort_order").default(0),
-  metaTitle:    text("meta_title"),
-  metaDesc:     text("meta_desc"),
-  createdAt:    timestamp("created_at").defaultNow().notNull(),
-  updatedAt:    timestamp("updated_at").defaultNow().notNull(),
-});
-
-// product_variants (500g, 1kg, etc.)
-export const productVariants = pgTable("product_variants", {
-  id:           text("id").primaryKey().$defaultFn(() => createId()),
-  productId:    text("product_id").references(() => products.id, { onDelete: "cascade" }).notNull(),
-  name:         text("name").notNull(),          // "500g", "1kg"
-  priceInr:     integer("price_inr").notNull(),  // in paise (×100)
-  mrpInr:       integer("mrp_inr"),
-  weight:       text("weight"),                  // "500g"
-  stock:        integer("stock").default(0).notNull(),
-  sku:          text("sku").notNull().unique(),
-  isActive:     boolean("is_active").default(true).notNull(),
-  sortOrder:    integer("sort_order").default(0),
-});
-
-// product_images
-export const productImages = pgTable("product_images", {
-  id:         text("id").primaryKey().$defaultFn(() => createId()),
-  productId:  text("product_id").references(() => products.id, { onDelete: "cascade" }).notNull(),
-  url:        text("url").notNull(),
-  alt:        text("alt"),
-  isPrimary:  boolean("is_primary").default(false),
-  sortOrder:  integer("sort_order").default(0),
-});
-```
-
-### 1.3 — Orders
-
-```typescript
-// orders
-export const orders = pgTable("orders", {
-  id:             text("id").primaryKey().$defaultFn(() => createId()),
-  orderNumber:    text("order_number").notNull().unique(),  // AN-2024-0001
-  userId:         text("user_id").references(() => users.id),  // nullable for guest
-  guestName:      text("guest_name"),
-  guestEmail:     text("guest_email"),
-  guestPhone:     text("guest_phone"),
-  status:         text("status").default("pending").notNull(),
-  // pending | payment_pending | payment_uploaded | payment_verified |
-  // confirmed | processing | shipped | delivered | cancelled | refunded
-  paymentStatus:  text("payment_status").default("pending").notNull(),
-  // pending | uploaded | verified | rejected
-  paymentMethod:  text("payment_method").default("upi_qr"),
-  paymentProofUrl:text("payment_proof_url"),
-  paymentVerifiedAt: timestamp("payment_verified_at"),
-  paymentVerifiedBy: text("payment_verified_by"),  // admin user id
-  subtotalInr:    integer("subtotal_inr").notNull(),  // in paise
-  shippingInr:    integer("shipping_inr").default(0).notNull(),
-  discountInr:    integer("discount_inr").default(0).notNull(),
-  totalInr:       integer("total_inr").notNull(),
-  addressId:      text("address_id").references(() => addresses.id),
-  addressSnapshot:jsonb("address_snapshot"),  // frozen at order time
-  notes:          text("notes"),
-  adminNotes:     text("admin_notes"),
-  trackingNumber: text("tracking_number"),
-  trackingUrl:    text("tracking_url"),
-  courier:        text("courier"),
-  estimatedDelivery: date("estimated_delivery"),
-  whatsappSentAt: timestamp("whatsapp_sent_at"),
-  isSampleRequest:boolean("is_sample_request").default(false).notNull(),
-  createdAt:      timestamp("created_at").defaultNow().notNull(),
-  updatedAt:      timestamp("updated_at").defaultNow().notNull(),
-});
-
-// order_items
-export const orderItems = pgTable("order_items", {
-  id:         text("id").primaryKey().$defaultFn(() => createId()),
-  orderId:    text("order_id").references(() => orders.id, { onDelete: "cascade" }).notNull(),
-  variantId:  text("variant_id").references(() => productVariants.id).notNull(),
-  productSnapshot: jsonb("product_snapshot").notNull(),  // name, variant, price at order time
-  quantity:   integer("quantity").notNull(),
-  unitPriceInr: integer("unit_price_inr").notNull(),
-  totalInr:   integer("total_inr").notNull(),
-});
-
-// order_status_history
-export const orderStatusHistory = pgTable("order_status_history", {
-  id:         text("id").primaryKey().$defaultFn(() => createId()),
-  orderId:    text("order_id").references(() => orders.id, { onDelete: "cascade" }).notNull(),
-  status:     text("status").notNull(),
-  note:       text("note"),
-  changedBy:  text("changed_by"),  // admin user id or "system"
-  createdAt:  timestamp("created_at").defaultNow().notNull(),
-});
-```
-
-### 1.4 — Blog
-
-```typescript
-// blog_categories
-export const blogCategories = pgTable("blog_categories", {
-  id:         text("id").primaryKey().$defaultFn(() => createId()),
-  name:       text("name").notNull(),
-  slug:       text("slug").notNull().unique(),
-  color:      text("color"),  // hex color for badge
-  sortOrder:  integer("sort_order").default(0),
-});
-
-// blog_posts
-export const blogPosts = pgTable("blog_posts", {
-  id:           text("id").primaryKey().$defaultFn(() => createId()),
-  title:        text("title").notNull(),
-  slug:         text("slug").notNull().unique(),
-  excerpt:      text("excerpt"),
-  content:      text("content").notNull(),  // rich text HTML
-  coverImageUrl:text("cover_image_url"),
-  categoryId:   text("category_id").references(() => blogCategories.id),
-  authorId:     text("author_id").references(() => users.id).notNull(),
-  status:       text("status").default("draft").notNull(),  // draft | published | archived
-  publishedAt:  timestamp("published_at"),
-  readTime:     integer("read_time"),  // minutes
-  metaTitle:    text("meta_title"),
-  metaDesc:     text("meta_desc"),
-  tags:         text("tags").array(),
-  viewCount:    integer("view_count").default(0).notNull(),
-  isFeatured:   boolean("is_featured").default(false),
-  sortOrder:    integer("sort_order").default(0),
-  createdAt:    timestamp("created_at").defaultNow().notNull(),
-  updatedAt:    timestamp("updated_at").defaultNow().notNull(),
-});
-```
-
-### 1.5 — Media Library
-
-```typescript
-// media
-export const media = pgTable("media", {
-  id:           text("id").primaryKey().$defaultFn(() => createId()),
-  filename:     text("filename").notNull(),
-  originalName: text("original_name").notNull(),
-  url:          text("url").notNull(),
-  thumbnailUrl: text("thumbnail_url"),
-  mimeType:     text("mime_type").notNull(),
-  size:         integer("size").notNull(),  // bytes
-  width:        integer("width"),
-  height:       integer("height"),
-  alt:          text("alt"),
-  folder:       text("folder").default("general"),
-  uploadedBy:   text("uploaded_by").references(() => users.id),
-  createdAt:    timestamp("created_at").defaultNow().notNull(),
-});
-```
-
-### 1.6 — CMS / Site Config
-
-```typescript
-// site_config (key-value store — same pattern as StockSense appConfig)
-export const siteConfig = pgTable("site_config", {
-  key:       text("key").primaryKey(),
-  value:     text("value"),
-  category:  text("category").default("general"),
-  label:     text("label"),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// cms_sections (landing page sections config)
-export const cmsSections = pgTable("cms_sections", {
-  id:         text("id").primaryKey().$defaultFn(() => createId()),
-  sectionKey: text("section_key").notNull().unique(),  // hero | promise | products | about | faq | cta
-  isEnabled:  boolean("is_enabled").default(true).notNull(),
-  sortOrder:  integer("sort_order").default(0).notNull(),
-  config:     jsonb("config"),  // section-specific JSON config (headings, texts, colors)
-  updatedAt:  timestamp("updated_at").defaultNow().notNull(),
-});
-```
-
-### 1.7 — Testimonials & Reviews
-
-```typescript
-export const testimonials = pgTable("testimonials", {
-  id:         text("id").primaryKey().$defaultFn(() => createId()),
-  name:       text("name").notNull(),
-  location:   text("location"),
-  content:    text("content").notNull(),
-  rating:     integer("rating").default(5),
-  mediaUrl:   text("media_url"),      // video or image testimonial
-  mediaType:  text("media_type"),     // video | image
-  isApproved: boolean("is_approved").default(false).notNull(),
-  isFeatured: boolean("is_featured").default(false).notNull(),
-  sortOrder:  integer("sort_order").default(0),
-  createdAt:  timestamp("created_at").defaultNow().notNull(),
-});
-```
-
-### 1.8 — Notifications
-
-```typescript
-export const notifications = pgTable("notifications", {
-  id:         text("id").primaryKey().$defaultFn(() => createId()),
-  userId:     text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  type:       text("type").notNull(),  // order_confirmed | order_shipped | payment_verified | etc.
-  title:      text("title").notNull(),
-  body:       text("body").notNull(),
-  link:       text("link"),
-  isRead:     boolean("is_read").default(false).notNull(),
-  createdAt:  timestamp("created_at").defaultNow().notNull(),
-});
-```
+> Last updated: 2026-05-30
+> Source of truth: `src/lib/db/schema.ts`, `src/lib/cache.ts`, `src/lib/config.ts`, `src/lib/payment/*`, and `src/app/api/*`.
 
 ---
 
-## 2. POSTGRESQL INDEXES
+## 1. Database Schema
 
-```sql
--- Orders
-CREATE INDEX idx_orders_user_id ON orders(user_id);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_payment_status ON orders(payment_status);
-CREATE INDEX idx_orders_created_at ON orders(created_at DESC);
-CREATE INDEX idx_orders_order_number ON orders(order_number);
+All prices are stored in paise. All tables are defined in `src/lib/db/schema.ts`.
 
--- Products
-CREATE INDEX idx_products_slug ON products(slug);
-CREATE INDEX idx_products_category ON products(category);
-CREATE INDEX idx_products_is_active ON products(is_active);
-
--- Blog
-CREATE INDEX idx_blog_posts_slug ON blog_posts(slug);
-CREATE INDEX idx_blog_posts_status ON blog_posts(status);
-CREATE INDEX idx_blog_posts_published_at ON blog_posts(published_at DESC);
-CREATE INDEX idx_blog_posts_category ON blog_posts(category_id);
-
--- Media
-CREATE INDEX idx_media_folder ON media(folder);
-CREATE INDEX idx_media_uploaded_by ON media(uploaded_by);
-
--- Notifications
-CREATE INDEX idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX idx_notifications_is_read ON notifications(is_read);
-```
+| Table | Purpose | Status |
+|---|---|---|
+| `users` | Customer/admin accounts | ✅ |
+| `addresses` | Saved customer addresses | ✅ |
+| `products` | Product master records | ✅ |
+| `product_variants` | Size/price/stock variants | ✅ |
+| `product_images` | Product image gallery | ✅ |
+| `orders` | Order header, payment, shipping, flags | ✅ |
+| `order_items` | Snapshot-based order line items | ✅ |
+| `order_status_history` | Order timeline/status audit | ✅ |
+| `blog_categories` | Blog taxonomy | ✅ |
+| `blog_posts` | Blog content and SEO metadata | ✅ |
+| `media` | Uploaded file metadata | ✅ |
+| `site_config` | DB-backed key-value config | ✅ |
+| `cms_sections` | Homepage section config | ✅ |
+| `testimonials` | Landing testimonial content | ✅ |
+| `notifications` | Customer in-app notifications | ✅ |
+| `notification_deliveries` | Cross-channel delivery audit log | ✅ |
+| `otp_codes` | Hashed OTP codes for email verification/password reset | ✅ |
+| `push_subscriptions` | Browser push subscription storage | ✅ storage + provider config |
+| `order_sequence` | Yearly order number sequence | ✅ |
 
 ---
 
-## 3. THREE-LAYER CACHE SYSTEM (Event-Based Invalidation)
+## 2. Local Database State
 
-### Architecture
+Local setup has been completed.
 
-```
-L1 — Page/Component Cache  (Redis TTL: 1 hour)
-     Key pattern: an:page:{pageKey}:{params}
-     Example: an:page:products, an:page:blog:list:1, an:page:cms:landing
+| Item | Status |
+|---|---|
+| Local role `apras_user` | ✅ |
+| Local DB `apras_naturals_db` | ✅ |
+| Migrations applied | ✅ |
+| Seed data loaded | ✅ |
+| Config defaults loaded | ✅ |
+| Indexes created | ✅ |
 
-L2 — Query Cache  (Redis TTL: 15 minutes)
-     Key pattern: an:query:{resource}:{params}
-     Example: an:query:products:active, an:query:blog:featured
+Seed counts:
 
-L3 — DB  (source of truth — no cache)
+| Table | Count |
+|---|---:|
+| users | 1 |
+| products | 4 |
+| product_variants | 9 |
+| cms_sections | 13 |
+| site_config | 90 |
+| otp_codes | 0 |
+| notification_deliveries | 0 |
+| push_subscriptions | 0 |
+| blog_categories | 4 |
+| whatsapp_logs | 0 |
 
-Invalidation events trigger cache busting at all layers.
-```
-
-### Cache Implementation
-
-```typescript
-// src/lib/cache.ts
-
-export const CACHE_TTL = {
-  PAGE:     3600,    // 1 hour
-  QUERY:    900,     // 15 minutes
-  SESSION:  86400,   // 24 hours
-  CONFIG:   1800,    // 30 minutes
-} as const;
-
-// Event-based invalidation keys
-export const CACHE_TAGS = {
-  PRODUCTS:     "an:tag:products",
-  ORDERS:       "an:tag:orders",
-  BLOG:         "an:tag:blog",
-  CMS:          "an:tag:cms",
-  TESTIMONIALS: "an:tag:testimonials",
-} as const;
-
-export async function invalidateTag(tag: string) {
-  // Get all keys with this tag pattern and delete them
-  const keys = await redis.keys(`an:*:${tag}:*`);
-  if (keys.length > 0) await redis.del(...keys);
-}
-
-// Simpler approach: prefix-based invalidation
-export async function invalidateByPrefix(prefix: string) {
-  const keys = await redis.keys(`${prefix}*`);
-  if (keys.length > 0) await redis.del(...keys);
-}
-
-// Usage: when admin updates a product, call:
-// await invalidateByPrefix("an:page:products");
-// await invalidateByPrefix("an:query:products");
-// await invalidateByPrefix("an:page:cms:landing"); // if product featured on landing
-```
-
-### Cache Events
-
-| Admin Action | Invalidates |
-|-------------|-------------|
-| Update product | `an:query:products:*`, `an:page:shop:*`, `an:page:cms:landing` |
-| Update CMS section | `an:page:cms:landing`, `an:query:cms:*` |
-| Publish blog post | `an:page:blog:*`, `an:query:blog:*` |
-| Update testimonial | `an:query:testimonials:*`, `an:page:cms:landing` |
-| Update site config | `an:query:config:*`, `an:page:cms:landing` |
+Production should still use Coolify environment variables and Docker startup.
 
 ---
 
-## 4. FEATURE SPECS — ORDER FLOW
+## 3. Config Store
 
-### Customer Journey
+Config is DB-first through `site_config`.
 
-```
-1. Browse shop → Add to cart (localStorage)
-2. Checkout form → Enter name, phone, address
-3. Order placed → Status: "pending"
-4. Payment page → Company QR displayed
-   - Customer scans QR
-   - Customer uploads payment screenshot
-   - Status: "payment_uploaded"
-5. WhatsApp notification → Admin receives order details + proof
-6. Admin verifies in admin panel → Status: "payment_verified" → "confirmed"
-7. Admin sends WhatsApp to customer: "Order confirmed, will ship in 24-48 hours"
-8. Admin updates tracking → Status: "shipped"
-9. Customer sees tracking in portal → Status: "delivered"
+| Category | Important Keys |
+|---|---|
+| general | `site_name`, `site_tagline`, `site_email`, `site_phone`, `site_address`, `maintenance_mode` |
+| payment | `payment_default_gateway`, `payment_offline_enabled`, `payment_offline_qr_enabled`, `payment_qr_url`, `payment_upi_id`, `payment_company_name`, Razorpay/Stripe key slots |
+| shipping | `shipping_free_above`, `shipping_flat_rate`, `shipping_free_enabled` |
+| whatsapp | `whatsapp_admin_number`, `whatsapp_enabled`, `whatsapp_order_notify`, `whatsapp_phone_number_id`, `whatsapp_access_token`, WhatsApp templates |
+| blog | `blog_enabled`, `blog_title`, `blog_layout`, `blog_posts_per_page` |
+| media | `media_max_size_mb`, `media_storage`, Cloudflare R2 account/access/bucket/public URL keys |
+| orders | `orders_guest_checkout`, `orders_sample_enabled`, `orders_prefix` |
+| localization | `locale_default`, `locales_enabled`, `currency_default`, `currencies_enabled`, `currency_rates_json` |
+| notification | `notification_in_app_enabled`, `notification_email_enabled`, `notification_email_provider`, `notification_email_from`, `notification_resend_enabled`, `notification_resend_api_key`, SMS keys, Telegram keys, Web Push VAPID keys, channel toggles |
+| otp | `otp_email_enabled`, `otp_email_verification_enabled`, `otp_password_reset_enabled`, `otp_email_verification_ttl_minutes`, `otp_password_reset_ttl_minutes`, `otp_max_attempts` |
+| observability | `sentry_enabled`, `sentry_dsn`, `sentry_environment` |
+
+Correct money config values are in paise:
+
+```txt
+shipping_free_above=99900
+shipping_flat_rate=6000
 ```
 
-### Order Number Format
-
-```
-AN-YYYY-NNNN  →  AN-2024-0001
-Generated server-side with sequence + year prefix
-```
-
-### QR Code Payment
-
-```
-- Admin uploads company UPI QR in admin settings
-- Stored in siteConfig: payment_qr_url
-- Checkout page fetches and displays this QR
-- Upload field accepts JPG/PNG (max 5MB)
-- Preview shown to customer after upload
-- Admin sees proof image in order detail panel
-```
+External provider/API keys are DB-first and fall back to `.env` only when DB values are empty. Secret config keys are encrypted before storage when `CONFIG_ENCRYPTION_KEY`, `APP_CONFIG_ENCRYPTION_KEY`, or `JWT_SECRET` is available.
 
 ---
 
-## 5. FEATURE SPECS — MEDIA UPLOADER COMPONENT
+## 4. Module Config Specification
 
-```typescript
-// components/media/MediaUploader/index.tsx
-// Drag & drop + auto-crop using dnd-kit + react-image-crop
+The current code enforces the first module control plane through `src/lib/modules.ts`, DB-backed `site_config`, module-aware navigation, page guards, API guards, and module-aware root providers. Cart provider/header actions are dynamically imported only when E-Commerce is enabled. Deep per-module package splitting remains a rule before heavy MLM/payment plugins.
 
-interface MediaUploaderProps {
-  accept: string[];          // ["image/jpeg", "image/png", "video/mp4"]
-  maxSize: number;           // bytes
-  maxFiles: number;
-  aspectRatio?: number;      // e.g. 16/9, 1/1, 4/3 — triggers auto-crop
-  recommendedDimensions?: {  // shown as hint in UI
-    width: number;
-    height: number;
-    label: string;           // "Recommended: 1200×800px"
-  };
-  onUpload: (files: UploadedFile[]) => void;
-  folder?: string;
-  multiple?: boolean;
-}
+### Core Module
 
-// Usage throughout admin:
-// <MediaUploader 
-//   accept={["image/jpeg", "image/png"]}
-//   maxSize={5 * 1024 * 1024}
-//   aspectRatio={4/3}
-//   recommendedDimensions={{ width: 1200, height: 900, label: "Product images: 1200×900px" }}
-//   onUpload={handleUpload}
-//   folder="products"
-// />
+Core cannot be disabled.
+
+Includes:
+
+- Auth and roles
+- Layout shells
+- Settings
+- Health
+- DB/Redis/cache/config
+- Module registry
+- Locale/currency settings
+- Admin dashboard shell
+
+Config:
+
+```txt
+module_core_enabled=true
 ```
 
-**Where MediaUploader is used:**
+### CMS Module
 
-| Location | Accept | Aspect | Recommended Size |
-|----------|--------|--------|-----------------|
-| Product images | JPG/PNG | 4:3 | 1200×900px |
-| Blog cover | JPG/PNG | 16:9 | 1600×900px |
-| Testimonial photo | JPG | 1:1 | 400×400px |
-| Payment QR | JPG/PNG | 1:1 | 800×800px |
-| CMS hero background | JPG/PNG | 16:9 | 1920×1080px |
-| Admin avatar | JPG/PNG | 1:1 | 200×200px |
-| Payment proof (customer) | JPG/PNG | free | Max 5MB |
+Includes:
+
+- `/home`
+- `/admin/cms`
+- `/api/cms`
+- `/api/admin/cms`
+- CMS sections and testimonials
+
+Config:
+
+```txt
+module_cms_enabled=true
+```
+
+### E-Commerce Module
+
+Includes:
+
+- `/shop`
+- `/shop/[slug]`
+- `/checkout`
+- `/orders`
+- `/profile` address dependencies
+- `/admin/orders`
+- `/admin/products`
+- Product/order APIs
+- Payment gateway registry
+
+Config:
+
+```txt
+module_ecommerce_enabled=true
+```
+
+### Blog Module
+
+Includes:
+
+- `/blog`
+- `/blog/[slug]`
+- `/admin/blog`
+- Blog APIs
+
+Config:
+
+```txt
+module_blog_enabled=true
+```
+
+### Payment Gateway Modules
+
+Payment gateways are submodules. Offline QR is gateway #1.
+
+```txt
+payment_offline_qr_enabled=true
+payment_razorpay_enabled=false
+payment_stripe_enabled=false
+```
+
+Target behavior:
+
+- Disabled gateways do not appear in checkout/admin.
+- Checkout calls `getPaymentGateway()` instead of hardcoding gateway name.
+- Gateway metadata appears in the admin module/payment settings UI.
 
 ---
 
-## 6. FEATURE SPECS — BLOG SYSTEM
+## 5. Cache Strategy
 
-### Blog Workflow (Admin)
+Redis uses `keyPrefix: "an:"`; code should pass keys without the prefix.
 
-```
-1. Admin → /admin/blog → Blog posts list (grid or list view toggle)
-2. Create post → Rich text editor with:
-   - Title, slug (auto-generated, editable)
-   - Category (select or create inline)
-   - Tags (multi-input)
-   - Cover image (MediaUploader, 16:9, 1600×900 recommended)
-   - Content editor (custom WYSIWYG or contenteditable with toolbar)
-   - Excerpt (auto-generated from content, editable)
-   - SEO: meta title, meta description
-   - Featured toggle
-   - Status: Draft → Published → Archived
-3. Publish → Appears in /blog (public)
-4. Cache invalidation → an:page:blog:* cleared on publish/update
+| Cache Area | Pattern | TTL |
+|---|---|---:|
+| Product list | `query:products:*` | 15m |
+| Product detail | `query:product:*` | 15m |
+| Related products | `query:related:*` | 15m |
+| Blog | `query:blog:*` | 15m |
+| CMS sections | `query:cms:*` | 30m |
+| Testimonials | `query:testimonials:*` | 15m |
+| Config | `config:*` | 30m |
+| Future page cache | `page:*` | 1h |
 
-Blog listing view options (admin toggle):
-  - Grid view: 3-column cards with cover image
-  - List view: compact rows
+Invalidation helpers:
 
-Blog public pages:
-  /blog          → Grid of published posts (3 col), pagination
-  /blog/[slug]   → Full post detail with related posts
-```
+- `cacheInvalidate.products()`
+- `cacheInvalidate.orders()`
+- `cacheInvalidate.blog()`
+- `cacheInvalidate.cms()`
+- `cacheInvalidate.config()`
+- `cacheInvalidate.testimonials()`
 
-### Blog Config (admin-configurable)
-
-```
-siteConfig keys:
-  blog_enabled:      true/false
-  blog_title:        "APRAS Naturals Journal"
-  blog_subtitle:     "Stories of purity, tradition & wellness"
-  blog_layout:       grid | list
-  blog_posts_per_page: 9
-  blog_show_author:  true/false
-  blog_show_read_time: true/false
-  blog_show_related: true/false
-  blog_related_count: 3
-```
+Audit note: product admin routes currently call lower-level `invalidateByPrefix()`. Prefer the named helpers when continuing work.
 
 ---
 
-## 7. FEATURE SPECS — CMS / LANDING PAGE
+## 6. API Inventory
 
-### CMS Sections (all configurable from admin)
+### Public
 
-| Section Key | Configurable Fields |
-|-------------|-------------------|
-| `hero` | heading, subheading, badge text, CTA buttons, video URL, show/hide |
-| `marquee` | items array (text + icon), speed, show/hide |
-| `promise` | eyebrow, heading, subheading, cards (icon, title, body) × 3 |
-| `purity` | eyebrow, heading, bullets × 3, image |
-| `products` | eyebrow, heading, show variants, featured products (select) |
-| `ghee` | eyebrow, heading, subheading, bullets × 4, images × 3 |
-| `gallery` | eyebrow, heading, images × N (MediaUploader) |
-| `leadership` | eyebrow, heading, body text, badge text |
-| `testimonials` | eyebrow, heading, featured testimonials (select) |
-| `how_it_works` | eyebrow, heading, steps × 3 |
-| `mission` | quote text, attribution |
-| `faq` | eyebrow, heading, faqs array (question, answer) |
-| `cta` | heading, subheading, primary button, secondary button |
+| Endpoint | Auth | Status |
+|---|---|---|
+| `GET /api/health` | None | ✅ |
+| `GET /api/products` | None | ✅ |
+| `GET /api/products/[slug]` | None | ✅ |
+| `POST /api/orders` | Optional customer / guest | ✅ |
+| `POST /api/orders/[id]/upload-proof` | Signed order token | ✅ |
+| `GET /api/blog` | None | ✅ |
+| `GET /api/blog/[slug]` | None | ✅ |
+| `GET /api/cms` | None | ✅ |
 
-### CMS Config Storage
+### Auth
 
-```typescript
-// cmsSections table: one row per section
-// config column is jsonb with section-specific fields
+| Endpoint | Auth | Status |
+|---|---|---|
+| `POST /api/auth/login` | None | ✅ |
+| `POST /api/auth/register` | None | ✅ |
+| `GET /api/auth/me` | Customer/admin | ✅ |
+| `POST /api/auth/logout` | None | ✅ |
 
-// Example hero config:
-{
-  "heading": "Nature's Liquid Gold",
-  "subheading": "Uncompromised. Unprocessed. Unadulterated.",
-  "badgeText": "Authorized Partner of Prakvedaa",
-  "primaryCta": { "label": "Explore Collection", "href": "/shop" },
-  "secondaryCta": { "label": "Request Free Sample", "href": "/checkout?sample=true" },
-  "videoUrl": "/videos/APRUS.mp4"
-}
+### Customer
 
-// Admin edits via form → PUT /api/admin/cms/{sectionKey}
-// → Updates cmsSections.config
-// → Invalidates an:page:cms:landing cache
-```
+| Endpoint | Auth | Status |
+|---|---|---|
+| `GET /api/customer/orders` | Customer | ✅ |
+| `GET /api/customer/orders/[id]` | Customer | ✅ |
+| `GET /api/customer/profile` | Customer | ✅ |
+| `PATCH /api/customer/profile` | Customer | ✅ |
+| `POST /api/customer/addresses` | Customer | ✅ |
+| `DELETE /api/customer/addresses?id=` | Customer | ✅ |
 
----
+### Admin
 
-## 8. WHATSAPP INTEGRATION (Meta Cloud API)
-
-### Order Notification Template
-
-```
-When order placed (payment_uploaded):
-→ Admin receives WhatsApp:
-  "🆕 New Order: AN-2024-0001
-   Customer: Rahul Sharma (+91-9876543210)
-   Items: Tulsi Honey 500g ×2, Karanj Honey 1kg ×1
-   Total: ₹1,399
-   Payment: Proof uploaded ✅
-   [View Order → link]"
-
-When admin confirms:
-→ Customer receives WhatsApp:
-  "✅ Order Confirmed!
-   Your order AN-2024-0001 has been confirmed.
-   We'll ship within 24-48 hours. Thank you for choosing APRAS Naturals! 🍯"
-
-When shipped:
-→ Customer receives:
-  "📦 Your order is on its way!
-   Order: AN-2024-0001
-   Tracking: [number]
-   Courier: [name]
-   Expected: [date]"
-```
+| Endpoint | Auth | Status |
+|---|---|---|
+| `GET /api/admin/analytics` | Admin | ✅ |
+| `GET /api/admin/analytics/dashboard` | Admin | ✅ |
+| `GET/PATCH/POST /api/admin/whatsapp` | Admin | ✅ |
+| `POST /api/admin/orders/[id]/whatsapp` | Admin | ✅ |
+| `GET /api/admin/orders` | Admin | ✅ |
+| `GET/PATCH /api/admin/orders/[id]` | Admin | ✅ |
+| `GET/POST /api/admin/products` | Admin | ✅ |
+| `GET/PUT/DELETE /api/admin/products/[id]` | Admin | ✅ |
+| `GET/POST /api/admin/blog` | Admin | ✅ |
+| `GET/PATCH/DELETE /api/admin/blog/[id]` | Admin | ✅ |
+| `GET/POST/PATCH/DELETE /api/admin/blog/categories` | Admin | ✅ |
+| `GET /api/admin/cms` | Admin | ✅ |
+| `GET/PUT /api/admin/cms/[sectionKey]` | Admin | ✅ |
+| `GET/PATCH /api/admin/config` | Admin | ✅ |
+| `POST /api/media/upload` | Admin | ✅ |
+| `GET /api/admin/customers` | Admin | ✅ |
+| `GET/PATCH /api/admin/customers/[id]` | Admin | ✅ |
+| `GET /api/admin/media` | Admin | ✅ |
+| `GET/PATCH/DELETE /api/admin/media/[id]` | Admin | ✅ |
 
 ---
 
-## 9. CUSTOMER PORTAL — UI/UX
+## 7. Feature Specifications
 
-**Layout**: Top navigation (exactly like StockSense member layout)
+### 7.1 E-Commerce Flow
 
-```
-Header (64px fixed):
-  [🍯 APRAS Logo]  [Orders]  [Profile]  [Logout]  |  [User name] avatar
+Built:
 
-Pages:
-  /orders          → Order list (cards with status badges)
-  /orders/[id]     → Order detail + timeline roadmap
-  /profile         → Name, phone, email, saved addresses
-```
+- Product listing with category filter.
+- Product detail with gallery, variant selector, quantity, related products.
+- Cart context with localStorage.
+- Cart drawer from CustomerHeader.
+- Checkout address/review.
+- Free sample request path.
+- Order creation with snapshot line items.
+- Server-side order price recalculation.
+- Atomic variant stock decrement.
+- Payment proof upload with signed order token.
+- Admin verification/status updates.
 
-### Order Detail Roadmap Component
+Still needed:
 
-```
-Visual timeline showing order stages:
-  ● Order Placed     → [date]
-  ● Payment Uploaded → [date]  
-  ● Payment Verified → [date]  ← admin action
-  ● Order Confirmed  → [date]
-  ● Processing       → [date]
-  ○ Shipped          → [tracking info]
-  ○ Delivered        → [expected date]
+- Order cancel/refund workflow.
+- Coupon/discount module if required later.
+- Shipping method module if carriers become dynamic.
 
-Stages are filled/unfilled based on current status.
-Current stage pulsing amber indicator.
-```
+### 7.2 Payment Flow
+
+Built:
+
+- Payment gateway interface.
+- Offline QR gateway.
+- Registry-backed order creation/payment session.
+- QR/UPI/company admin config.
+- Payment proof upload.
+- Admin manual verification.
+
+Still needed later:
+
+- Gateway webhooks for future online providers.
+- Gateway audit logs when online gateways are added.
+
+### 7.3 CMS Flow
+
+Built:
+
+- 13 seeded CMS sections.
+- `/home` fetches enabled sections.
+- Admin list and enabled toggle.
+- `/admin/cms/[sectionKey]` editor for enabled state, sort order, and JSON config.
+
+Still needed:
+
+- Section-specific schema validation.
+- CMS media selection from admin media library.
+
+### 7.4 Blog Flow
+
+Built:
+
+- Blog list/detail.
+- Admin blog list/new/edit/delete.
+- Publish/draft/archive.
+- Cover image upload.
+- Category admin.
+
+Still needed:
+
+- Related post rendering.
+- RSS if useful.
+
+### 7.5 Media Flow
+
+Built:
+
+- Upload API writes local files in dev and DB metadata.
+- Admin auth required on upload.
+- MediaUploader component.
+- Cloudflare R2 signed PUT upload helper for configured/production storage.
 
 ---
 
-## 10. ADMIN PANEL — UI/UX
+## 8. Security Requirements
 
-**Layout**: Left sidebar (exactly like StockSense admin layout)
+Must complete before production:
 
-```
-Sidebar (240px dark amber):
-  [🍯 APRAS Admin]
-  ─────────────────
-  📊 Dashboard
-  📦 Orders
-  🛍️  Products
-  👥 Customers
-  📝 Blog
-  🖼️  Media
-  🎨 CMS / Appearance
-  📣 WhatsApp
-  📈 Analytics
-  ⚙️  Settings
+- ✅ Redis rate limiting for login, registration, forgot password, and resend verification.
+- ✅ Signed payment-proof upload tokens.
+- ✅ Same-site mutation hardening for authenticated API writes.
+- ✅ Sanitize rich HTML inputs for blog content and product long descriptions before rendering.
+- ✅ Encrypt secret config values before real provider keys are stored.
+- 🔴 Replace seed admin password process with secure first-admin setup or forced rotation.
+- 🔴 Add audit logs for admin order/payment/status changes.
+- 🔴 Ensure media upload accepts only configured types and sizes.
 
-Content area: remaining width, bg var(--bg-primary)
-```
+---
 
-### Admin Dashboard Widgets
+## 9. Data Integrity Requirements
 
-```
-Row 1 (4 cols):
-  - Total Orders (today) | trend vs yesterday
-  - Revenue (this month) | trend
-  - Pending Verification (orders) | action required
-  - New Customers (this week)
+Already improved:
 
-Row 2 (2 cols):
-  - Recent Orders table (last 10) with status badges
-  - Order Status Distribution (simple bar chart)
+- ✅ Order header, items, and initial history are inserted in one Drizzle transaction.
+- ✅ Order placement atomically decrements variant stock.
+- ✅ Order numbers use DB-backed sequence table.
+- ✅ Product and variant uniqueness uses DB constraints.
+- ✅ Media deletion is guarded when referenced by products/blog/CMS/site config.
+- ✅ Product variant edits preserve ordered variants by deactivating removed variants.
+- ✅ Product delete archives active products when variants are referenced by historical orders.
 
-Row 3:
-  - Quick Actions: New Product | New Blog | View Pending Orders
+---
+
+## 10. Build Verification
+
+Latest successful local verification:
+
+```bash
+npm run verify
 ```
 
-### Order Management Features
+Build output includes:
 
-```
-Orders list:
-  - Filter by: status, date range, payment status
-  - Search by: order number, customer name, phone
-  - Bulk actions: verify payment, export CSV
-
-Order detail:
-  - Customer info + address
-  - Items with images
-  - Payment proof image (full preview on click)
-  - Status update dropdown
-  - Admin notes text area
-  - WhatsApp send buttons (confirm / shipped notifications)
-  - Tracking number + courier input
-  - Status history timeline
-```
+- `/`
+- `/home`
+- `/shop`
+- `/shop/[slug]`
+- `/blog`
+- `/blog/[slug]`
+- `/checkout`
+- `/checkout/payment`
+- `/orders`
+- `/orders/[id]`
+- `/profile`
+- `/admin/dashboard`
+- `/admin/orders`
+- `/admin/products`
+- `/admin/blog`
+- `/admin/cms`
+- `/admin/cms/[sectionKey]`
+- `/admin/settings`
+- all listed API route handlers

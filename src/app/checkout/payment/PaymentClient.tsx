@@ -19,6 +19,7 @@ export default function PaymentClient({ qrUrl, upiId, companyName }: PaymentClie
 
   const orderId     = params.get("orderId") ?? "";
   const orderNumber = params.get("orderNumber") ?? "";
+  const uploadToken = params.get("token") ?? "";
   const totalPaise  = parseInt(params.get("total") ?? "0");
   const totalFormatted = `₹${(totalPaise / 100).toLocaleString("en-IN")}`;
 
@@ -40,6 +41,7 @@ export default function PaymentClient({ qrUrl, upiId, companyName }: PaymentClie
     try {
       const form = new FormData();
       form.append("proof", file);
+      form.append("token", uploadToken);
       const res = await fetch(`/api/orders/${orderId}/upload-proof`, { method: "POST", body: form });
       const data = await res.json();
       if (!data.success) { showError(data.error ?? "Upload failed"); return; }

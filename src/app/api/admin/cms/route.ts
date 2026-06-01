@@ -4,11 +4,14 @@ import { cmsSections } from "@/lib/db/schema";
 import { asc } from "drizzle-orm";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError } from "@/lib/errors";
+import { requireModuleApi } from "@/lib/modules";
 
 export async function GET(req: NextRequest) {
   try {
     const authResult = await createAdminGuard()(req);
     if (authResult) return authResult;
+    const moduleResult = await requireModuleApi("cms");
+    if (moduleResult) return moduleResult;
     const rows = await db.select().from(cmsSections).orderBy(asc(cmsSections.sortOrder));
     return NextResponse.json({ success: true, data: rows });
   } catch (err) {

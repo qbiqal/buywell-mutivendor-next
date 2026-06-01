@@ -4,6 +4,7 @@ import { orders, orderItems, orderStatusHistory } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { createAuthGuard, getAuthPayload } from "@/lib/middleware";
 import { handleApiError, NotFoundError, ForbiddenError } from "@/lib/errors";
+import { requireModuleApi } from "@/lib/modules";
 
 export async function GET(
   req: NextRequest,
@@ -12,6 +13,8 @@ export async function GET(
   try {
     const authResult = await createAuthGuard()(req);
     if (authResult) return authResult;
+    const moduleResult = await requireModuleApi("ecommerce");
+    if (moduleResult) return moduleResult;
 
     const payload = await getAuthPayload(req);
     const { id } = await params;

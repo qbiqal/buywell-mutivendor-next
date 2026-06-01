@@ -1,12 +1,72 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Input, Textarea } from "@/components/ui/Input";
+import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/Card";
 import { MediaUploader } from "@/components/media/MediaUploader";
 import { useToast } from "@/components/ui/Toast";
 import type { UploadedFile } from "@/components/media/MediaUploader";
 import styles from "./settings.module.css";
+
+const MODULE_SETTINGS = [
+  { key: "module_core_enabled", label: "Core", description: "Auth, admin shell, settings, DB, Redis, cache", locked: true },
+  { key: "module_cms_enabled", label: "CMS", description: "Homepage sections, landing content, testimonials" },
+  { key: "module_blog_enabled", label: "Blog", description: "Public blog and admin blog publishing" },
+  { key: "module_ecommerce_enabled", label: "E-Commerce", description: "Shop, cart, checkout, orders, products, payment modules" },
+] as const;
+
+const NOTIFICATION_KEYS = [
+  "notification_in_app_enabled",
+  "notification_email_enabled",
+  "notification_email_provider",
+  "notification_email_from",
+  "notification_resend_enabled",
+  "notification_resend_api_key",
+  "notification_sms_enabled",
+  "notification_sms_provider",
+  "notification_sms_api_key",
+  "notification_sms_sender_id",
+  "notification_sms_auth_token",
+  "notification_whatsapp_enabled",
+  "notification_telegram_enabled",
+  "notification_telegram_bot_token",
+  "notification_telegram_chat_id",
+  "notification_push_enabled",
+  "notification_push_provider",
+  "notification_push_vapid_public_key",
+  "notification_push_vapid_private_key",
+  "notification_push_vapid_subject",
+];
+
+const OTP_KEYS = [
+  "otp_email_enabled",
+  "otp_email_verification_enabled",
+  "otp_password_reset_enabled",
+  "otp_email_verification_ttl_minutes",
+  "otp_password_reset_ttl_minutes",
+  "otp_max_attempts",
+];
+
+const EXTERNAL_KEY_SETTINGS = [
+  "whatsapp_phone_number_id",
+  "whatsapp_access_token",
+  "media_storage",
+  "media_r2_account_id",
+  "media_r2_access_key_id",
+  "media_r2_secret_access_key",
+  "media_r2_bucket_name",
+  "media_r2_public_url",
+  "payment_razorpay_enabled",
+  "payment_razorpay_key_id",
+  "payment_razorpay_key_secret",
+  "payment_stripe_enabled",
+  "payment_stripe_publishable_key",
+  "payment_stripe_secret_key",
+  "payment_stripe_webhook_secret",
+  "sentry_enabled",
+  "sentry_dsn",
+  "sentry_environment",
+];
 
 export default function AdminSettingsClient() {
   const { success, error: showError } = useToast();
@@ -24,6 +84,11 @@ export default function AdminSettingsClient() {
   function set(key: string) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setConfig((p) => ({ ...p, [key]: e.target.value }));
+  }
+
+  function setCheckbox(key: string) {
+    return (e: React.ChangeEvent<HTMLInputElement>) =>
+      setConfig((p) => ({ ...p, [key]: e.target.checked ? "true" : "false" }));
   }
 
   async function save(keys: string[]) {
@@ -49,8 +114,229 @@ export default function AdminSettingsClient() {
     <div className={styles.content}>
       <div className="admin-page-header">
         <h1 className="admin-page-title">Settings</h1>
-        <p className="admin-page-subtitle">Configure site information, payment, and shipping</p>
+        <p className="admin-page-subtitle">Configure modules, site information, localization, payment, and shipping</p>
       </div>
+
+      {/* Module Controls */}
+      <Card padding="none" className={styles.settingsCard}>
+        <CardHeader><h2 className={styles.sectionTitle}>Modules</h2></CardHeader>
+        <CardBody className={styles.cardFields}>
+          <p className={styles.fieldHint}>Enable only the modules required for this client install. Core is always on.</p>
+          <div className={styles.moduleGrid}>
+            {MODULE_SETTINGS.map((module) => (
+              <label key={module.key} className={[styles.moduleToggle, "locked" in module && module.locked ? styles.moduleLocked : ""].join(" ")}>
+                <input
+                  type="checkbox"
+                  checked={(config[module.key] ?? "true") !== "false"}
+                  onChange={setCheckbox(module.key)}
+                  disabled={"locked" in module && module.locked}
+                />
+                <span>
+                  <strong>{module.label}</strong>
+                  <small>{module.description}</small>
+                </span>
+              </label>
+            ))}
+          </div>
+        </CardBody>
+        <CardFooter>
+          <Button
+            variant="primary"
+            loading={saving}
+            onClick={() => save(["module_core_enabled","module_cms_enabled","module_blog_enabled","module_ecommerce_enabled"])}
+          >
+            Save Modules
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {/* Notification Gateway Settings */}
+      <Card padding="none" className={styles.settingsCard}>
+        <CardHeader><h2 className={styles.sectionTitle}>Notifications & Gateways</h2></CardHeader>
+        <CardBody className={styles.cardFields}>
+          <p className={styles.fieldHint}>Core notification channels are toggleable here. Resend is the first email gateway; SMS, Telegram, WhatsApp, and push have provider slots for future adapters.</p>
+          <div className={styles.moduleGrid}>
+            <label className={styles.moduleToggle}>
+              <input type="checkbox" checked={(config.notification_in_app_enabled ?? "true") !== "false"} onChange={setCheckbox("notification_in_app_enabled")} />
+              <span><strong>In-app</strong><small>Stores notifications for the signed-in user</small></span>
+            </label>
+            <label className={styles.moduleToggle}>
+              <input type="checkbox" checked={(config.notification_email_enabled ?? "true") !== "false"} onChange={setCheckbox("notification_email_enabled")} />
+              <span><strong>Email</strong><small>Routes through the active email provider</small></span>
+            </label>
+            <label className={styles.moduleToggle}>
+              <input type="checkbox" checked={config.notification_sms_enabled === "true"} onChange={setCheckbox("notification_sms_enabled")} />
+              <span><strong>SMS</strong><small>Disabled until a provider adapter is added</small></span>
+            </label>
+            <label className={styles.moduleToggle}>
+              <input type="checkbox" checked={(config.notification_whatsapp_enabled ?? "true") !== "false"} onChange={setCheckbox("notification_whatsapp_enabled")} />
+              <span><strong>WhatsApp</strong><small>Uses current WhatsApp panel/provider configuration</small></span>
+            </label>
+            <label className={styles.moduleToggle}>
+              <input type="checkbox" checked={config.notification_telegram_enabled === "true"} onChange={setCheckbox("notification_telegram_enabled")} />
+              <span><strong>Telegram</strong><small>Disabled until a bot adapter is added</small></span>
+            </label>
+            <label className={styles.moduleToggle}>
+              <input type="checkbox" checked={config.notification_push_enabled === "true"} onChange={setCheckbox("notification_push_enabled")} />
+              <span><strong>Push</strong><small>Stores browser subscriptions for future Web Push sends</small></span>
+            </label>
+          </div>
+          <div className={styles.formRow}>
+            <Select
+              label="Email Provider"
+              value={config.notification_email_provider ?? "resend"}
+              onChange={(e) => setConfig((p) => ({ ...p, notification_email_provider: e.target.value }))}
+              options={[{ value: "resend", label: "Resend" }]}
+            />
+            <Input label="From Email" value={config.notification_email_from ?? ""} onChange={set("notification_email_from")} placeholder="APRAS Naturals <no-reply@example.com>" />
+          </div>
+          <label className={styles.inlineCheck}>
+            <input
+              type="checkbox"
+              checked={(config.notification_resend_enabled ?? "true") !== "false"}
+              onChange={setCheckbox("notification_resend_enabled")}
+            />
+            Enable Resend email gateway
+          </label>
+          <Input
+            label="Resend API Key"
+            type="password"
+            value={config.notification_resend_api_key ?? ""}
+            onChange={set("notification_resend_api_key")}
+            placeholder="re_..."
+            autoComplete="off"
+          />
+          <div className={styles.formRow}>
+            <Input label="SMS Provider Key" value={config.notification_sms_provider ?? ""} onChange={set("notification_sms_provider")} placeholder="future_sms_provider" />
+            <Input label="Push Provider Key" value={config.notification_push_provider ?? "web_push"} onChange={set("notification_push_provider")} placeholder="web_push" />
+          </div>
+          <div className={styles.formRow}>
+            <Input label="SMS API Key" type="password" value={config.notification_sms_api_key ?? ""} onChange={set("notification_sms_api_key")} placeholder="provider API key" autoComplete="off" />
+            <Input label="SMS Sender ID" value={config.notification_sms_sender_id ?? ""} onChange={set("notification_sms_sender_id")} placeholder="APRAS" />
+          </div>
+          <Input label="SMS Auth Token" type="password" value={config.notification_sms_auth_token ?? ""} onChange={set("notification_sms_auth_token")} placeholder="provider auth token" autoComplete="off" />
+          <div className={styles.formRow}>
+            <Input label="Telegram Bot Token" type="password" value={config.notification_telegram_bot_token ?? ""} onChange={set("notification_telegram_bot_token")} placeholder="123456:ABC..." autoComplete="off" />
+            <Input label="Telegram Chat ID" value={config.notification_telegram_chat_id ?? ""} onChange={set("notification_telegram_chat_id")} placeholder="-100..." />
+          </div>
+          <div className={styles.formRow}>
+            <Input label="Web Push VAPID Public Key" value={config.notification_push_vapid_public_key ?? ""} onChange={set("notification_push_vapid_public_key")} placeholder="B..." />
+            <Input label="Web Push VAPID Private Key" type="password" value={config.notification_push_vapid_private_key ?? ""} onChange={set("notification_push_vapid_private_key")} placeholder="private key" autoComplete="off" />
+          </div>
+          <Input label="Web Push Subject" value={config.notification_push_vapid_subject ?? ""} onChange={set("notification_push_vapid_subject")} placeholder="mailto:admin@example.com" />
+        </CardBody>
+        <CardFooter>
+          <Button variant="primary" loading={saving} onClick={() => save(NOTIFICATION_KEYS)}>
+            Save Notifications
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {/* OTP Settings */}
+      <Card padding="none" className={styles.settingsCard}>
+        <CardHeader><h2 className={styles.sectionTitle}>OTP & Account Recovery</h2></CardHeader>
+        <CardBody className={styles.cardFields}>
+          <div className={styles.moduleGrid}>
+            <label className={styles.moduleToggle}>
+              <input type="checkbox" checked={(config.otp_email_enabled ?? "true") !== "false"} onChange={setCheckbox("otp_email_enabled")} />
+              <span><strong>Email OTP</strong><small>Master switch for email-based one-time codes</small></span>
+            </label>
+            <label className={styles.moduleToggle}>
+              <input type="checkbox" checked={(config.otp_email_verification_enabled ?? "true") !== "false"} onChange={setCheckbox("otp_email_verification_enabled")} />
+              <span><strong>Email Verification</strong><small>Sends verification code after registration</small></span>
+            </label>
+            <label className={styles.moduleToggle}>
+              <input type="checkbox" checked={(config.otp_password_reset_enabled ?? "true") !== "false"} onChange={setCheckbox("otp_password_reset_enabled")} />
+              <span><strong>Password Reset</strong><small>Sends reset code for forgot password</small></span>
+            </label>
+          </div>
+          <div className={styles.formRow}>
+            <Input label="Verification TTL (minutes)" value={config.otp_email_verification_ttl_minutes ?? "60"} onChange={set("otp_email_verification_ttl_minutes")} type="number" min="1" />
+            <Input label="Password Reset TTL (minutes)" value={config.otp_password_reset_ttl_minutes ?? "30"} onChange={set("otp_password_reset_ttl_minutes")} type="number" min="1" />
+          </div>
+          <Input label="Max OTP Attempts" value={config.otp_max_attempts ?? "5"} onChange={set("otp_max_attempts")} type="number" min="1" />
+        </CardBody>
+        <CardFooter>
+          <Button variant="primary" loading={saving} onClick={() => save(OTP_KEYS)}>
+            Save OTP Settings
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {/* External Provider Keys */}
+      <Card padding="none" className={styles.settingsCard}>
+        <CardHeader><h2 className={styles.sectionTitle}>External Provider Keys</h2></CardHeader>
+        <CardBody className={styles.cardFields}>
+          <p className={styles.fieldHint}>Admin values are encrypted before storage. If a field is empty, the matching `.env` value is used as fallback.</p>
+
+          <div className={styles.subSection}>
+            <h3 className={styles.subTitle}>WhatsApp Meta Cloud</h3>
+            <div className={styles.formRow}>
+              <Input label="Phone Number ID" type="password" value={config.whatsapp_phone_number_id ?? ""} onChange={set("whatsapp_phone_number_id")} placeholder="WHATSAPP_PHONE_NUMBER_ID" autoComplete="off" />
+              <Input label="Access Token" type="password" value={config.whatsapp_access_token ?? ""} onChange={set("whatsapp_access_token")} placeholder="WHATSAPP_ACCESS_TOKEN" autoComplete="off" />
+            </div>
+          </div>
+
+          <div className={styles.subSection}>
+            <h3 className={styles.subTitle}>Cloudflare R2</h3>
+            <Select
+              label="Media Storage"
+              value={config.media_storage ?? "local"}
+              onChange={(e) => setConfig((p) => ({ ...p, media_storage: e.target.value }))}
+              options={[{ value: "local", label: "Local" }, { value: "r2", label: "Cloudflare R2" }]}
+            />
+            <div className={styles.formRow}>
+              <Input label="R2 Account ID" value={config.media_r2_account_id ?? ""} onChange={set("media_r2_account_id")} placeholder="CLOUDFLARE_R2_ACCOUNT_ID" />
+              <Input label="R2 Bucket" value={config.media_r2_bucket_name ?? ""} onChange={set("media_r2_bucket_name")} placeholder="CLOUDFLARE_R2_BUCKET_NAME" />
+            </div>
+            <div className={styles.formRow}>
+              <Input label="R2 Access Key ID" type="password" value={config.media_r2_access_key_id ?? ""} onChange={set("media_r2_access_key_id")} placeholder="CLOUDFLARE_R2_ACCESS_KEY_ID" autoComplete="off" />
+              <Input label="R2 Secret Access Key" type="password" value={config.media_r2_secret_access_key ?? ""} onChange={set("media_r2_secret_access_key")} placeholder="CLOUDFLARE_R2_SECRET_ACCESS_KEY" autoComplete="off" />
+            </div>
+            <Input label="R2 Public URL" value={config.media_r2_public_url ?? ""} onChange={set("media_r2_public_url")} placeholder="https://media.example.com" />
+          </div>
+
+          <div className={styles.subSection}>
+            <h3 className={styles.subTitle}>Future Payment Gateways</h3>
+            <div className={styles.moduleGrid}>
+              <label className={styles.moduleToggle}>
+                <input type="checkbox" checked={config.payment_razorpay_enabled === "true"} onChange={setCheckbox("payment_razorpay_enabled")} />
+                <span><strong>Razorpay</strong><small>Provider keys are stored now; adapter is added when gateway module is built</small></span>
+              </label>
+              <label className={styles.moduleToggle}>
+                <input type="checkbox" checked={config.payment_stripe_enabled === "true"} onChange={setCheckbox("payment_stripe_enabled")} />
+                <span><strong>Stripe</strong><small>Provider keys are stored now; adapter is added when gateway module is built</small></span>
+              </label>
+            </div>
+            <div className={styles.formRow}>
+              <Input label="Razorpay Key ID" type="password" value={config.payment_razorpay_key_id ?? ""} onChange={set("payment_razorpay_key_id")} placeholder="RAZORPAY_KEY_ID" autoComplete="off" />
+              <Input label="Razorpay Key Secret" type="password" value={config.payment_razorpay_key_secret ?? ""} onChange={set("payment_razorpay_key_secret")} placeholder="RAZORPAY_KEY_SECRET" autoComplete="off" />
+            </div>
+            <div className={styles.formRow}>
+              <Input label="Stripe Publishable Key" value={config.payment_stripe_publishable_key ?? ""} onChange={set("payment_stripe_publishable_key")} placeholder="pk_..." />
+              <Input label="Stripe Secret Key" type="password" value={config.payment_stripe_secret_key ?? ""} onChange={set("payment_stripe_secret_key")} placeholder="sk_..." autoComplete="off" />
+            </div>
+            <Input label="Stripe Webhook Secret" type="password" value={config.payment_stripe_webhook_secret ?? ""} onChange={set("payment_stripe_webhook_secret")} placeholder="whsec_..." autoComplete="off" />
+          </div>
+
+          <div className={styles.subSection}>
+            <h3 className={styles.subTitle}>Observability</h3>
+            <label className={styles.inlineCheck}>
+              <input type="checkbox" checked={config.sentry_enabled === "true"} onChange={setCheckbox("sentry_enabled")} />
+              Enable Sentry when DSN is configured
+            </label>
+            <div className={styles.formRow}>
+              <Input label="Sentry DSN" type="password" value={config.sentry_dsn ?? ""} onChange={set("sentry_dsn")} placeholder="SENTRY_DSN" autoComplete="off" />
+              <Input label="Sentry Environment" value={config.sentry_environment ?? "production"} onChange={set("sentry_environment")} placeholder="production" />
+            </div>
+          </div>
+        </CardBody>
+        <CardFooter>
+          <Button variant="primary" loading={saving} onClick={() => save(EXTERNAL_KEY_SETTINGS)}>
+            Save External Keys
+          </Button>
+        </CardFooter>
+      </Card>
 
       {/* Site Info */}
       <Card padding="none" className={styles.settingsCard}>
@@ -69,10 +355,49 @@ export default function AdminSettingsClient() {
         </CardFooter>
       </Card>
 
+      {/* Localization */}
+      <Card padding="none" className={styles.settingsCard}>
+        <CardHeader><h2 className={styles.sectionTitle}>Localization & Currency</h2></CardHeader>
+        <CardBody className={styles.cardFields}>
+          <div className={styles.formRow}>
+            <Input label="Default Locale" value={config.locale_default ?? "en"} onChange={set("locale_default")} placeholder="en" />
+            <Input label="Enabled Locales" value={config.locales_enabled ?? "en,hi"} onChange={set("locales_enabled")} placeholder="en,hi" />
+          </div>
+          <div className={styles.formRow}>
+            <Input label="Default Currency" value={config.currency_default ?? "INR"} onChange={set("currency_default")} placeholder="INR" />
+            <Input label="Enabled Currencies" value={config.currencies_enabled ?? "INR"} onChange={set("currencies_enabled")} placeholder="INR,USD" />
+          </div>
+          <Textarea
+            label="Currency Rates JSON"
+            value={config.currency_rates_json ?? "{\"INR\":1}"}
+            onChange={set("currency_rates_json")}
+            placeholder='{"INR":1,"USD":0.012}'
+            rows={3}
+          />
+        </CardBody>
+        <CardFooter>
+          <Button
+            variant="primary"
+            loading={saving}
+            onClick={() => save(["locale_default","locales_enabled","currency_default","currencies_enabled","currency_rates_json"])}
+          >
+            Save Localization
+          </Button>
+        </CardFooter>
+      </Card>
+
       {/* Payment Settings */}
       <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>Payment — QR Code Setup</h2></CardHeader>
         <CardBody className={styles.cardFields}>
+          <label className={styles.inlineCheck}>
+            <input
+              type="checkbox"
+              checked={(config.payment_offline_qr_enabled ?? "true") !== "false"}
+              onChange={setCheckbox("payment_offline_qr_enabled")}
+            />
+            Enable Offline QR payment gateway
+          </label>
           <div>
             <p className={styles.fieldLabel}>QR Code Image</p>
             <p className={styles.fieldHint}>This QR code is shown to customers on the payment page. Recommended: 800×800px (1:1)</p>
@@ -94,7 +419,7 @@ export default function AdminSettingsClient() {
           <Input label="Company Name (shown on payment page)" value={config.payment_company_name ?? ""} onChange={set("payment_company_name")} placeholder="APRAS Naturals" />
         </CardBody>
         <CardFooter>
-          <Button variant="primary" loading={saving} onClick={() => save(["payment_qr_url","payment_upi_id","payment_company_name"])}>
+          <Button variant="primary" loading={saving} onClick={() => save(["payment_offline_qr_enabled","payment_qr_url","payment_upi_id","payment_company_name"])}>
             Save Payment Settings
           </Button>
         </CardFooter>

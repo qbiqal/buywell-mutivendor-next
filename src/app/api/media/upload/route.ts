@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { media } from "@/lib/db/schema";
-import { getAuthPayload } from "@/lib/middleware";
+import { createAdminGuard, getAuthPayload } from "@/lib/middleware";
 import { handleApiError, ValidationError } from "@/lib/errors";
+import { getAllSiteConfig } from "@/lib/config";
 import path from "path";
 import fs from "fs/promises";
 
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB for homepage/product videos
 const ALLOWED_TYPES  = ["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/webm"];
 
 export async function POST(req: NextRequest) {
   try {
+    const authResult = await createAdminGuard()(req);
+    if (authResult) return authResult;
+
     const payload = await getAuthPayload(req);
 
     const formData = await req.formData();
@@ -27,9 +31,8 @@ export async function POST(req: NextRequest) {
     const buffer   = Buffer.from(bytes);
 
     let url: string;
-    let width: number | undefined;
-    let height: number | undefined;
-    const storage: "local" | "r2" = (process.env.NODE_ENV === "production" && process.env.CLOUDFLARE_R2_BUCKET_NAME)
+    const mediaConfig = await getAllSiteConfig("media");
+    const storage: "local" | "r2" = (mediaConfig.media_storage === "r2" || (process.env.NODE_ENV === "production" && process.env.CLOUDFLARE_R2_BUCKET_NAME))
       ? "r2"
       : "local";
 

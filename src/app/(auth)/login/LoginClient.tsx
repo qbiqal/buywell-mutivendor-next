@@ -68,6 +68,7 @@ export default function LoginClient() {
             placeholder="••••••••"
             required
           />
+          <Link href="/forgot-password" className={styles.formLink}>Forgot password?</Link>
           <Button type="submit" variant="primary" fullWidth loading={loading} size="lg">
             Sign In
           </Button>
@@ -78,7 +79,7 @@ export default function LoginClient() {
           <Link href="/register" className={styles.link}>Create one</Link>
         </p>
         <p className={styles.footer} style={{ marginTop: 8 }}>
-          <Link href="/" className={styles.link}>← Back to Home</Link>
+          <Link href="/" className={styles.link}>Back to Home</Link>
         </p>
       </div>
     </div>

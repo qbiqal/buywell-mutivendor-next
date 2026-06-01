@@ -26,12 +26,12 @@
 /* ── Variants ── */
 .primary {
   background: linear-gradient(135deg, var(--amber), var(--amber-lt));
-  color: var(--ink);
-  box-shadow: 0 4px 16px rgba(217,119,6,0.3);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(45,125,70,0.3);
 }
 .primary:not(:disabled):hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-amber);
+  box-shadow: var(--shadow-green);
 }
 
 .secondary {
@@ -39,7 +39,7 @@
   color: #fff;
 }
 .secondary:not(:disabled):hover {
-  background: #2d1a06;
+  background: var(--green-dk);
   transform: translateY(-1px);
 }
 

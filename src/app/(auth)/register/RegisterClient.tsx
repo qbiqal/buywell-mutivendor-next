@@ -28,8 +28,9 @@ export default function RegisterClient() {
       });
       const data = await res.json();
       if (!data.success) { showError(data.error ?? "Registration failed"); return; }
-      success("Account created!", "Welcome to APRAS Naturals");
-      router.push("/shop");
+      success("Account created", "Check your email for the verification code");
+      const query = new URLSearchParams({ email: form.email }).toString();
+      router.push(`/verify-email?${query}`);
       router.refresh();
     } finally {
       setLoading(false);
@@ -64,7 +65,7 @@ export default function RegisterClient() {
           <Link href="/login" className={styles.link}>Sign in</Link>
         </p>
         <p className={styles.footer} style={{ marginTop: 8 }}>
-          <Link href="/" className={styles.link}>← Back to Home</Link>
+          <Link href="/" className={styles.link}>Back to Home</Link>
         </p>
       </div>
     </div>

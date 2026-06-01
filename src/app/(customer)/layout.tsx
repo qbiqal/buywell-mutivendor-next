@@ -4,6 +4,7 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { CustomerHeader } from "@/components/layout/CustomerHeader";
 import { Footer } from "@/components/layout/Footer";
+import { getEnabledPublicNav, getModuleState } from "@/lib/modules";
 
 export default async function CustomerLayout({ children }: { children: React.ReactNode }) {
   let user = null;
@@ -19,10 +20,12 @@ export default async function CustomerLayout({ children }: { children: React.Rea
       if (rows[0]) user = rows[0];
     }
   }
+  const modules = await getModuleState();
+  const navLinks = getEnabledPublicNav(modules);
 
   return (
     <div className="customer-shell">
-      <CustomerHeader user={user} />
+      <CustomerHeader user={user} navLinks={navLinks} ecommerceEnabled={modules.ecommerce} />
       <main className="customer-main">
         {children}
       </main>

@@ -16,7 +16,7 @@ export const offlineQrGateway: PaymentGateway = {
   displayName: "Pay via UPI / QR Code",
 
   async isEnabled(): Promise<boolean> {
-    const enabled = await getSiteConfig("payment_offline_enabled");
+    const enabled = await getSiteConfig("payment_offline_qr_enabled");
     return enabled !== "false";
   },
 

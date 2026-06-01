@@ -3,10 +3,14 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./CustomerHeader.module.css";
-import { useCart } from "@/components/shop/Cart/CartContext";
 import { LogoIcon, LeafLogo } from "@/components/ui/Logo";
 
-const NAV_LINKS = [
+export interface PublicNavItem {
+  label: string;
+  href: string;
+}
+
+const NAV_LINKS: PublicNavItem[] = [
   { label: "Shop",   href: "/shop" },
   { label: "Blog",   href: "/blog" },
   { label: "About",  href: "/#promise" },
@@ -14,14 +18,16 @@ const NAV_LINKS = [
 
 interface CustomerHeaderProps {
   user?: { firstName: string; email: string; role: string } | null;
+  navLinks?: PublicNavItem[];
+  ecommerceEnabled?: boolean;
+  cartSlot?: React.ReactNode;
 }
 
-export function CustomerHeader({ user }: CustomerHeaderProps) {
+export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = true, cartSlot = null }: CustomerHeaderProps) {
   const pathname = usePathname();
   const router   = useRouter();
-  const { itemCount } = useCart();
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled,    setScrolled]    = useState(false);
+  const [menuOpen,    setMenuOpen]    = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -36,6 +42,7 @@ export function CustomerHeader({ user }: CustomerHeaderProps) {
   }
 
   return (
+    <>
     <header className={[styles.header, scrolled ? styles.scrolled : ""].join(" ")}>
       <div className={styles.inner}>
         {/* Logo */}
@@ -46,7 +53,7 @@ export function CustomerHeader({ user }: CustomerHeaderProps) {
 
         {/* Desktop nav */}
         <nav className={styles.nav}>
-          {NAV_LINKS.map((l) => (
+          {navLinks.map((l) => (
             <Link key={l.href} href={l.href} className={[styles.navLink, pathname.startsWith(l.href) ? styles.active : ""].join(" ")}>
               {l.label}
             </Link>
@@ -55,11 +62,7 @@ export function CustomerHeader({ user }: CustomerHeaderProps) {
 
         {/* Right actions */}
         <div className={styles.actions}>
-          {/* Cart */}
-          <Link href="/checkout" className={styles.cartBtn} aria-label="Cart">
-            <span className={styles.cartIcon}>🛒</span>
-            {itemCount > 0 && <span className={styles.cartBadge}>{itemCount}</span>}
-          </Link>
+          {ecommerceEnabled && cartSlot}
 
           {user ? (
             <div className={styles.userMenu}>
@@ -69,8 +72,13 @@ export function CustomerHeader({ user }: CustomerHeaderProps) {
                 <span className={styles.chevron}>▾</span>
               </button>
               <div className={styles.dropdown}>
-                <Link href="/orders" className={styles.dropdownItem}>📦 My Orders</Link>
-                <Link href="/profile" className={styles.dropdownItem}>👤 Profile</Link>
+                {ecommerceEnabled && (
+                  <>
+                    <Link href="/orders" className={styles.dropdownItem}>📦 My Orders</Link>
+                    <Link href="/profile" className={styles.dropdownItem}>👤 Profile</Link>
+                  </>
+                )}
+                <Link href="/notifications" className={styles.dropdownItem}>Notifications</Link>
                 {user.role === "admin" && (
                   <Link href="/admin/dashboard" className={styles.dropdownItem}>⚙️ Admin Panel</Link>
                 )}
@@ -97,15 +105,20 @@ export function CustomerHeader({ user }: CustomerHeaderProps) {
       {/* Mobile drawer */}
       {menuOpen && (
         <div className={styles.mobileDrawer}>
-          {NAV_LINKS.map((l) => (
+          {navLinks.map((l) => (
             <Link key={l.href} href={l.href} className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
               {l.label}
             </Link>
           ))}
           {user ? (
             <>
-              <Link href="/orders" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>My Orders</Link>
-              <Link href="/profile" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>Profile</Link>
+              {ecommerceEnabled && (
+                <>
+                  <Link href="/orders" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>My Orders</Link>
+                  <Link href="/profile" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>Profile</Link>
+                </>
+              )}
+              <Link href="/notifications" className={styles.mobileLink} onClick={() => setMenuOpen(false)}>Notifications</Link>
               <button onClick={handleLogout} className={styles.mobileLogout}>Logout</button>
             </>
           ) : (
@@ -117,5 +130,7 @@ export function CustomerHeader({ user }: CustomerHeaderProps) {
         </div>
       )}
     </header>
+
+    </>
   );
 }

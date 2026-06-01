@@ -23,14 +23,16 @@
 .noBorder { border: none; box-shadow: none; }
 
 .header {
-  padding-bottom: 16px;
+  padding: 20px 24px 16px;
   margin-bottom: 16px;
   border-bottom: 1px solid var(--border-color);
 }
-.body  { flex: 1; }
+.body {
+  flex: 1;
+  padding: 0 24px 20px;
+}
 .footer {
-  padding-top: 16px;
-  margin-top: 16px;
+  padding: 12px 24px 20px;
   border-top: 1px solid var(--border-color);
   display: flex;
   align-items: center;

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { captureException } from "./observability";
 
 export class AppError extends Error {
   constructor(
@@ -45,6 +46,7 @@ export function handleApiError(error: unknown): NextResponse {
 
   if (error instanceof Error) {
     console.error("[API Error]", error.message, error.stack);
+    captureException(error, { source: "api" }).catch(() => {});
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

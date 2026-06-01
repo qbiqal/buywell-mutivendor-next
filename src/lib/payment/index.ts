@@ -9,6 +9,7 @@
 import type { PaymentGateway } from "./types";
 import { offlineQrGateway } from "./offline-qr";
 import { getSiteConfig } from "../config";
+import { AppError } from "../errors";
 
 export type GatewayName = "offline_qr" | "razorpay" | "stripe";
 
@@ -29,8 +30,9 @@ export async function getPaymentGateway(name?: GatewayName): Promise<PaymentGate
 
   const enabled = await gateway.isEnabled();
   if (!enabled) {
-    console.warn(`[payment] Gateway "${gatewayName}" is disabled, falling back to offline_qr`);
-    return offlineQrGateway;
+    console.warn(`[payment] Gateway "${gatewayName}" is disabled`);
+    if (gatewayName !== "offline_qr" && await offlineQrGateway.isEnabled()) return offlineQrGateway;
+    throw new AppError("Payment gateway is disabled", 503, "PAYMENT_GATEWAY_DISABLED");
   }
 
   return gateway;

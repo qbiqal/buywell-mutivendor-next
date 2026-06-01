@@ -7,10 +7,12 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getSiteConfig } from "@/lib/config";
+import { getEnabledPublicNav, getModuleState, requireModulePage } from "@/lib/modules";
 
 export const metadata: Metadata = { title: "Complete Payment" };
 
 export default async function PaymentPage() {
+  await requireModulePage("ecommerce");
   let user = null;
   const token = await getTokenFromCookies();
   if (token) {
@@ -25,10 +27,12 @@ export default async function PaymentPage() {
   const qrUrl      = (await getSiteConfig("payment_qr_url")) ?? "";
   const upiId      = (await getSiteConfig("payment_upi_id")) ?? "";
   const companyName = (await getSiteConfig("payment_company_name")) ?? "APRAS Naturals";
+  const modules = await getModuleState();
+  const navLinks = getEnabledPublicNav(modules);
 
   return (
     <>
-      <CustomerHeader user={user} />
+      <CustomerHeader user={user} navLinks={navLinks} ecommerceEnabled={modules.ecommerce} />
       <main style={{ paddingTop: "var(--header-height)" }}>
         <PaymentClient qrUrl={qrUrl} upiId={upiId} companyName={companyName} />
       </main>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import styles from "./ComingSoon.module.css";
 
@@ -69,20 +69,22 @@ function Particle({ style }: { style: React.CSSProperties }) {
   return <div className={styles.particle} style={style} />;
 }
 
+const PARTICLES = Array.from({ length: 18 }, (_, i) => {
+  const seed = (i + 1) * 37;
+  return {
+    id: i,
+    left: `${(seed * 17) % 100}%`,
+    top: `${(seed * 29) % 100}%`,
+    size: ((seed * 7) % 8) + 4,
+    delay: ((seed * 11) % 40) / 10,
+    duration: 4 + ((seed * 13) % 60) / 10,
+    opacity: 0.15 + (((seed * 19) % 25) / 100),
+  };
+});
+
 export default function ComingSoon() {
   const [email, setEmail]   = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [particles] = useState(() =>
-    Array.from({ length: 18 }, (_, i) => ({
-      id: i,
-      left:  `${Math.random() * 100}%`,
-      top:   `${Math.random() * 100}%`,
-      size:  Math.random() * 8 + 4,
-      delay: Math.random() * 4,
-      duration: 4 + Math.random() * 6,
-      opacity: 0.15 + Math.random() * 0.25,
-    }))
-  );
 
   function handleNotify(e: React.FormEvent) {
     e.preventDefault();
@@ -98,7 +100,7 @@ export default function ComingSoon() {
 
       {/* Floating leaf particles */}
       <div className={styles.particles} aria-hidden>
-        {particles.map((p) => (
+        {PARTICLES.map((p) => (
           <Particle
             key={p.id}
             style={{
@@ -196,7 +198,7 @@ export default function ComingSoon() {
 
         {/* Preview site link */}
         <div className={styles.previewLinks}>
-          <Link href="/home" className={styles.previewLink}>
+          <Link href="/" className={styles.previewLink}>
             Preview the full site →
           </Link>
           <span className={styles.previewDot}>·</span>

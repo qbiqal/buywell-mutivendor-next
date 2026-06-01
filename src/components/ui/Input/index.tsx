@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useId } from "react";
 import styles from "./Input.module.css";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -10,7 +10,8 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function Input({ label, error, hint, leftIcon, className = "", id, ...props }: InputProps) {
-  const inputId = id ?? `input-${Math.random().toString(36).slice(2)}`;
+  const generatedId = useId();
+  const inputId = id ?? `input-${generatedId}`;
   return (
     <div className={styles.group}>
       {label && <label htmlFor={inputId} className={styles.label}>{label}</label>}
@@ -40,7 +41,8 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 export function Textarea({ label, error, hint, className = "", id, ...props }: TextareaProps) {
-  const textareaId = id ?? `textarea-${Math.random().toString(36).slice(2)}`;
+  const generatedId = useId();
+  const textareaId = id ?? `textarea-${generatedId}`;
   return (
     <div className={styles.group}>
       {label && <label htmlFor={textareaId} className={styles.label}>{label}</label>}
@@ -62,7 +64,8 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export function Select({ label, error, options, className = "", id, ...props }: SelectProps) {
-  const selectId = id ?? `select-${Math.random().toString(36).slice(2)}`;
+  const generatedId = useId();
+  const selectId = id ?? `select-${generatedId}`;
   return (
     <div className={styles.group}>
       {label && <label htmlFor={selectId} className={styles.label}>{label}</label>}

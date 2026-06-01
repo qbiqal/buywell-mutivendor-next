@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { MediaUploader } from "@/components/media/MediaUploader";
 import { useToast } from "@/components/ui/Toast";
-import type { BlogPost } from "@/lib/db/schema";
+import type { BlogCategory, BlogPost } from "@/lib/db/schema";
 import styles from "./blog-editor.module.css";
 
 interface BlogEditorProps {
@@ -32,6 +32,7 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
   const [title,         setTitle]         = useState("");
   const [excerpt,       setExcerpt]       = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [categoryId,    setCategoryId]    = useState("");
   const [status,        setStatus]        = useState("draft");
   const [metaTitle,     setMetaTitle]     = useState("");
   const [metaDesc,      setMetaDesc]      = useState("");
@@ -40,8 +41,12 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
   const [isFeatured,    setIsFeatured]    = useState(false);
   const [saving,        setSaving]        = useState(false);
   const [loading,       setLoading]       = useState(!!postId);
+  const [categories,    setCategories]    = useState<BlogCategory[]>([]);
 
   useEffect(() => {
+    fetch("/api/admin/blog/categories")
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setCategories(d.data); });
     if (!postId) return;
     fetch(`/api/admin/blog/${postId}`)
       .then((r) => r.json())
@@ -51,6 +56,7 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
         setTitle(p.title);
         setExcerpt(p.excerpt ?? "");
         setCoverImageUrl(p.coverImageUrl ?? "");
+        setCategoryId(p.categoryId ?? "");
         setStatus(p.status);
         setMetaTitle(p.metaTitle ?? "");
         setMetaDesc(p.metaDesc ?? "");
@@ -75,7 +81,7 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
     setSaving(true);
     try {
       const body = {
-        title, content, excerpt, coverImageUrl, status: saveStatus,
+        title, content, excerpt, coverImageUrl, categoryId: categoryId || null, status: saveStatus,
         metaTitle, metaDesc, readTime: parseInt(readTime), isFeatured,
         tags: tagsRaw.split(",").map((t) => t.trim()).filter(Boolean),
       };
@@ -167,6 +173,14 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
           <div className={styles.sideCard}>
             <label className={styles.sectionLabel}>Status</label>
             <Select value={status} onChange={(e) => setStatus(e.target.value)} options={STATUS_OPTS} />
+            <div style={{ marginTop: 12 }}>
+              <Select
+                label="Category"
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                options={[{ value: "", label: "Uncategorized" }, ...categories.map((category) => ({ value: category.id, label: category.name }))]}
+              />
+            </div>
 
             <div style={{ marginTop: 12 }}>
               <label className={styles.checkLabel}>

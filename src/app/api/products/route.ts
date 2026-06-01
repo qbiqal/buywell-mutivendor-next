@@ -4,9 +4,13 @@ import { products, productVariants, productImages } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
 import { handleApiError } from "@/lib/errors";
+import { requireModuleApi } from "@/lib/modules";
 
 export async function GET(req: NextRequest) {
   try {
+    const moduleResult = await requireModuleApi("ecommerce");
+    if (moduleResult) return moduleResult;
+
     const { searchParams } = req.nextUrl;
     const category  = searchParams.get("category");
     const featured  = searchParams.get("featured") === "true";

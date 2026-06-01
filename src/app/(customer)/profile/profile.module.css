@@ -1,0 +1,67 @@
+.page {
+  min-height: 60vh;
+  padding: 40px 24px 80px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 960px;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 28px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+.cardTitle { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.cardHeaderRow { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+
+.fields { display: flex; flex-direction: column; gap: 14px; }
+.row    { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.memberSince { font-size: 13px; color: var(--text-secondary); }
+.footerRow   { display: flex; gap: 10px; align-items: center; }
+
+/* Addresses */
+.noAddresses {
+  text-align: center;
+  padding: 32px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  color: var(--text-secondary);
+}
+.addressList { display: flex; flex-direction: column; gap: 12px; }
+.addressCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  background: var(--bg-primary);
+}
+.defaultAddr { border-color: var(--accent); background: var(--honey); }
+.addrTop   { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+.addrLabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); background: var(--honey); padding: 2px 8px; border-radius: 4px; }
+.defaultBadge { margin-left: 6px; font-size: 11px; font-weight: 700; color: var(--accent); background: rgba(45,125,70,0.1); padding: 2px 8px; border-radius: 4px; }
+.removeAddrBtn { font-size: 12px; color: #ef4444; background: none; border: none; cursor: pointer; padding: 2px 6px; border-radius: 4px; font-weight: 600; white-space: nowrap; transition: background 0.12s; }
+.removeAddrBtn:hover { background: #fee2e2; }
+.addrName  { font-weight: 600; font-size: 14px; color: var(--text-primary); margin-bottom: 3px; }
+.addrText  { font-size: 13px; color: var(--text-secondary); margin-bottom: 2px; }
+.addrPhone { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+
+/* Modal form */
+.modalForm { display: flex; flex-direction: column; gap: 14px; }
+.checkLabel { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; color: var(--text-primary); }
+.checkLabel input { width: 16px; height: 16px; accent-color: var(--accent); }
+.modalFooter { display: flex; gap: 10px; justify-content: flex-end; padding-top: 8px; }

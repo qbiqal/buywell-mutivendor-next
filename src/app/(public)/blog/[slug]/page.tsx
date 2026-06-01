@@ -5,17 +5,46 @@ import { eq, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { requireModulePage } from "@/lib/modules";
 import styles from "./blog-detail.module.css";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const rows = await db.select({ title: blogPosts.title, metaDesc: blogPosts.metaDesc, coverImageUrl: blogPosts.coverImageUrl })
+  const rows = await db.select({
+    title: blogPosts.title,
+    slug: blogPosts.slug,
+    excerpt: blogPosts.excerpt,
+    metaTitle: blogPosts.metaTitle,
+    metaDesc: blogPosts.metaDesc,
+    coverImageUrl: blogPosts.coverImageUrl,
+  })
     .from(blogPosts).where(and(eq(blogPosts.slug, slug), eq(blogPosts.status, "published")));
   if (!rows[0]) return {};
-  return { title: rows[0].title, description: rows[0].metaDesc ?? undefined };
+  const post = rows[0];
+  const title = post.metaTitle ?? post.title;
+  const description = post.metaDesc ?? post.excerpt ?? undefined;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/blog/${post.slug}` },
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      url: `/blog/${post.slug}`,
+      images: post.coverImageUrl ? [{ url: post.coverImageUrl, alt: post.title }] : undefined,
+    },
+    twitter: {
+      card: post.coverImageUrl ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: post.coverImageUrl ? [post.coverImageUrl] : undefined,
+    },
+  };
 }
 
 export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  await requireModulePage("blog");
   const { slug } = await params;
   const rows = await db.select().from(blogPosts).where(and(eq(blogPosts.slug, slug), eq(blogPosts.status, "published")));
   if (!rows[0]) notFound();

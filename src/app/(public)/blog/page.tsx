@@ -5,6 +5,7 @@ import { blogPosts } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
 import { getAllSiteConfig } from "@/lib/config";
+import { requireModulePage } from "@/lib/modules";
 import BlogListingClient from "./BlogListingClient";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,6 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BlogPage() {
+  await requireModulePage("blog");
   const [config, posts] = await Promise.all([
     getAllSiteConfig("blog"),
     withCache("query:blog:published:1", CACHE_TTL.QUERY, async () =>

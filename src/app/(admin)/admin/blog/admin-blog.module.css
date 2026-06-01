@@ -11,10 +11,67 @@
 .filterBtn:hover { border-color: var(--amber); color: var(--amber); }
 .filterActive { background: var(--ink); color: #fff; border-color: var(--ink); }
 
+.categoryPanel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+.categoryHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.categoryHeader h2 {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.categoryForm {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 44px 80px auto;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.categoryForm input {
+  min-height: 36px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0 10px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+.categoryList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.categoryItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.categoryItem small { color: var(--text-secondary); }
+.categorySwatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
 /* Grid view */
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 @media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px)  { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 820px) {
+  .categoryForm { grid-template-columns: 1fr; }
+}
 
 .blogCard { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; }
 .cardCover { position: relative; height: 180px; background: var(--bg-secondary); }

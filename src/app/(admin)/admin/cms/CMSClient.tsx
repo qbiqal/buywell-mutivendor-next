@@ -10,6 +10,7 @@ const SECTION_LABELS: Record<string, string> = {
   hero:         "🎥 Hero Section",
   marquee:      "📜 Marquee Strip",
   promise:      "🛡️ APRAS Promise",
+  sample:       "🎁 Sample Banner",
   purity:       "✨ Purity Banner",
   products:     "🍯 Products Section",
   ghee:         "🥛 A2 Ghee Section",
@@ -19,7 +20,8 @@ const SECTION_LABELS: Record<string, string> = {
   how_it_works: "📋 How It Works",
   mission:      "🌿 Mission Quote",
   faq:          "❓ FAQ",
-  cta:          "📣 Call-to-Action",
+  contact:      "📞 Contact Section",
+  cta:          "📣 Legacy Call-to-Action",
 };
 
 export default function CMSClient() {

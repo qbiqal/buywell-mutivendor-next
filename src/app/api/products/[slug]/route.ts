@@ -4,12 +4,16 @@ import { products, productVariants, productImages } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
 import { handleApiError, NotFoundError } from "@/lib/errors";
+import { requireModuleApi } from "@/lib/modules";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const moduleResult = await requireModuleApi("ecommerce");
+    if (moduleResult) return moduleResult;
+
     const { slug } = await params;
     const cacheKey = `query:product:${slug}`;
 

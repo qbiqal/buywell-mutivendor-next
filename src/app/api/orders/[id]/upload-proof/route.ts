@@ -4,6 +4,10 @@ import { orders, orderStatusHistory } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { handleApiError, NotFoundError, ValidationError } from "@/lib/errors";
 import { notifyAdminNewOrder } from "@/lib/whatsapp";
+import { requireModuleApi } from "@/lib/modules";
+import { getAllSiteConfig } from "@/lib/config";
+import { getPaymentGateway, type GatewayName } from "@/lib/payment";
+import { verifyPaymentProofUploadToken } from "@/lib/upload-token";
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
@@ -12,6 +16,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const moduleResult = await requireModuleApi("ecommerce");
+    if (moduleResult) return moduleResult;
+
     const { id } = await params;
 
     // Verify order exists
@@ -21,7 +28,11 @@ export async function POST(
 
     const formData = await req.formData();
     const file = formData.get("proof") as File | null;
+    const token = String(formData.get("token") ?? req.headers.get("x-upload-token") ?? "");
 
+    if (!verifyPaymentProofUploadToken(token, id)) {
+      throw new ValidationError("Payment proof upload link has expired. Please place the order again or contact support.");
+    }
     if (!file) throw new ValidationError("Payment proof file is required");
     if (file.size > MAX_SIZE_BYTES) throw new ValidationError("File too large — max 5MB");
     if (!file.type.startsWith("image/")) throw new ValidationError("Only image files are accepted");
@@ -29,11 +40,15 @@ export async function POST(
     // Save file — local in dev, R2 in prod
     let proofUrl: string;
 
-    if (process.env.NODE_ENV === "production" && process.env.CLOUDFLARE_R2_BUCKET_NAME) {
+    const mediaConfig = await getAllSiteConfig("media");
+    const useR2 = mediaConfig.media_storage === "r2" || (process.env.NODE_ENV === "production" && Boolean(process.env.CLOUDFLARE_R2_BUCKET_NAME));
+
+    if (useR2) {
       // R2 upload
       const { uploadToR2 } = await import("@/lib/media");
       const buffer = Buffer.from(await file.arrayBuffer());
-      proofUrl = await uploadToR2(`payment-proofs/${order.orderNumber}-${Date.now()}`, buffer, file.type);
+      const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      proofUrl = await uploadToR2(`payment-proofs/${order.orderNumber}-${Date.now()}.${extension}`, buffer, file.type);
     } else {
       // Local save (dev only)
       const { writeFile, mkdir } = await import("fs/promises");
@@ -46,21 +61,25 @@ export async function POST(
       proofUrl = `/uploads/proofs/${filename}`;
     }
 
+    const gateway = await getPaymentGateway(order.paymentGateway as GatewayName);
+    const verification = await gateway.verifyPayment({ orderId: id, proofUrl });
+
     // Update order
     await db.update(orders)
       .set({
         paymentProofUrl:          proofUrl,
         paymentProofOriginalName: file.name,
-        paymentStatus:            "uploaded",
-        status:                   "payment_uploaded",
+        paymentStatus:            verification.verified ? "verified" : "uploaded",
+        status:                   verification.verified ? "payment_verified" : "payment_uploaded",
+        paymentRef:               verification.transactionRef ?? order.paymentRef,
         updatedAt:                new Date(),
       })
       .where(eq(orders.id, id));
 
     await db.insert(orderStatusHistory).values({
       orderId:   id,
-      status:    "payment_uploaded",
-      note:      "Customer uploaded payment proof",
+      status:    verification.verified ? "payment_verified" : "payment_uploaded",
+      note:      verification.verified ? "Payment verified by gateway" : "Customer uploaded payment proof",
       changedBy: "system",
     });
 

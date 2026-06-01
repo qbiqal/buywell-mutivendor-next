@@ -18,6 +18,12 @@
 .info     { background: rgba(59,130,246,0.12); color: #1D4ED8; }
 .amber    { background: var(--honey); color: var(--amber-dk); }
 
+:global(.dark) .success { color: #86efac; }
+:global(.dark) .warning { color: #facc15; }
+:global(.dark) .danger  { color: #fca5a5; }
+:global(.dark) .info    { color: #93c5fd; }
+:global(.dark) .amber   { color: #86efac; }
+
 .dot {
   width: 6px; height: 6px;
   border-radius: 50%;

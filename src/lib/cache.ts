@@ -49,30 +49,31 @@ export async function deleteCached(key: string): Promise<void> {
 }
 
 // ── Invalidate by prefix ───────────────────────────────────────────────────────
-// NOTE: ioredis keyPrefix "an:" is automatically prepended to scan patterns.
-// When we call redis.keys("page:products:*"), Redis sees "an:page:products:*".
+// NOTE: ioredis keyPrefix is not applied to SCAN MATCH patterns, so we scan
+// with the physical prefix and delete with logical keys that ioredis prefixes.
 
 export async function invalidateByPrefix(prefix: string): Promise<number> {
   try {
     // Use SCAN instead of KEYS for production safety (non-blocking)
     let cursor = "0";
     let deleted = 0;
+    const keyPrefix = (redis as { options?: { keyPrefix?: string } }).options?.keyPrefix ?? "";
     do {
       const [nextCursor, keys] = await redis.scan(
         cursor,
         "MATCH",
-        `${prefix}*`,
+        `${keyPrefix}${prefix}*`,
         "COUNT",
         100
       );
       cursor = nextCursor;
       if (keys.length > 0) {
-        // redis.del with prefixed keys — ioredis strips the keyPrefix for us when using del
-        // We need raw key names without prefix for del; use pipeline
         const pipeline = redis.pipeline();
         for (const key of keys) {
-          // keys returned by SCAN already include the prefix — del needs raw key
-          pipeline.del(key.replace(/^an:/, ""));
+          const logicalKey = keyPrefix && key.startsWith(keyPrefix)
+            ? key.slice(keyPrefix.length)
+            : key;
+          pipeline.del(logicalKey);
         }
         const results = await pipeline.exec();
         deleted += results?.length ?? 0;

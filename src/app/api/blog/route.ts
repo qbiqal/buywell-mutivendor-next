@@ -4,9 +4,13 @@ import { blogPosts, blogCategories, users } from "@/lib/db/schema";
 import { eq, and, desc, ilike, asc } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
 import { handleApiError } from "@/lib/errors";
+import { requireModuleApi } from "@/lib/modules";
 
 export async function GET(req: NextRequest) {
   try {
+    const moduleResult = await requireModuleApi("blog");
+    if (moduleResult) return moduleResult;
+
     const { searchParams } = req.nextUrl;
     const page    = Math.max(1, parseInt(searchParams.get("page") ?? "1"));
     const limit   = Math.min(20, parseInt(searchParams.get("limit") ?? "9"));
