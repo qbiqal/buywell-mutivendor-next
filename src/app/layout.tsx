@@ -12,6 +12,11 @@ const publicSans = Public_Sans({
   display: "swap",
 });
 
+// RootLayout queries the DB (getModuleState, getLocalizationConfig).
+// Marking dynamic prevents Next.js from attempting to statically pre-render
+// any page at build time when no DB connection is available.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://aprasnaturals.com"),
   title: {

@@ -17,11 +17,6 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 # 3GB covers large TS codebases on constrained build servers
 ENV NODE_OPTIONS="--max-old-space-size=3072"
-# Coolify injects real DATABASE_URL/REDIS_URL as build ARGs; override them here
-# so Next.js never attempts a live DB/Redis connection during the build phase.
-# Real values are injected at container runtime via Docker environment variables.
-ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
-ENV REDIS_URL=redis://localhost:6379/0
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
