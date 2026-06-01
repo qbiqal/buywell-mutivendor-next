@@ -475,11 +475,11 @@ done
 | Item | Value |
 |---|---|
 | Bucket name | `apras-naturals-media` |
-| Public URL | `https://pub-247bd7bddc43440aa2f82b3bfe2d9b20.r2.dev` |
+| Public URL | `https://media.aprasnaturals.com` (custom domain, production-ready) |
+| r2.dev fallback URL | `https://pub-247bd7bddc43440aa2f82b3bfe2d9b20.r2.dev` |
 | Access Key ID | `d31f2ac430e557f84c59022958bf1aa4` |
 | Secret (in Coolify) | set as `CLOUDFLARE_R2_SECRET_ACCESS_KEY` |
-
-> **Custom domain (recommended for production)**: In bucket Settings → Custom Domains → Add → point a Cloudflare-proxied subdomain like `media.aprasnaturals.com` to the bucket. This removes the `r2.dev` rate-limit and enables caching. Update `CLOUDFLARE_R2_PUBLIC_URL` to the custom domain after setting it up.
+| `CLOUDFLARE_R2_PUBLIC_URL` in Coolify | `https://media.aprasnaturals.com` |
 
 ---
 
@@ -614,3 +614,8 @@ curl -X PATCH ".../api/v1/applications/$UUID" -d '{"build_pack": "dockerfile", "
 | Deploy webhook | `http://178.104.149.128:8000/api/v1/deploy?uuid=gs856v98p5925c8nzcey68f3&force=false` |
 | Coolify project | Qbiqal Client Projects → production environment |
 | Coolify log | `http://178.104.149.128:8000/project/x6t42bpwzaxjwn3pmzokvuiy/environment/vjaz1j6oe1988kfcjemr8n2z/application/gs856v98p5925c8nzcey68f3` |
+
+
+Next step for production: In the R2 bucket settings → Custom Domains → point
+  ▎ media.aprasnaturals.com to remove the r2.dev rate-limit. Then update 
+  ▎ CLOUDFLARE_R2_PUBLIC_URL in Coolify to the custom domain
