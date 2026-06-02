@@ -33,7 +33,7 @@ export interface AvailableMenuTarget {
 }
 
 export async function getPublicMenus(): Promise<PublicMenus> {
-  return withCache("query:cms:menus:public", CACHE_TTL.CONFIG, async () => {
+  return withCache("query:cms:menus:public:v2", CACHE_TTL.CONFIG, async () => {
     const [menus, items, pages, modules] = await Promise.all([
       db.select().from(cmsMenus).where(eq(cmsMenus.isEnabled, true)),
       db.select().from(cmsMenuItems)

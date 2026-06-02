@@ -56,6 +56,17 @@ COPY --from=deps /app/node_modules/pg-protocol ./node_modules/pg-protocol
 COPY --from=deps /app/node_modules/pg-types ./node_modules/pg-types
 COPY --from=deps /app/node_modules/pgpass ./node_modules/pgpass
 
+# content-seed.js invalidates Redis caches outside Next's traced server bundle
+COPY --from=deps /app/node_modules/ioredis ./node_modules/ioredis
+COPY --from=deps /app/node_modules/@ioredis ./node_modules/@ioredis
+COPY --from=deps /app/node_modules/cluster-key-slot ./node_modules/cluster-key-slot
+COPY --from=deps /app/node_modules/debug ./node_modules/debug
+COPY --from=deps /app/node_modules/denque ./node_modules/denque
+COPY --from=deps /app/node_modules/ms ./node_modules/ms
+COPY --from=deps /app/node_modules/redis-errors ./node_modules/redis-errors
+COPY --from=deps /app/node_modules/redis-parser ./node_modules/redis-parser
+COPY --from=deps /app/node_modules/standard-as-callback ./node_modules/standard-as-callback
+
 # Startup scripts
 COPY --chown=nextjs:nodejs scripts/startup.js ./startup.js
 COPY --chown=nextjs:nodejs scripts/config-seed.js ./config-seed.js
