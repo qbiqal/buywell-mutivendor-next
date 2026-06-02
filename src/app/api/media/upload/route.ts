@@ -20,6 +20,10 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file   = formData.get("file") as File | null;
     const folder = (formData.get("folder") as string) ?? "general";
+    const widthRaw = formData.get("width");
+    const heightRaw = formData.get("height");
+    const width = widthRaw ? parseInt(String(widthRaw), 10) : null;
+    const height = heightRaw ? parseInt(String(heightRaw), 10) : null;
 
     if (!file)                           throw new ValidationError("No file provided");
     if (!ALLOWED_TYPES.includes(file.type)) throw new ValidationError(`File type not allowed: ${file.type}`);
@@ -53,6 +57,8 @@ export async function POST(req: NextRequest) {
       url,
       mimeType:     file.type,
       sizeBytes:    file.size,
+      width:        Number.isFinite(width) ? width : null,
+      height:       Number.isFinite(height) ? height : null,
       folder,
       storage,
       uploadedBy:   payload?.sub ?? null,

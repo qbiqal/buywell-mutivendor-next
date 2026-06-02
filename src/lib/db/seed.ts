@@ -3,6 +3,7 @@ import path from "path";
 import {
   users, products, productVariants, productImages,
   blogCategories, cmsSections, siteConfig,
+  cmsMenus, cmsMenuItems,
 } from "./schema";
 import bcrypt from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
@@ -315,6 +316,60 @@ async function seed() {
     });
   }
   console.log(`✓ ${sections.length} CMS sections seeded`);
+
+  // ── CMS menus ──────────────────────────────────────────────────────────────
+  const defaultMenus = [
+    {
+      menuKey: "landing_header",
+      label: "Landing Page Header",
+      items: [
+        { label: "Shop", href: "/shop", itemType: "shop_index", sortOrder: 1 },
+        { label: "Blog", href: "/blog", itemType: "blog_index", sortOrder: 2 },
+        { label: "Promise", href: "/#promise", itemType: "landing_anchor", sortOrder: 3 },
+        { label: "Contact", href: "/#contact", itemType: "landing_anchor", sortOrder: 4 },
+      ],
+    },
+    {
+      menuKey: "site_header",
+      label: "Other Pages Header",
+      items: [
+        { label: "Home", href: "/", itemType: "landing_anchor", sortOrder: 1 },
+        { label: "Shop", href: "/shop", itemType: "shop_index", sortOrder: 2 },
+        { label: "Blog", href: "/blog", itemType: "blog_index", sortOrder: 3 },
+        { label: "Contact", href: "/#contact", itemType: "landing_anchor", sortOrder: 4 },
+      ],
+    },
+    {
+      menuKey: "footer",
+      label: "Footer Menu",
+      items: [
+        { label: "Blog", href: "/blog", itemType: "blog_index", sortOrder: 1 },
+        { label: "Our Promise", href: "/#promise", itemType: "landing_anchor", sortOrder: 2 },
+        { label: "Community", href: "/#gallery", itemType: "landing_anchor", sortOrder: 3 },
+        { label: "Free Sample", href: "/#contact", itemType: "landing_anchor", sortOrder: 4 },
+      ],
+    },
+  ];
+
+  for (const menuData of defaultMenus) {
+    await db.insert(cmsMenus).values({
+      menuKey: menuData.menuKey,
+      label: menuData.label,
+    }).onConflictDoNothing();
+
+    const [menu] = await db.select().from(cmsMenus).where(eq(cmsMenus.menuKey, menuData.menuKey)).limit(1);
+    if (!menu) continue;
+    const [existingItems] = await db.select({ count: sql<number>`count(*)` }).from(cmsMenuItems).where(eq(cmsMenuItems.menuId, menu.id));
+    if (Number(existingItems?.count ?? 0) > 0) {
+      console.log(`○ ${menuData.label} already has menu items`);
+      continue;
+    }
+    await db.insert(cmsMenuItems).values(menuData.items.map((item) => ({
+      menuId: menu.id,
+      ...item,
+    })));
+    console.log(`✓ ${menuData.label} seeded with ${menuData.items.length} items`);
+  }
 
   console.log("\n✅ Seed complete!");
   await pool.end();

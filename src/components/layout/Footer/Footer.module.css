@@ -50,7 +50,7 @@
   color: #9ee8b4;
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.13em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -110,6 +110,14 @@
   margin-bottom: 14px;
 }
 
+.logoImage {
+  width: auto;
+  height: 48px;
+  max-width: 180px;
+  object-fit: contain;
+  display: block;
+}
+
 .logoIcon {
   width: 42px;
   height: 42px;
@@ -158,7 +166,7 @@
   color: rgba(255,255,255,0.42);
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.18em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -217,7 +225,7 @@
   color: #9ee8b4;
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.09em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -249,4 +257,3 @@
     flex-direction: column;
   }
 }
-

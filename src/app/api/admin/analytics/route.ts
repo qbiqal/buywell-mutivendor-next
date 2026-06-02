@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orderItems, orders, users } from "@/lib/db/schema";
+import { orderItems, orders, trafficEvents, users } from "@/lib/db/schema";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError } from "@/lib/errors";
 import { requireModuleApi } from "@/lib/modules";
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const format = searchParams.get("format");
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    const [summaryRows, revenueRows, statusRows, paymentRows, topProducts, customerRows] = await Promise.all([
+    const [summaryRows, revenueRows, statusRows, paymentRows, topProducts, customerRows, trafficSummaryRows, topPages, referrers, sources] = await Promise.all([
       db
         .select({
           totalOrders: sql<number>`count(*)`,
@@ -78,6 +78,45 @@ export async function GET(req: NextRequest) {
         .where(and(eq(users.role, "customer"), gte(users.createdAt, since)))
         .groupBy(sql`date_trunc('day', ${users.createdAt})`)
         .orderBy(sql`date_trunc('day', ${users.createdAt})`),
+      db
+        .select({
+          pageViews: sql<number>`count(*)`,
+          uniqueVisitors: sql<number>`count(distinct ${trafficEvents.visitorId})`,
+          sessions: sql<number>`count(distinct ${trafficEvents.sessionId})`,
+        })
+        .from(trafficEvents)
+        .where(gte(trafficEvents.createdAt, since)),
+      db
+        .select({
+          path: trafficEvents.path,
+          views: sql<number>`count(*)`,
+          visitors: sql<number>`count(distinct ${trafficEvents.visitorId})`,
+        })
+        .from(trafficEvents)
+        .where(gte(trafficEvents.createdAt, since))
+        .groupBy(trafficEvents.path)
+        .orderBy(sql`count(*) desc`)
+        .limit(10),
+      db
+        .select({
+          referrer: sql<string>`coalesce(nullif(${trafficEvents.referrer}, ''), 'Direct')`,
+          views: sql<number>`count(*)`,
+        })
+        .from(trafficEvents)
+        .where(gte(trafficEvents.createdAt, since))
+        .groupBy(sql`coalesce(nullif(${trafficEvents.referrer}, ''), 'Direct')`)
+        .orderBy(sql`count(*) desc`)
+        .limit(8),
+      db
+        .select({
+          source: sql<string>`coalesce(nullif(${trafficEvents.source}, ''), 'direct')`,
+          views: sql<number>`count(*)`,
+        })
+        .from(trafficEvents)
+        .where(gte(trafficEvents.createdAt, since))
+        .groupBy(sql`coalesce(nullif(${trafficEvents.source}, ''), 'direct')`)
+        .orderBy(sql`count(*) desc`)
+        .limit(8),
     ]);
 
     const summary = summaryRows[0] ?? {
@@ -87,6 +126,7 @@ export async function GET(req: NextRequest) {
       sampleRequests: 0,
       averageOrderInr: 0,
     };
+    const trafficSummary = trafficSummaryRows[0] ?? { pageViews: 0, uniqueVisitors: 0, sessions: 0 };
 
     const data = {
       range: { days, since: since.toISOString() },
@@ -113,6 +153,24 @@ export async function GET(req: NextRequest) {
         date: row.date,
         count: Number(row.count ?? 0),
       }))),
+      traffic: {
+        pageViews: Number(trafficSummary.pageViews ?? 0),
+        uniqueVisitors: Number(trafficSummary.uniqueVisitors ?? 0),
+        sessions: Number(trafficSummary.sessions ?? 0),
+        topPages: topPages.map((row) => ({
+          path: row.path,
+          views: Number(row.views ?? 0),
+          visitors: Number(row.visitors ?? 0),
+        })),
+        referrers: referrers.map((row) => ({
+          referrer: row.referrer,
+          views: Number(row.views ?? 0),
+        })),
+        sources: sources.map((row) => ({
+          source: row.source,
+          views: Number(row.views ?? 0),
+        })),
+      },
     };
 
     if (format === "csv") {

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { NextResponse } from "next/server";
 import { getAllSiteConfig } from "./config";
 
-export type ModuleKey = "core" | "cms" | "blog" | "ecommerce";
+export type ModuleKey = "core" | "cms" | "seo" | "blog" | "ecommerce";
 export type PaymentModuleKey = "offline_qr";
 
 export interface NavItem {
@@ -42,8 +42,21 @@ export const APP_MODULES: AppModule[] = [
     name: "CMS",
     canDisable: true,
     defaultEnabled: true,
-    adminNav: [{ label: "CMS", href: "/admin/cms", icon: "🎨" }],
+    adminNav: [
+      { label: "CMS", href: "/admin/cms", icon: "🎨" },
+      { label: "CMS Pages", href: "/admin/cms/pages", icon: "📄" },
+      { label: "Menus", href: "/admin/cms/menus", icon: "🧭" },
+    ],
     publicNav: [{ label: "About", href: "/#promise" }],
+  },
+  {
+    key: "seo",
+    name: "SEO",
+    canDisable: true,
+    defaultEnabled: true,
+    adminNav: [{ label: "SEO", href: "/admin/seo", icon: "🔎" }],
+    publicNav: [],
+    dependencies: ["cms"],
   },
   {
     key: "blog",
@@ -88,12 +101,16 @@ function boolConfig(value: string | undefined, fallback: boolean): boolean {
 
 export async function getModuleState(): Promise<ModuleState> {
   const config = await getAllSiteConfig("modules");
-  return APP_MODULES.reduce((state, mod) => {
-    state[mod.key] = mod.key === "core"
+  const state = APP_MODULES.reduce((current, mod) => {
+    current[mod.key] = mod.key === "core"
       ? true
       : boolConfig(config[`module_${mod.key}_enabled`], mod.defaultEnabled);
-    return state;
+    return current;
   }, {} as ModuleState);
+  for (const mod of APP_MODULES) {
+    if (mod.dependencies?.some((key) => !state[key])) state[mod.key] = false;
+  }
+  return state;
 }
 
 export async function getPaymentModuleState(): Promise<PaymentModuleState> {

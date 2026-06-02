@@ -32,7 +32,15 @@
   font-weight: 700;
   color: var(--ink);
   text-decoration: none;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+  min-width: 0;
+}
+.logoImage {
+  width: auto;
+  height: 48px;
+  max-width: 180px;
+  object-fit: contain;
+  display: block;
 }
 .logoIcon {
   width: 36px; height: 36px;
@@ -53,7 +61,7 @@
 .navLink {
   font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-transform: uppercase;
   color: var(--ink);
   text-decoration: none;
@@ -145,7 +153,7 @@
 .registerBtn {
   padding: 8px 18px;
   font-size: 14px; font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   background: var(--ink); color: #fff;
   border-radius: var(--radius-full);
   text-decoration: none;
@@ -157,7 +165,7 @@
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   background: linear-gradient(135deg, #1B4332, #2D7D46);
   color: #fff;
   border-radius: var(--radius-full);
@@ -209,4 +217,5 @@
 @media (max-width: 768px) {
   .nav, .authBtns { display: none; }
   .mobileMenu { display: block; }
+  .logoImage { max-width: 150px; height: 40px; }
 }

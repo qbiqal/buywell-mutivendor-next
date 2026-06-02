@@ -20,12 +20,14 @@ module.exports = async function seedConfig() {
     { key: 'site_email',           value: 'aprasnaturals@gmail.com', category: 'general' },
     { key: 'site_phone',           value: '+919470309006',         category: 'general' },
     { key: 'site_address',         value: 'Ranchi – 834005, Jharkhand, India', category: 'general' },
+    { key: 'admin_logo_url',       value: '',                      category: 'general' },
     { key: 'site_logo_url',        value: '',                      category: 'general' },
     { key: 'maintenance_mode',     value: 'false',                 category: 'general' },
 
     // Module flags
     { key: 'module_core_enabled',      value: 'true',              category: 'modules' },
     { key: 'module_cms_enabled',       value: 'true',              category: 'modules' },
+    { key: 'module_seo_enabled',       value: 'true',              category: 'modules' },
     { key: 'module_ecommerce_enabled', value: 'true',              category: 'modules' },
     { key: 'module_blog_enabled',      value: 'true',              category: 'modules' },
 
@@ -127,6 +129,27 @@ module.exports = async function seedConfig() {
     { key: 'sentry_enabled',       value: 'false',                category: 'observability' },
     { key: 'sentry_dsn',           value: '',                     category: 'observability' },
     { key: 'sentry_environment',   value: 'production',           category: 'observability' },
+
+    // SEO and analytics
+    { key: 'seo_default_title', value: 'APRAS Naturals — Pure Prakvedaa Honey & A2 Bilona Ghee', category: 'seo' },
+    { key: 'seo_title_template', value: '%s | APRAS Naturals', category: 'seo' },
+    { key: 'seo_default_description', value: 'APRAS Naturals is the authorized partner of Prakvedaa. Discover pure mono-floral raw honey and authentic A2 Bilona Ghee sourced ethically from India.', category: 'seo' },
+    { key: 'seo_default_keywords', value: 'honey,A2 ghee,Prakvedaa,organic honey,Jharkhand,raw honey,bilona ghee', category: 'seo' },
+    { key: 'seo_canonical_base_url', value: process.env.NEXT_PUBLIC_APP_URL || 'https://aprasnaturals.com', category: 'seo' },
+    { key: 'seo_default_og_image_url', value: '', category: 'seo' },
+    { key: 'seo_indexing_enabled', value: 'true', category: 'seo' },
+    { key: 'seo_google_site_verification', value: '', category: 'seo' },
+    { key: 'seo_bing_site_verification', value: '', category: 'seo' },
+    { key: 'seo_yandex_site_verification', value: '', category: 'seo' },
+    { key: 'seo_gtm_id', value: '', category: 'seo' },
+    { key: 'seo_ga_measurement_id', value: '', category: 'seo' },
+    { key: 'seo_meta_pixel_id', value: '', category: 'seo' },
+    { key: 'seo_first_party_analytics_enabled', value: 'true', category: 'seo' },
+    { key: 'seo_robots_extra_disallow', value: '', category: 'seo' },
+    { key: 'seo_sitemap_change_frequency', value: 'weekly', category: 'seo' },
+    { key: 'seo_sitemap_priority_default', value: '0.7', category: 'seo' },
+    { key: 'seo_submission_google_endpoint', value: '', category: 'seo' },
+    { key: 'seo_submission_bing_endpoint', value: '', category: 'seo' },
   ];
 
   for (const row of defaults) {

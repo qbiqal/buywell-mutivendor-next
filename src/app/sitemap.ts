@@ -2,12 +2,15 @@ import type { MetadataRoute } from "next";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { blogPosts, products } from "@/lib/db/schema";
+import { getPublishedCmsPages } from "@/lib/cms";
 import { getModuleState } from "@/lib/modules";
+import { getSeoConfig } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = getBaseUrl();
+  const seo = await getSeoConfig();
+  const baseUrl = seo.baseUrl;
   const now = new Date();
   const routes: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
@@ -17,6 +20,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const modules = await getModuleState();
+    if (modules.cms) {
+      const pages = await getPublishedCmsPages();
+      for (const page of pages) {
+        routes.push({
+          url: `${baseUrl}/${page.slug}`,
+          lastModified: page.updatedAt,
+          changeFrequency: "monthly",
+          priority: 0.6,
+        });
+      }
+    }
 
     if (modules.ecommerce) {
       routes.push({ url: `${baseUrl}/shop`, lastModified: now, changeFrequency: "daily", priority: 0.9 });
@@ -62,9 +76,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   return routes;
-}
-
-function getBaseUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_APP_URL || "https://aprasnaturals.com";
-  return raw.replace(/\/$/, "");
 }

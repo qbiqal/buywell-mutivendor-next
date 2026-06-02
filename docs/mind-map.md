@@ -1,6 +1,6 @@
 # APRAS Naturals — Platform Mind Map
 
-> Last updated: 2026-05-30
+> Last updated: 2026-06-02
 > Current state: CMS landing is active at `/`; `/home` is an alias; Coming Soon is available at `/coming-soon`.
 
 ---
@@ -25,7 +25,7 @@ APRAS Naturals
 │   ├── Same-site API mutation hardening
 │   ├── Rich HTML sanitizer
 │   ├── Observability: Sentry envelope capture
-│   ├── SEO: sitemap + robots
+│   ├── Brand logos: admin logo + website logo via DB config
 │   ├── Theme: Public Sans + persisted light/dark mode
 │   └── /admin/media
 │
@@ -35,9 +35,25 @@ APRAS Naturals
 │   ├── /coming-soon
 │   ├── /admin/cms
 │   ├── /admin/cms/[sectionKey]
+│   ├── /admin/cms/pages
+│   ├── /admin/cms/menus
+│   ├── /[slug] published CMS pages
 │   ├── cms_sections
+│   ├── cms_pages
+│   ├── cms_menus
+│   ├── cms_menu_items
 │   ├── testimonials
-│   └── Landing content, media, and scroll-scrub hero video
+│   └── Landing content, pages, menus, media, and scroll-scrub hero video
+│
+├── SEO Module
+│   ├── /admin/seo
+│   ├── seo_page_overrides
+│   ├── seo_internal_links
+│   ├── seo_search_submissions
+│   ├── traffic_events
+│   ├── GTM / GA / Meta Pixel settings
+│   ├── Search engine verification settings
+│   └── Dynamic sitemap + robots controls
 │
 ├── E-Commerce Module
 │   ├── /shop
@@ -79,7 +95,8 @@ Core Admin Utilities
     ├── Resend/SMS/Telegram/Web Push keys
     ├── WhatsApp/R2/Razorpay/Stripe/Sentry provider keys
     ├── Notification channel toggles
-    └── OTP TTL/attempt controls
+    ├── OTP TTL/attempt controls
+    └── Admin/website logo uploaders
 ```
 
 ---
@@ -95,6 +112,7 @@ Public
   /shop/[slug]              Product detail
   /blog                     Blog listing
   /blog/[slug]              Blog detail
+  /[slug]                   Published CMS page
   /checkout                 Checkout / sample request
   /checkout/payment         QR proof upload
   /checkout/confirmation    Confirmation
@@ -130,6 +148,12 @@ Admin
   /admin/blog/[id]/edit
   /admin/cms
   /admin/cms/[sectionKey]
+  /admin/cms/pages
+  /admin/cms/pages/new
+  /admin/cms/pages/[id]/edit
+  /admin/cms/menus
+  /admin/seo
+  /admin/analytics           Commerce + first-party traffic analytics
   /admin/settings              Modules, localization, currency, site, payment, shipping, notifications, OTP
 ```
 
@@ -249,6 +273,13 @@ blog_categories
 
 site_config
 cms_sections
+cms_pages
+cms_menus
+  └── cms_menu_items
+seo_page_overrides
+seo_internal_links
+seo_search_submissions
+traffic_events
 testimonials
 notification_deliveries
 otp_codes
@@ -272,6 +303,10 @@ query:product:*           Product detail queries
 query:related:*           Related product queries
 query:blog:*              Blog queries
 query:cms:*               CMS section queries
+query:cms:pages:*         CMS page queries
+query:cms:menus:*         Header/footer menu queries
+query:seo:*               SEO override/settings-derived queries
+query:traffic:*           First-party traffic analytics
 query:testimonials:*      Testimonial queries
 page:*                    Future page-level cache
 ```
@@ -283,7 +318,11 @@ Invalidation targets:
 | Product create/update/delete | products, product detail, shop/home |
 | Blog publish/update/delete | blog |
 | CMS section update | cms, home |
+| CMS page create/update/delete | cms pages, sitemap, affected public slug |
+| CMS menu update | menus, public shell |
 | Config update | config, home |
+| SEO update | seo, sitemap, robots, public shell |
+| Traffic event | admin traffic analytics |
 | Testimonial update | testimonials, home |
 
 ---
@@ -313,6 +352,11 @@ Current:
 - ✅ `/home` reads enabled sections.
 - ✅ `/admin/cms` lists/toggles sections.
 - ✅ `/admin/cms/[sectionKey]` edits enabled state, sort order, and section JSON config.
+- ✅ `/admin/cms/pages` creates and edits published CMS pages at `/{slug}`.
+- ✅ `/admin/cms/menus` manages landing header, other-pages header, and footer menus with drag-and-drop ordering.
+- ✅ Available menu targets include CMS pages, blog listing/posts, shop listing/products, landing anchors, and external links.
+- ✅ `/admin/seo` manages sitewide SEO, analytics tags, verification codes, route overrides, internal links, and search submission logs.
+- ✅ `/admin/settings` owns core brand logos: admin panel logo 144x144 and website logo 360x96 via `MediaUploader`.
 
 ---
 

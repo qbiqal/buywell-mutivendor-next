@@ -226,6 +226,101 @@ export const cmsSections = pgTable("cms_sections", {
   updatedAt:  timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const cmsPages = pgTable("cms_pages", {
+  id:              text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title:           text("title").notNull(),
+  slug:            text("slug").notNull().unique(),
+  excerpt:         text("excerpt"),
+  content:         text("content").notNull(),
+  status:          text("status").default("draft").notNull(), // draft | published | archived
+  template:        text("template").default("standard").notNull(),
+  metaTitle:       text("meta_title"),
+  metaDescription: text("meta_description"),
+  keywords:        text("keywords").array(),
+  canonicalUrl:    text("canonical_url"),
+  ogImageUrl:      text("og_image_url"),
+  noIndex:         boolean("no_index").default(false).notNull(),
+  noFollow:        boolean("no_follow").default(false).notNull(),
+  sortOrder:       integer("sort_order").default(0).notNull(),
+  createdBy:       text("created_by").references(() => users.id, { onDelete: "set null" }),
+  publishedAt:     timestamp("published_at"),
+  createdAt:       timestamp("created_at").defaultNow().notNull(),
+  updatedAt:       timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const cmsMenus = pgTable("cms_menus", {
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  menuKey:   text("menu_key").notNull().unique(), // landing_header | site_header | footer
+  label:     text("label").notNull(),
+  isEnabled: boolean("is_enabled").default(true).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const cmsMenuItems = pgTable("cms_menu_items", {
+  id:          text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  menuId:      text("menu_id").references(() => cmsMenus.id, { onDelete: "cascade" }).notNull(),
+  label:       text("label").notNull(),
+  href:        text("href").notNull(),
+  itemType:    text("item_type").default("external").notNull(), // cms_page | blog_index | blog_post | shop_index | product | landing_anchor | external
+  pageId:      text("page_id").references(() => cmsPages.id, { onDelete: "set null" }),
+  blogPostId:  text("blog_post_id").references(() => blogPosts.id, { onDelete: "set null" }),
+  productId:   text("product_id").references(() => products.id, { onDelete: "set null" }),
+  opensNewTab: boolean("opens_new_tab").default(false).notNull(),
+  isEnabled:   boolean("is_enabled").default(true).notNull(),
+  sortOrder:   integer("sort_order").default(0).notNull(),
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
+  updatedAt:   timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const seoPageOverrides = pgTable("seo_page_overrides", {
+  id:              text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  routePath:       text("route_path").notNull().unique(),
+  title:           text("title"),
+  description:     text("description"),
+  keywords:        text("keywords").array(),
+  canonicalUrl:    text("canonical_url"),
+  ogImageUrl:      text("og_image_url"),
+  robots:          text("robots").default("index,follow").notNull(),
+  structuredData:  jsonb("structured_data"),
+  updatedAt:       timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const seoSearchSubmissions = pgTable("seo_search_submissions", {
+  id:          text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  engine:      text("engine").notNull(), // google | bing | yandex | other
+  endpoint:    text("endpoint"),
+  sitemapUrl:  text("sitemap_url").notNull(),
+  status:      text("status").default("pending").notNull(), // pending | submitted | failed
+  response:    text("response"),
+  submittedAt: timestamp("submitted_at"),
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
+});
+
+export const seoInternalLinks = pgTable("seo_internal_links", {
+  id:         text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  sourcePath: text("source_path").notNull(),
+  targetPath: text("target_path").notNull(),
+  anchorText: text("anchor_text").notNull(),
+  context:    text("context"),
+  isEnabled:  boolean("is_enabled").default(true).notNull(),
+  sortOrder:  integer("sort_order").default(0).notNull(),
+  updatedAt:  timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const trafficEvents = pgTable("traffic_events", {
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  eventType: text("event_type").default("page_view").notNull(),
+  path:      text("path").notNull(),
+  referrer:  text("referrer"),
+  source:    text("source"),
+  medium:    text("medium"),
+  campaign:  text("campaign"),
+  visitorId: text("visitor_id"),
+  sessionId: text("session_id"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ── Testimonials ───────────────────────────────────────────────────────────────
 
 export const testimonials = pgTable("testimonials", {
@@ -338,6 +433,14 @@ export type BlogCategory      = typeof blogCategories.$inferSelect;
 export type Media             = typeof media.$inferSelect;
 export type SiteConfig        = typeof siteConfig.$inferSelect;
 export type CmsSection        = typeof cmsSections.$inferSelect;
+export type CmsPage           = typeof cmsPages.$inferSelect;
+export type NewCmsPage        = typeof cmsPages.$inferInsert;
+export type CmsMenu           = typeof cmsMenus.$inferSelect;
+export type CmsMenuItem       = typeof cmsMenuItems.$inferSelect;
+export type SeoPageOverride   = typeof seoPageOverrides.$inferSelect;
+export type SeoSearchSubmission = typeof seoSearchSubmissions.$inferSelect;
+export type SeoInternalLink   = typeof seoInternalLinks.$inferSelect;
+export type TrafficEvent      = typeof trafficEvents.$inferSelect;
 export type Testimonial       = typeof testimonials.$inferSelect;
 export type Notification      = typeof notifications.$inferSelect;
 export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;

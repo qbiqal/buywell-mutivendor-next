@@ -11,6 +11,7 @@ import styles from "./settings.module.css";
 const MODULE_SETTINGS = [
   { key: "module_core_enabled", label: "Core", description: "Auth, admin shell, settings, DB, Redis, cache", locked: true },
   { key: "module_cms_enabled", label: "CMS", description: "Homepage sections, landing content, testimonials" },
+  { key: "module_seo_enabled", label: "SEO", description: "Metadata, sitemap controls, analytics tags, search submissions" },
   { key: "module_blog_enabled", label: "Blog", description: "Public blog and admin blog publishing" },
   { key: "module_ecommerce_enabled", label: "E-Commerce", description: "Shop, cart, checkout, orders, products, payment modules" },
 ] as const;
@@ -66,6 +67,16 @@ const EXTERNAL_KEY_SETTINGS = [
   "sentry_enabled",
   "sentry_dsn",
   "sentry_environment",
+];
+
+const BRAND_SETTINGS = [
+  "site_name",
+  "site_tagline",
+  "site_email",
+  "site_phone",
+  "site_address",
+  "admin_logo_url",
+  "site_logo_url",
 ];
 
 export default function AdminSettingsClient() {
@@ -143,7 +154,7 @@ export default function AdminSettingsClient() {
           <Button
             variant="primary"
             loading={saving}
-            onClick={() => save(["module_core_enabled","module_cms_enabled","module_blog_enabled","module_ecommerce_enabled"])}
+            onClick={() => save(["module_core_enabled","module_cms_enabled","module_seo_enabled","module_blog_enabled","module_ecommerce_enabled"])}
           >
             Save Modules
           </Button>
@@ -340,17 +351,57 @@ export default function AdminSettingsClient() {
 
       {/* Site Info */}
       <Card padding="none" className={styles.settingsCard}>
-        <CardHeader><h2 className={styles.sectionTitle}>Site Information</h2></CardHeader>
+        <CardHeader><h2 className={styles.sectionTitle}>Brand & Site Information</h2></CardHeader>
         <CardBody className={styles.cardFields}>
           <Input label="Site Name"    value={config.site_name    ?? ""} onChange={set("site_name")}    placeholder="APRAS Naturals" />
           <Input label="Site Tagline" value={config.site_tagline ?? ""} onChange={set("site_tagline")} placeholder="Pure Honey & Ghee" />
           <Input label="Email"        value={config.site_email   ?? ""} onChange={set("site_email")}   placeholder="aprasnaturals@gmail.com" type="email" />
           <Input label="Phone / WhatsApp" value={config.site_phone ?? ""} onChange={set("site_phone")} placeholder="+91 9470309006" />
           <Textarea label="Address" value={config.site_address ?? ""} onChange={set("site_address")} placeholder="Ranchi – 834005, Jharkhand" />
+          <div className={styles.logoGrid}>
+            <div className={styles.logoPanel}>
+              <div>
+                <p className={styles.fieldLabel}>Admin Panel Logo</p>
+                <p className={styles.fieldHint}>Sidebar slot renders at 36×36px. Upload target: 144×144px retina square.</p>
+              </div>
+              {config.admin_logo_url && (
+                <div className={styles.logoPreview}>
+                  <img src={config.admin_logo_url} alt="Current admin logo" />
+                  <span>{config.admin_logo_url}</span>
+                </div>
+              )}
+              <MediaUploader
+                accept={["image/jpeg","image/png","image/webp"]}
+                aspectRatio={1}
+                recommendedDimensions={{ width: 144, height: 144, label: "Admin logo: 144×144px (1:1 square)" }}
+                folder="brand"
+                onUpload={(files: UploadedFile[]) => { if (files[0]) setConfig((p) => ({ ...p, admin_logo_url: files[0].url })); }}
+              />
+            </div>
+            <div className={styles.logoPanel}>
+              <div>
+                <p className={styles.fieldLabel}>Website Logo</p>
+                <p className={styles.fieldHint}>Header and footer render up to 180×48px. Upload target: 360×96px transparent-friendly lockup.</p>
+              </div>
+              {config.site_logo_url && (
+                <div className={styles.logoPreview}>
+                  <img src={config.site_logo_url} alt="Current website logo" />
+                  <span>{config.site_logo_url}</span>
+                </div>
+              )}
+              <MediaUploader
+                accept={["image/jpeg","image/png","image/webp"]}
+                aspectRatio={15 / 4}
+                recommendedDimensions={{ width: 360, height: 96, label: "Website logo: 360×96px (15:4 lockup)" }}
+                folder="brand"
+                onUpload={(files: UploadedFile[]) => { if (files[0]) setConfig((p) => ({ ...p, site_logo_url: files[0].url })); }}
+              />
+            </div>
+          </div>
         </CardBody>
         <CardFooter>
-          <Button variant="primary" loading={saving} onClick={() => save(["site_name","site_tagline","site_email","site_phone","site_address"])}>
-            Save Site Info
+          <Button variant="primary" loading={saving} onClick={() => save(BRAND_SETTINGS)}>
+            Save Brand Settings
           </Button>
         </CardFooter>
       </Card>

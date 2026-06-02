@@ -110,14 +110,39 @@ export const cacheInvalidate = {
     invalidateByPrefix("page:cms:landing"),
   ]),
 
+  cmsPages: () => Promise.all([
+    invalidateByPrefix("query:cms:pages"),
+    invalidateByPrefix("page:cms:pages"),
+    invalidateByPrefix("page:sitemap"),
+  ]),
+
+  menus: () => Promise.all([
+    invalidateByPrefix("query:cms:menus"),
+    invalidateByPrefix("page:cms:menus"),
+    invalidateByPrefix("page:cms:landing"),
+  ]),
+
   config: () => Promise.all([
     invalidateByPrefix("query:config"),
     invalidateByPrefix("page:cms:landing"),
+    invalidateByPrefix("page:cms:menus"),
+    invalidateByPrefix("page:sitemap"),
+  ]),
+
+  seo: () => Promise.all([
+    invalidateByPrefix("query:seo"),
+    invalidateByPrefix("page:sitemap"),
+    invalidateByPrefix("page:robots"),
   ]),
 
   testimonials: () => Promise.all([
     invalidateByPrefix("query:testimonials"),
     invalidateByPrefix("page:cms:landing"),
+  ]),
+
+  traffic: () => Promise.all([
+    invalidateByPrefix("query:traffic"),
+    invalidateByPrefix("page:admin:analytics"),
   ]),
 };
 

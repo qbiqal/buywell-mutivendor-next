@@ -1,13 +1,24 @@
 import type { MetadataRoute } from "next";
+import { getAllSiteConfig } from "@/lib/config";
+import { getSeoConfig } from "@/lib/seo";
 
-export default function robots(): MetadataRoute.Robots {
-  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://aprasnaturals.com").replace(/\/$/, "");
+export const dynamic = "force-dynamic";
+
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const [seo, seoConfigRaw] = await Promise.all([
+    getSeoConfig(),
+    getAllSiteConfig("seo"),
+  ]);
+  const extraDisallow = (seoConfigRaw.seo_robots_extra_disallow ?? "")
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
 
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/home", "/coming-soon", "/shop", "/blog"],
-      disallow: [
+      allow: seo.indexingEnabled ? ["/", "/home", "/coming-soon", "/shop", "/blog"] : [],
+      disallow: seo.indexingEnabled ? [
         "/admin",
         "/api",
         "/checkout",
@@ -19,8 +30,9 @@ export default function robots(): MetadataRoute.Robots {
         "/forgot-password",
         "/reset-password",
         "/verify-email",
-      ],
+        ...extraDisallow,
+      ] : ["/"],
     },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${seo.baseUrl}/sitemap.xml`,
   };
 }

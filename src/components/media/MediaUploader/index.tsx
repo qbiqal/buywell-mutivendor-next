@@ -140,20 +140,23 @@ export function MediaUploader({
       width:  (crop.width  / 100) * img.width  * scaleX,
       height: (crop.height / 100) * img.height * scaleY,
     };
-    canvas.width  = pixelCrop.width;
-    canvas.height = pixelCrop.height;
-    ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, canvas.width, canvas.height);
+    const targetWidth = recommendedDimensions?.width ?? Math.round(pixelCrop.width);
+    const targetHeight = recommendedDimensions?.height ?? Math.round(pixelCrop.height);
+    canvas.width  = targetWidth;
+    canvas.height = targetHeight;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, targetWidth, targetHeight);
 
     canvas.toBlob((blob) => {
       if (!blob) return;
       const croppedFile = new File([blob], pendingFile.name, { type: pendingFile.type });
       setCropModal(false);
       setFiles([croppedFile]);
-      uploadFiles([croppedFile]);
+      uploadFiles([croppedFile], { width: targetWidth, height: targetHeight });
     }, pendingFile.type, 0.92);
   }
 
-  async function uploadFiles(toUpload: File[]) {
+  async function uploadFiles(toUpload: File[], dimensions?: { width: number; height: number }) {
     setUploading(true);
     setProgress(0);
     const uploaded: UploadedFile[] = [];
@@ -164,6 +167,10 @@ export function MediaUploader({
         const form = new FormData();
         form.append("file",   f);
         form.append("folder", folder);
+        if (dimensions) {
+          form.append("width", String(dimensions.width));
+          form.append("height", String(dimensions.height));
+        }
 
         const res  = await fetch("/api/media/upload", { method: "POST", body: form });
         const data = await res.json();

@@ -1,6 +1,6 @@
 # APRAS Naturals — AI Agent Reference
 
-> Last updated: 2026-05-30
+> Last updated: 2026-06-02
 > Framework: Next.js 16.2.2
 > DB: PostgreSQL 17
 > Cache: Redis 7 with `an:` prefix
@@ -16,7 +16,7 @@
 4. Config must come from DB first via `src/lib/config.ts`; env is fallback only.
 5. Redis keys must be passed without the `an:` prefix because ioredis adds it through `keyPrefix`.
 6. Payment must stay pluggable. Offline QR is gateway #1.
-7. Core must stay lightweight. CMS, E-Commerce, Blog, and payment gateways are target modules.
+7. Core must stay lightweight. CMS, SEO, E-Commerce, Blog, and payment gateways are target modules.
 8. Keep `/` module-aware: when CMS is disabled it redirects to `/login`; Coming Soon stays at `/coming-soon`.
 9. Use `page.tsx` as the server shell and `*Client.tsx` for interactivity.
 10. Run `npm run verify` after meaningful source changes unless the change is docs-only.
@@ -42,19 +42,22 @@
 - ✅ Reusable admin datatable filter panel on products, customers, orders, and blog with search, status, date range, amount/price/stock/content filters where applicable.
 - ✅ Admin customer list/detail with search, spend/order stats, addresses, orders, and deactivate/reactivate.
 - ✅ Admin media library with grid/list filters, upload, preview, URL copy, alt/folder edit, and guarded delete.
-- ✅ Admin analytics with revenue/orders/payment/product/customer charts and CSV export.
+- ✅ Admin analytics with revenue/orders/payment/product/customer charts, first-party traffic analytics, and CSV export.
 - ✅ Admin WhatsApp panel with manual send, template manager, order resend API/buttons, and delivery logs.
 - ✅ Auth recovery flow: forgot password, reset password, email verification, resend verification.
 - ✅ Core notification/OTP provider layer with Resend email gateway, in-app notifications, delivery logs, and push subscription storage.
 - ✅ Admin provider key provisions for Resend, SMS, Telegram, Web Push, WhatsApp, R2, Razorpay, Stripe, and Sentry; DB config is primary and `.env` is fallback.
 - ✅ Secret config encryption at rest for provider/API keys.
-- ✅ Sitemap and robots.
+- ✅ SEO module with sitewide metadata settings, route overrides, verification codes, GTM/GA/Meta Pixel config, sitemap/robots controls, internal links, and search submission log.
+- ✅ Dynamic sitemap and robots include CMS pages and SEO settings.
 - ✅ Redis rate limiting for login/register/recovery attempts.
 - ✅ Same-site API mutation hardening in `proxy.ts`.
 - ✅ Sentry server-side capture path with DB config/env fallback.
 - ✅ Rich HTML sanitization for blog content and product long descriptions.
-- ✅ Module control plane for Core, CMS, Blog, E-Commerce, and Offline QR.
-- ✅ Admin module toggles, locked Core toggle, localization, currency, notification, OTP, and Resend settings.
+- ✅ CMS page creator/editor and menu manager for landing header, other-pages header, and footer menus.
+- ✅ Module control plane for Core, CMS, SEO, Blog, E-Commerce, and Offline QR.
+- ✅ Admin module toggles, locked Core toggle, brand logo uploaders, localization, currency, notification, OTP, and Resend settings.
+- ✅ Admin logo uploader crops to 144x144 and website logo uploader crops to 360x96 through `MediaUploader`.
 - ✅ Module-aware public/admin nav, route gates, API gates, and root providers.
 - ✅ Module-aware dynamic cart provider/header imports so CMS-only/Blog-only installs do not load cart UI.
 - ✅ Offline QR payment gateway abstraction and registry-based order creation.
@@ -91,6 +94,8 @@ npm run db:migrate
 npm run db:seed
 node -e "require('./scripts/config-seed.js')().then(()=>console.log('config defaults seeded'))"
 npm run db:indexes
+npm run typecheck
+npm run unit
 npm run build
 npm run smoke
 npm run e2e
@@ -106,7 +111,9 @@ Local seed counts after audit:
 | product_variants | 9 |
 | product_images | 12 |
 | cms_sections | 14 |
-| site_config | 90 |
+| cms_menus | 3 |
+| cms_menu_items | 12 |
+| site_config | 110+ |
 | otp_codes | 0 |
 | notification_deliveries | 0 |
 | push_subscriptions | 0 |
@@ -122,7 +129,10 @@ Core
   auth, users, settings, notifications, OTP, media library, DB, Redis, cache, route protection, module registry, provider key config
 
 CMS Module
-  /home, /admin/cms, cms_sections, testimonials, landing content
+  /home, /admin/cms, /admin/cms/pages, /admin/cms/menus, cms_sections, cms_pages, cms_menus, testimonials, landing content, public CMS pages
+
+SEO Module
+  /admin/seo, seo_page_overrides, seo_internal_links, seo_search_submissions, traffic_events, GTM/GA/Meta Pixel config, sitemap/robots controls
 
 E-Commerce Module
   /shop, /checkout, /orders, /profile, admin orders/products/customers, products, variants, orders
@@ -137,10 +147,10 @@ Payment Submodules
 Implemented module behavior:
 
 - Core cannot be disabled.
-- CMS, E-Commerce, Blog, and Offline QR can be enabled/disabled from admin.
+- CMS, SEO, E-Commerce, Blog, and Offline QR can be enabled/disabled from admin.
 - Disabled modules hide public/admin nav, block pages/APIs, and skip e-commerce providers.
 - Notification channels and OTP behavior are Core settings, not business modules.
-- Current config keys: `module_cms_enabled`, `module_ecommerce_enabled`, `module_blog_enabled`, `payment_offline_qr_enabled`.
+- Current config keys: `module_cms_enabled`, `module_seo_enabled`, `module_ecommerce_enabled`, `module_blog_enabled`, `payment_offline_qr_enabled`.
 - Current cart provider and cart header actions are dynamically imported only when E-Commerce is enabled.
 - Next hardening rule: split future heavy MLM/payment modules into module folders/services and dynamically import them only when enabled.
 
@@ -175,6 +185,7 @@ Implemented module behavior:
 | `layout.tsx` | Module-aware root providers: Toast always, Cart only when E-Commerce enabled | ✅ |
 | `(public)/layout.tsx` | Public shell with module-aware CustomerHeader/Footer | ✅ |
 | `(public)/page.tsx` | CMS landing route-group shell | ✅ |
+| `(public)/[slug]/page.tsx` | Published CMS page renderer and page SEO metadata | ✅ |
 | `(public)/LandingClient.tsx` | Landing renderer | ✅ |
 | `(public)/shop/page.tsx` | Shop listing shell | ✅ |
 | `(public)/shop/ShopClient.tsx` | Shop listing UI/filter | ✅ |
@@ -195,15 +206,16 @@ Implemented module behavior:
 | `(customer)/notifications/*` | In-app notification center | ✅ |
 | `(admin)/layout.tsx` | Admin shell, auth check, module-aware nav | ✅ |
 | `(admin)/admin/dashboard/*` | Module-aware admin dashboard | ✅ |
-| `(admin)/admin/analytics/*` | Revenue/order/product/customer analytics | ✅ |
+| `(admin)/admin/analytics/*` | Revenue/order/product/customer and first-party traffic analytics | ✅ |
 | `(admin)/admin/orders/*` | Admin order list/detail | ✅ |
 | `(admin)/admin/products/*` | Product list/new/edit form | ✅ |
 | `(admin)/admin/customers/*` | Customer list/detail and activate/deactivate | ✅ |
 | `(admin)/admin/media/*` | Media library grid/list/upload/edit/delete | ✅ |
 | `(admin)/admin/whatsapp/*` | WhatsApp manual send/templates/logs | ✅ |
 | `(admin)/admin/blog/*` | Blog list/new/edit/category manager | ✅ |
-| `(admin)/admin/cms/*` | CMS section list/toggle/detail editor | ✅ |
-| `(admin)/admin/settings/*` | Module, localization, currency, site, payment, shipping, notification, OTP, external provider settings | ✅ |
+| `(admin)/admin/cms/*` | CMS section list/toggle/detail editor, page editor, menu manager | ✅ |
+| `(admin)/admin/seo/*` | SEO, analytics tags, route overrides, internal links, search submissions | ✅ |
+| `(admin)/admin/settings/*` | Module, brand logos, localization, currency, site, payment, shipping, notification, OTP, external provider settings | ✅ |
 | `checkout/*` | Checkout/payment/confirmation | ✅ |
 | `sitemap.ts` | Module-aware XML sitemap | ✅ |
 | `robots.ts` | Robots rules with sitemap link | ✅ |
@@ -237,6 +249,7 @@ Implemented module behavior:
 | `POST /api/media/upload` | Admin | ✅ |
 | `GET /api/admin/analytics` | Admin | ✅ |
 | `GET /api/admin/analytics/dashboard` | Admin | ✅ module-aware |
+| `POST /api/analytics/traffic` | None | ✅ first-party public page views |
 | `GET/PATCH /api/admin/orders/[id]` | Admin | ✅ |
 | `GET /api/admin/orders` | Admin | ✅ |
 | `GET/POST /api/admin/products` | Admin | ✅ |
@@ -252,6 +265,10 @@ Implemented module behavior:
 | `GET/POST/PATCH/DELETE /api/admin/blog/categories` | Admin | ✅ |
 | `GET /api/admin/cms` | Admin | ✅ |
 | `GET/PUT /api/admin/cms/[sectionKey]` | Admin | ✅ API |
+| `GET/POST /api/admin/cms/pages` | Admin | ✅ |
+| `GET/PATCH/DELETE /api/admin/cms/pages/[id]` | Admin | ✅ |
+| `GET/PATCH /api/admin/cms/menus` | Admin | ✅ |
+| `GET/PATCH/POST /api/admin/seo` | Admin | ✅ |
 | `GET/PATCH /api/admin/config` | Admin | ✅ |
 
 ### `src/components`
@@ -320,12 +337,24 @@ query:product:*
 query:related:*
 query:blog:*
 query:cms:*
+query:cms:pages:*
+query:cms:menus:*
+query:seo:*
+query:traffic:*
 query:testimonials:*
 config:*
 page:*
 ```
 
 ioredis stores them as `an:<key>`.
+
+Important invalidation groups:
+
+- `cacheInvalidate.config()` plus `revalidateSiteShell()` refresh logo, brand, public shell, sitemap, and robots consumers.
+- `cacheInvalidate.cmsPages()` refreshes CMS page queries and affected public slugs.
+- `cacheInvalidate.menus()` refreshes header/footer menu consumers.
+- `cacheInvalidate.seo()` refreshes SEO overrides, sitemap, and robots.
+- `cacheInvalidate.traffic()` refreshes admin traffic analytics.
 
 ---
 

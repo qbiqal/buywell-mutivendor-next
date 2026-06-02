@@ -54,9 +54,13 @@ export default function CMSClient() {
           <h1 className="admin-page-title">Landing Page CMS</h1>
           <p className="admin-page-subtitle">Enable, disable, and configure all landing page sections</p>
         </div>
-        <a href="/" target="_blank" rel="noopener noreferrer">
-          <Button variant="ghost" size="sm">🌐 Preview Site</Button>
-        </a>
+        <div className={styles.headerActions}>
+          <a href="/admin/cms/pages"><Button variant="outline" size="sm">CMS Pages</Button></a>
+          <a href="/admin/cms/menus"><Button variant="outline" size="sm">Menus</Button></a>
+          <a href="/" target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" size="sm">Preview Site</Button>
+          </a>
+        </div>
       </div>
 
       {loading ? (

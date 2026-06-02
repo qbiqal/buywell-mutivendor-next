@@ -1,7 +1,10 @@
 import LandingPage from "@/app/(public)/LandingPage";
+import { buildSeoMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "APRAS Naturals — Pure Prakvedaa Honey & A2 Bilona Ghee",
-};
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata() {
+  return buildSeoMetadata("/", { canonicalPath: "/" });
+}
 
 export default LandingPage;

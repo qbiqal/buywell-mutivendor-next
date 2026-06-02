@@ -5,6 +5,7 @@ import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError, ValidationError } from "@/lib/errors";
 import { cacheInvalidate } from "@/lib/cache";
 import { getAllSiteConfig, setSiteConfig } from "@/lib/config";
+import { revalidateSiteShell } from "@/lib/revalidation";
 
 export async function GET(req: NextRequest) {
   try {
@@ -29,6 +30,7 @@ export async function PATCH(req: NextRequest) {
       await setSiteConfig(key, value ?? "");
     }
     await cacheInvalidate.config();
+    revalidateSiteShell();
     return NextResponse.json({ success: true });
   } catch (err) {
     return handleApiError(err);

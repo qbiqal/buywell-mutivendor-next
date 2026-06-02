@@ -20,9 +20,11 @@ interface AdminSidebarProps {
   pendingOrders?: number;
   navItems?: AdminNavItem[];
   viewSiteHref?: string;
+  logoUrl?: string;
+  siteName?: string;
 }
 
-export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS, viewSiteHref = "/" }: AdminSidebarProps) {
+export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS, viewSiteHref = "/", logoUrl = "", siteName = "APRAS" }: AdminSidebarProps) {
   const pathname  = usePathname();
   const router    = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -38,10 +40,12 @@ export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS,
       <aside className={[styles.sidebar, collapsed ? styles.collapsed : ""].join(" ")}>
         {/* Logo + collapse toggle */}
         <div className={styles.logo}>
-          <div className={styles.logoIcon}>🍯</div>
+          <div className={styles.logoIcon}>
+            {logoUrl ? <img src={logoUrl} alt={`${siteName} admin logo`} /> : "🍯"}
+          </div>
           {!collapsed && (
             <div className={styles.logoText}>
-              <span className={styles.logoName}>APRAS</span>
+              <span className={styles.logoName}>{siteName}</span>
               <span className={styles.logoSub}>Admin Panel</span>
             </div>
           )}

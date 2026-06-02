@@ -19,6 +19,14 @@ interface AnalyticsData {
   paymentsByStatus: Array<{ status: string; count: number }>;
   topProducts: Array<{ productName: string; quantity: number; revenueInr: number }>;
   customerGrowth: Array<{ date: string; count: number }>;
+  traffic: {
+    pageViews: number;
+    uniqueVisitors: number;
+    sessions: number;
+    topPages: Array<{ path: string; views: number; visitors: number }>;
+    referrers: Array<{ referrer: string; views: number }>;
+    sources: Array<{ source: string; views: number }>;
+  };
 }
 
 const RANGES = [7, 30, 90];
@@ -80,6 +88,10 @@ export default function AdminAnalyticsClient() {
         <Metric label="Orders" value={data.summary.totalOrders.toLocaleString("en-IN")} meta="All statuses" />
         <Metric label="Average Order" value={`₹${formatMoney(data.summary.averageOrderInr)}`} meta="Gross average" />
         <Metric label="Pending Verification" value={data.summary.pendingVerification.toLocaleString("en-IN")} meta="Proof uploaded" urgent={data.summary.pendingVerification > 0} />
+        <Metric label="Page Views" value={data.traffic.pageViews.toLocaleString("en-IN")} meta="First-party tracking" />
+        <Metric label="Visitors" value={data.traffic.uniqueVisitors.toLocaleString("en-IN")} meta="Distinct visitor IDs" />
+        <Metric label="Sessions" value={data.traffic.sessions.toLocaleString("en-IN")} meta="Browser sessions" />
+        <Metric label="Sample Requests" value={data.summary.sampleRequests.toLocaleString("en-IN")} meta="Order intent" />
       </div>
 
       <div className={styles.layout}>
@@ -149,6 +161,40 @@ export default function AdminAnalyticsClient() {
             ))}
           </div>
         </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <h2>Top Pages</h2>
+            <Badge variant="info">{data.traffic.pageViews} views</Badge>
+          </div>
+          <TrafficRows
+            rows={data.traffic.topPages.map((row) => ({
+              label: row.path,
+              value: `${row.views} views`,
+              meta: `${row.visitors} visitors`,
+            }))}
+          />
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <h2>Traffic Sources</h2>
+          </div>
+          <StatusBars rows={data.traffic.sources.map((row) => ({ status: row.source, count: row.views }))} max={Math.max(1, ...data.traffic.sources.map((row) => row.views))} />
+        </section>
+
+        <section className={[styles.panel, styles.widePanel].join(" ")}>
+          <div className={styles.panelHeader}>
+            <h2>Referrers</h2>
+          </div>
+          <TrafficRows
+            rows={data.traffic.referrers.map((row) => ({
+              label: row.referrer,
+              value: `${row.views} views`,
+              meta: row.referrer === "Direct" ? "Typed, bookmark, or hidden referrer" : "External source",
+            }))}
+          />
+        </section>
       </div>
     </div>
   );
@@ -177,6 +223,22 @@ function StatusBars({ rows, max }: { rows: Array<{ status: string; count: number
           <div className={styles.statusTrack}>
             <span style={{ width: `${Math.max(2, (row.count / max) * 100)}%` }} />
           </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TrafficRows({ rows }: { rows: Array<{ label: string; value: string; meta: string }> }) {
+  if (rows.length === 0) return <p className={styles.empty}>No traffic data yet.</p>;
+  return (
+    <div className={styles.productTable}>
+      {rows.map((row, index) => (
+        <div key={`${row.label}-${index}`} className={styles.productRow}>
+          <span className={styles.rank}>{index + 1}</span>
+          <span className={styles.productName}>{row.label}</span>
+          <span>{row.meta}</span>
+          <strong>{row.value}</strong>
         </div>
       ))}
     </div>

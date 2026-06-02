@@ -2,7 +2,38 @@ import React from "react";
 import Link from "next/link";
 import styles from "./Footer.module.css";
 
-export function Footer() {
+export interface FooterLink {
+  label: string;
+  href: string;
+  opensNewTab?: boolean;
+}
+
+interface FooterProps {
+  links?: FooterLink[];
+  logoUrl?: string;
+  siteName?: string;
+  tagline?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+}
+
+const FALLBACK_LINKS: FooterLink[] = [
+  { label: "Blog", href: "/blog" },
+  { label: "Our Promise", href: "/#promise" },
+  { label: "Community", href: "/#gallery" },
+  { label: "Free Sample", href: "/#contact" },
+];
+
+export function Footer({
+  links = FALLBACK_LINKS,
+  logoUrl = "",
+  siteName = "APRAS Naturals",
+  tagline = "Authorized partner and CNF of Prakvedaa. Pure mono-floral honey and A2 Bilona Ghee from India's heartland.",
+  email = "aprasnaturals@gmail.com",
+  phone = "+91 9470309006",
+  address = "Ranchi - 834005, Jharkhand",
+}: FooterProps) {
   return (
     <footer className={styles.footer}>
       <div className={styles.ctaBand}>
@@ -17,10 +48,16 @@ export function Footer() {
       <div className={styles.inner}>
         <div className={styles.brandCol}>
           <div className={styles.logo}>
-            <div className={styles.logoIcon}>🍯</div>
-            <span className={styles.logoName}>APRAS Naturals</span>
+            {logoUrl ? (
+              <img src={logoUrl} alt={siteName} className={styles.logoImage} />
+            ) : (
+              <>
+                <div className={styles.logoIcon}>🍯</div>
+                <span className={styles.logoName}>{siteName}</span>
+              </>
+            )}
           </div>
-          <p className={styles.desc}>Authorized partner and CNF of Prakvedaa. Pure mono-floral honey and A2 Bilona Ghee from India's heartland.</p>
+          <p className={styles.desc}>{tagline}</p>
           <div className={styles.trustRow}>
             <span>Lab tested</span>
             <span>Raw honey</span>
@@ -39,18 +76,24 @@ export function Footer() {
         <div className={styles.col}>
           <p className={styles.colTitle}>Company</p>
           <div className={styles.links}>
-            <Link href="/blog">Blog</Link>
-            <Link href="/#promise">Our Promise</Link>
-            <Link href="/#gallery">Community</Link>
-            <Link href="/#contact">Free Sample</Link>
+            {links.map((link) => (
+              <Link
+                key={`${link.href}-${link.label}`}
+                href={link.href}
+                target={link.opensNewTab ? "_blank" : undefined}
+                rel={link.opensNewTab ? "noopener noreferrer" : undefined}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
         <div className={styles.col}>
           <p className={styles.colTitle}>Contact</p>
           <div className={styles.contact}>
-            <p><a href="mailto:aprasnaturals@gmail.com">aprasnaturals@gmail.com</a></p>
-            <p><a href="tel:+919470309006">+91 9470309006</a></p>
-            <p>Ranchi – 834005, Jharkhand</p>
+            <p><a href={`mailto:${email}`}>{email}</a></p>
+            <p><a href={`tel:${phone.replace(/\s+/g, "")}`}>{phone}</a></p>
+            <p>{address}</p>
           </div>
         </div>
       </div>

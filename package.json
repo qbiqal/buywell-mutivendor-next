@@ -14,9 +14,10 @@
     "db:studio": "drizzle-kit studio",
     "lint": "echo 'lint: no eslint configured — skipped'",
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
+    "unit": "tsx scripts/unit.ts",
     "smoke": "tsx scripts/smoke.ts",
     "e2e": "tsx scripts/e2e.ts",
-    "verify": "npm run build && npm run smoke && npm run e2e"
+    "verify": "npm run typecheck && npm run unit && npm run build && npm run smoke && npm run e2e"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

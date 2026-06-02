@@ -3,11 +3,12 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./CustomerHeader.module.css";
-import { LogoIcon, LeafLogo } from "@/components/ui/Logo";
+import { LogoIcon } from "@/components/ui/Logo";
 
 export interface PublicNavItem {
   label: string;
   href: string;
+  opensNewTab?: boolean;
 }
 
 const NAV_LINKS: PublicNavItem[] = [
@@ -19,12 +20,26 @@ const NAV_LINKS: PublicNavItem[] = [
 interface CustomerHeaderProps {
   user?: { firstName: string; email: string; role: string } | null;
   navLinks?: PublicNavItem[];
+  landingNavLinks?: PublicNavItem[];
+  siteNavLinks?: PublicNavItem[];
   ecommerceEnabled?: boolean;
   cartSlot?: React.ReactNode;
   topOffset?: number;
+  logoUrl?: string;
+  siteName?: string;
 }
 
-export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = true, cartSlot = null, topOffset = 0 }: CustomerHeaderProps) {
+export function CustomerHeader({
+  user,
+  navLinks,
+  landingNavLinks,
+  siteNavLinks,
+  ecommerceEnabled = true,
+  cartSlot = null,
+  topOffset = 0,
+  logoUrl = "",
+  siteName = "APRAS Naturals",
+}: CustomerHeaderProps) {
   const pathname = usePathname();
   const router   = useRouter();
   const [scrolled,     setScrolled]     = useState(false);
@@ -56,20 +71,36 @@ export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = 
     router.refresh();
   }
 
+  const resolvedNavLinks = pathname === "/"
+    ? (landingNavLinks?.length ? landingNavLinks : navLinks ?? NAV_LINKS)
+    : (siteNavLinks?.length ? siteNavLinks : navLinks ?? NAV_LINKS);
+
   return (
     <>
     <header className={[styles.header, scrolled ? styles.scrolled : ""].join(" ")} style={topOffset ? { top: topOffset } : undefined}>
       <div className={styles.inner}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <LogoIcon size={36} />
-          <span>APRAS <span className={styles.logoAccent}>Naturals</span></span>
+          {logoUrl ? (
+            <img src={logoUrl} alt={siteName} className={styles.logoImage} />
+          ) : (
+            <>
+              <LogoIcon size={36} />
+              <span>APRAS <span className={styles.logoAccent}>Naturals</span></span>
+            </>
+          )}
         </Link>
 
         {/* Desktop nav */}
         <nav className={styles.nav}>
-          {navLinks.map((l) => (
-            <Link key={l.href} href={l.href} className={[styles.navLink, pathname.startsWith(l.href) ? styles.active : ""].join(" ")}>
+          {resolvedNavLinks.map((l) => (
+            <Link
+              key={`${l.href}-${l.label}`}
+              href={l.href}
+              target={l.opensNewTab ? "_blank" : undefined}
+              rel={l.opensNewTab ? "noopener noreferrer" : undefined}
+              className={[styles.navLink, isActive(pathname, l.href) ? styles.active : ""].join(" ")}
+            >
               {l.label}
             </Link>
           ))}
@@ -145,8 +176,15 @@ export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = 
       {/* Mobile drawer */}
       {menuOpen && (
         <div className={styles.mobileDrawer}>
-          {navLinks.map((l) => (
-            <Link key={l.href} href={l.href} className={styles.mobileLink} onClick={() => setMenuOpen(false)}>
+          {resolvedNavLinks.map((l) => (
+            <Link
+              key={`${l.href}-${l.label}`}
+              href={l.href}
+              target={l.opensNewTab ? "_blank" : undefined}
+              rel={l.opensNewTab ? "noopener noreferrer" : undefined}
+              className={styles.mobileLink}
+              onClick={() => setMenuOpen(false)}
+            >
               {l.label}
             </Link>
           ))}
@@ -173,4 +211,10 @@ export function CustomerHeader({ user, navLinks = NAV_LINKS, ecommerceEnabled = 
 
     </>
   );
+}
+
+function isActive(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/";
+  if (href.startsWith("/#")) return pathname === "/";
+  return pathname.startsWith(href.split("?")[0]);
 }
