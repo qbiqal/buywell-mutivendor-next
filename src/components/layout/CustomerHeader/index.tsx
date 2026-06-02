@@ -9,6 +9,7 @@ export interface PublicNavItem {
   label: string;
   href: string;
   opensNewTab?: boolean;
+  children?: PublicNavItem[];
 }
 
 const NAV_LINKS: PublicNavItem[] = [
@@ -95,15 +96,32 @@ export function CustomerHeader({
         {/* Desktop nav */}
         <nav className={styles.nav}>
           {resolvedNavLinks.map((l) => (
-            <Link
-              key={`${l.href}-${l.label}`}
-              href={l.href}
-              target={l.opensNewTab ? "_blank" : undefined}
-              rel={l.opensNewTab ? "noopener noreferrer" : undefined}
-              className={[styles.navLink, isActive(pathname, l.href) ? styles.active : ""].join(" ")}
-            >
-              {l.label}
-            </Link>
+            <div key={`${l.href}-${l.label}`} className={styles.navGroup}>
+              <Link
+                href={l.href}
+                target={l.opensNewTab ? "_blank" : undefined}
+                rel={l.opensNewTab ? "noopener noreferrer" : undefined}
+                className={[styles.navLink, isActive(pathname, l.href) ? styles.active : ""].join(" ")}
+              >
+                {l.label}
+                {!!l.children?.length && <span className={styles.navChevron}>▾</span>}
+              </Link>
+              {!!l.children?.length && (
+                <div className={styles.subNav}>
+                  {l.children.map((child) => (
+                    <Link
+                      key={`${child.href}-${child.label}`}
+                      href={child.href}
+                      target={child.opensNewTab ? "_blank" : undefined}
+                      rel={child.opensNewTab ? "noopener noreferrer" : undefined}
+                      className={styles.subNavLink}
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </nav>
 
@@ -178,16 +196,29 @@ export function CustomerHeader({
       {menuOpen && (
         <div className={styles.mobileDrawer}>
           {resolvedNavLinks.map((l) => (
-            <Link
-              key={`${l.href}-${l.label}`}
-              href={l.href}
-              target={l.opensNewTab ? "_blank" : undefined}
-              rel={l.opensNewTab ? "noopener noreferrer" : undefined}
-              className={styles.mobileLink}
-              onClick={() => setMenuOpen(false)}
-            >
-              {l.label}
-            </Link>
+            <div key={`${l.href}-${l.label}`} className={styles.mobileGroup}>
+              <Link
+                href={l.href}
+                target={l.opensNewTab ? "_blank" : undefined}
+                rel={l.opensNewTab ? "noopener noreferrer" : undefined}
+                className={styles.mobileLink}
+                onClick={() => setMenuOpen(false)}
+              >
+                {l.label}
+              </Link>
+              {!!l.children?.length && l.children.map((child) => (
+                <Link
+                  key={`${child.href}-${child.label}`}
+                  href={child.href}
+                  target={child.opensNewTab ? "_blank" : undefined}
+                  rel={child.opensNewTab ? "noopener noreferrer" : undefined}
+                  className={styles.mobileSubLink}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {child.label}
+                </Link>
+              ))}
+            </div>
           ))}
           {user ? (
             <>

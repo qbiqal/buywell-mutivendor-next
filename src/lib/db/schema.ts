@@ -400,6 +400,7 @@ export const cmsMenuItems = pgTable("cms_menu_items", {
   pageId:      text("page_id").references(() => cmsPages.id, { onDelete: "set null" }),
   blogPostId:  text("blog_post_id").references(() => blogPosts.id, { onDelete: "set null" }),
   productId:   text("product_id").references(() => products.id, { onDelete: "set null" }),
+  parentItemId: text("parent_item_id"),
   opensNewTab: boolean("opens_new_tab").default(false).notNull(),
   isEnabled:   boolean("is_enabled").default(true).notNull(),
   sortOrder:   integer("sort_order").default(0).notNull(),

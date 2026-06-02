@@ -195,10 +195,21 @@
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 24px;
 }
 
-.navLinks button {
+.navItemWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 54px;
+}
+
+.navLinks button,
+.navItemWrap > .navPageLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--landing-ink);
   font-size: 14px;
   font-weight: 600;
@@ -207,7 +218,59 @@
   transition: color 0.2s;
 }
 
-.navLinks button:hover {
+.navLinks button:hover,
+.navItemWrap > .navPageLink:hover {
+  color: var(--landing-green);
+}
+
+.navChevron {
+  font-size: 16px;
+}
+
+.navSubMenu {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: 50%;
+  min-width: 240px;
+  display: grid;
+  gap: 2px;
+  padding: 9px;
+  border: 1px solid rgba(45,125,70,0.14);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.96);
+  box-shadow: 0 22px 54px rgba(13, 37, 17, 0.14);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 10px);
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+.navItemWrap:hover .navSubMenu,
+.navItemWrap:focus-within .navSubMenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.navSubMenu a,
+.navSubMenu button {
+  width: 100%;
+  display: block;
+  padding: 11px 12px;
+  border-radius: 7px;
+  color: var(--landing-ink);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-align: left;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.navSubMenu a:hover,
+.navSubMenu button:hover {
+  background: rgba(45,125,70,0.08);
   color: var(--landing-green);
 }
 
@@ -216,7 +279,7 @@
 }
 
 .heroNav .navLogo span span,
-.heroNav .navLinks button,
+.heroNav .navItemWrap > button,
 .heroNav .menuToggle {
   color: var(--landing-green-dk);
 }
@@ -366,8 +429,13 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 28px;
+  gap: 22px;
   padding: 32px 24px;
+}
+
+.drawerNavGroup {
+  display: grid;
+  gap: 8px;
 }
 
 .drawerLinks button {
@@ -375,6 +443,22 @@
   color: var(--landing-ink);
   font-size: 18px;
   font-weight: 600;
+}
+
+.drawerSubLinks {
+  display: grid;
+  gap: 4px;
+  padding-left: 14px;
+  border-left: 2px solid rgba(45,125,70,0.14);
+}
+
+.drawerSubLinks a,
+.drawerSubLinks button {
+  color: var(--landing-muted);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-decoration: none;
 }
 
 .drawerCta {

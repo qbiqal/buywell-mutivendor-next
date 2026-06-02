@@ -6,6 +6,7 @@ export interface FooterLink {
   label: string;
   href: string;
   opensNewTab?: boolean;
+  children?: FooterLink[];
 }
 
 interface FooterProps {
@@ -77,14 +78,29 @@ export function Footer({
           <p className={styles.colTitle}>Company</p>
           <div className={styles.links}>
             {links.map((link) => (
-              <Link
-                key={`${link.href}-${link.label}`}
-                href={link.href}
-                target={link.opensNewTab ? "_blank" : undefined}
-                rel={link.opensNewTab ? "noopener noreferrer" : undefined}
-              >
-                {link.label}
-              </Link>
+              <div key={`${link.href}-${link.label}`} className={styles.footerLinkGroup}>
+                <Link
+                  href={link.href}
+                  target={link.opensNewTab ? "_blank" : undefined}
+                  rel={link.opensNewTab ? "noopener noreferrer" : undefined}
+                >
+                  {link.label}
+                </Link>
+                {!!link.children?.length && (
+                  <div className={styles.footerSubLinks}>
+                    {link.children.map((child) => (
+                      <Link
+                        key={`${child.href}-${child.label}`}
+                        href={child.href}
+                        target={child.opensNewTab ? "_blank" : undefined}
+                        rel={child.opensNewTab ? "noopener noreferrer" : undefined}
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>

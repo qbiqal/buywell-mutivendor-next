@@ -63,6 +63,7 @@ const indexes = [
   `CREATE INDEX IF NOT EXISTS idx_cms_pages_updated_at ON cms_pages(updated_at DESC)`,
   `CREATE INDEX IF NOT EXISTS idx_cms_menus_menu_key ON cms_menus(menu_key)`,
   `CREATE INDEX IF NOT EXISTS idx_cms_menu_items_menu_id ON cms_menu_items(menu_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_cms_menu_items_parent_item_id ON cms_menu_items(parent_item_id)`,
   `CREATE INDEX IF NOT EXISTS idx_cms_menu_items_sort_order ON cms_menu_items(sort_order)`,
   // SEO and traffic
   `CREATE INDEX IF NOT EXISTS idx_seo_page_overrides_route_path ON seo_page_overrides(route_path)`,

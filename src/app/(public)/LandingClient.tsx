@@ -9,11 +9,13 @@ import {
   useScroll,
   useSpring,
 } from "framer-motion";
+import type { PublicMenuItem } from "@/lib/cms";
 import styles from "./landing.module.css";
 
 interface LandingClientProps {
   sections: Record<string, Record<string, unknown>>;
   siteConfig: Record<string, string>;
+  navItems?: PublicMenuItem[];
   featuredProducts: Array<{ id: string; name: string; slug: string; category: string; description: string | null }>;
   testimonials: Array<{ id: string; name: string; content: string; mediaUrl: string | null; mediaType: string | null }>;
   recentPosts: Array<{ id: string; title: string; slug: string; excerpt: string | null; coverImageUrl: string | null; publishedAt: Date | null }>;
@@ -87,6 +89,15 @@ const defaultFaqs = [
   { question: "What does Mono-Floral mean?", answer: "Mono-floral means bees primarily collected nectar from one specific flower such as Tulsi, Karanj, or Moringa. Each honey keeps its own natural taste profile without artificial additions." },
   { question: "What is Bilona Ghee?", answer: "Bilona is the traditional Indian method of making ghee. A2 milk becomes curd, the curd is wooden-churned into butter, and the butter is slow-heated into rich ghee." },
   { question: "Can I get a free sample before ordering?", answer: "Yes. APRAS Naturals offers free samples to selected customers. Use the sample request path and the team will contact you to arrange delivery." },
+];
+
+const fallbackNavItems: PublicMenuItem[] = [
+  { id: "promise", label: "Our Promise", href: "/#promise", itemType: "landing_anchor", opensNewTab: false },
+  { id: "honey", label: "Honey", href: "/#honey", itemType: "landing_anchor", opensNewTab: false },
+  { id: "ghee", label: "A2 Ghee", href: "/#ghee", itemType: "landing_anchor", opensNewTab: false },
+  { id: "gallery", label: "Community", href: "/#gallery", itemType: "landing_anchor", opensNewTab: false },
+  { id: "shop", label: "Shop", href: "/shop", itemType: "shop_index", opensNewTab: false },
+  { id: "blog", label: "Blog", href: "/blog", itemType: "blog_index", opensNewTab: false },
 ];
 
 const defaultGallery: GalleryItem[] = [
@@ -171,7 +182,7 @@ function RevealArticle({ children, className, delay = 0, style }: RevealProps) {
   );
 }
 
-export default function LandingClient({ sections, siteConfig, featuredProducts, testimonials, recentPosts }: LandingClientProps) {
+export default function LandingClient({ sections, siteConfig, navItems = [], featuredProducts, testimonials, recentPosts }: LandingClientProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [formSent, setFormSent] = useState(false);
@@ -217,6 +228,7 @@ export default function LandingClient({ sections, siteConfig, featuredProducts, 
       : defaultTestimonials,
   );
   const faqItems = objectList(faqSection, "items", defaultFaqs);
+  const resolvedNavItems = navItems.length > 0 ? navItems : fallbackNavItems;
 
   useEffect(() => {
     let frame = 0;
@@ -321,6 +333,103 @@ export default function LandingClient({ sections, siteConfig, featuredProducts, 
     window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 76, behavior: "smooth" });
   }
 
+  function closeDrawer() {
+    setDrawerOpen(false);
+  }
+
+  function isLandingAnchor(href: string): boolean {
+    return href.startsWith("/#") || href.startsWith("#");
+  }
+
+  function anchorSelector(href: string): string {
+    return href.startsWith("/#") ? href.slice(1) : href;
+  }
+
+  function renderDesktopNavItem(item: PublicMenuItem) {
+    const isAnchor = isLandingAnchor(item.href);
+    const content = (
+      <>
+        {item.label}
+        {!!item.children?.length && <span className={`material-icons ${styles.navChevron}`}>expand_more</span>}
+      </>
+    );
+    return (
+      <div key={item.id} className={styles.navItemWrap}>
+        {isAnchor ? (
+          <button onClick={() => navTo(anchorSelector(item.href))}>{content}</button>
+        ) : (
+          <Link
+            href={item.href}
+            className={styles.navPageLink}
+            target={item.opensNewTab ? "_blank" : undefined}
+            rel={item.opensNewTab ? "noopener noreferrer" : undefined}
+          >
+            {content}
+          </Link>
+        )}
+        {!!item.children?.length && (
+          <div className={styles.navSubMenu}>
+            {item.children.map((child) => (
+              isLandingAnchor(child.href) ? (
+                <button key={child.id} onClick={() => navTo(anchorSelector(child.href))}>{child.label}</button>
+              ) : (
+                <Link
+                  key={child.id}
+                  href={child.href}
+                  target={child.opensNewTab ? "_blank" : undefined}
+                  rel={child.opensNewTab ? "noopener noreferrer" : undefined}
+                >
+                  {child.label}
+                </Link>
+              )
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function renderDrawerNavItem(item: PublicMenuItem) {
+    const isAnchor = isLandingAnchor(item.href);
+    const primary = isAnchor ? (
+      <button onClick={() => navTo(anchorSelector(item.href))}>{item.label}</button>
+    ) : (
+      <Link
+        href={item.href}
+        className={styles.drawerPageLink}
+        target={item.opensNewTab ? "_blank" : undefined}
+        rel={item.opensNewTab ? "noopener noreferrer" : undefined}
+        onClick={closeDrawer}
+      >
+        {item.label}
+      </Link>
+    );
+    return (
+      <div key={item.id} className={styles.drawerNavGroup}>
+        {primary}
+        {!!item.children?.length && (
+          <div className={styles.drawerSubLinks}>
+            {item.children.map((child) => (
+              isLandingAnchor(child.href) ? (
+                <button key={child.id} onClick={() => navTo(anchorSelector(child.href))}>{child.label}</button>
+              ) : (
+                <Link
+                  key={child.id}
+                  href={child.href}
+                  target={child.opensNewTab ? "_blank" : undefined}
+                  rel={child.opensNewTab ? "noopener noreferrer" : undefined}
+                  onClick={closeDrawer}
+                >
+                  {child.label}
+                </Link>
+              )
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   function submitInquiry(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormSent(true);
@@ -347,12 +456,7 @@ export default function LandingClient({ sections, siteConfig, featuredProducts, 
           </button>
         </div>
         <div className={styles.navLinks}>
-          <button onClick={() => navTo("#promise")}>Our Promise</button>
-          <button onClick={() => navTo("#honey")}>Honey</button>
-          <button onClick={() => navTo("#ghee")}>A2 Ghee</button>
-          <button onClick={() => navTo("#gallery")}>Community</button>
-          <Link href="/shop" className={styles.navPageLink}>Shop</Link>
-          <Link href="/blog" className={styles.navPageLink}>Blog</Link>
+          {resolvedNavItems.map(renderDesktopNavItem)}
         </div>
         <div className={styles.navActions}>
           <Link href="/login" className={styles.navLoginBtn}>Login</Link>
@@ -394,12 +498,7 @@ export default function LandingClient({ sections, siteConfig, featuredProducts, 
                 </button>
               </div>
               <div className={styles.drawerLinks}>
-                <button onClick={() => navTo("#promise")}>Our Promise</button>
-                <button onClick={() => navTo("#honey")}>Honey Collection</button>
-                <button onClick={() => navTo("#ghee")}>A2 Bilona Ghee</button>
-                <button onClick={() => navTo("#gallery")}>Community</button>
-                <Link href="/shop" className={styles.drawerPageLink}>Shop</Link>
-                <Link href="/blog" className={styles.drawerPageLink}>Blog</Link>
+                {resolvedNavItems.map(renderDrawerNavItem)}
                 <Link href="/login" className={styles.drawerLoginBtn}>Login</Link>
                 <button onClick={() => navTo("#contact")} className={styles.drawerCta}>Contact Us</button>
               </div>

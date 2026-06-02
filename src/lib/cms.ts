@@ -13,9 +13,16 @@ export interface PublicMenuItem {
   href: string;
   itemType: string;
   opensNewTab: boolean;
+  parentItemId?: string | null;
+  children?: PublicMenuItem[];
 }
 
 export type PublicMenus = Record<MenuKey, PublicMenuItem[]>;
+
+interface MenuTreeItem extends Omit<PublicMenuItem, "children"> {
+  menuKey: MenuKey;
+  children?: MenuTreeItem[];
+}
 
 export interface AvailableMenuTarget {
   id: string;
@@ -38,21 +45,43 @@ export async function getPublicMenus(): Promise<PublicMenus> {
 
     const menuById = new Map(menus.map((menu) => [menu.id, menu]));
     const pageById = new Map(pages.map((page) => [page.id, page]));
-    const result = emptyMenus();
+    const result: Record<MenuKey, MenuTreeItem[]> = {
+      landing_header: [],
+      site_header: [],
+      footer: [],
+    };
+    const eligibleItems: MenuTreeItem[] = [];
     for (const item of items) {
       const menu = menuById.get(item.menuId);
       if (!menu || !isMenuKey(menu.menuKey)) continue;
       const page = item.pageId ? pageById.get(item.pageId) : null;
       if (page && page.moduleKey !== "core" && !modules[page.moduleKey as ModuleKey]) continue;
-      result[menu.menuKey].push({
+      eligibleItems.push({
         id: item.id,
         label: item.label,
         href: item.href,
         itemType: item.itemType,
         opensNewTab: item.opensNewTab,
+        parentItemId: item.parentItemId,
+        children: [],
+        menuKey: menu.menuKey,
       });
     }
-    return result;
+    const itemById = new Map(eligibleItems.map((item) => [item.id, item]));
+    for (const item of eligibleItems) {
+      const parent = item.parentItemId ? itemById.get(item.parentItemId) : null;
+      if (parent && parent.menuKey === item.menuKey) {
+        parent.children ??= [];
+        parent.children.push(item);
+      } else {
+        result[item.menuKey].push(item);
+      }
+    }
+    return {
+      landing_header: result.landing_header.map((item) => stripMenuKey(item)),
+      site_header: result.site_header.map((item) => stripMenuKey(item)),
+      footer: result.footer.map((item) => stripMenuKey(item)),
+    };
   });
 }
 
@@ -82,6 +111,8 @@ export async function getAvailableMenuTargets(): Promise<AvailableMenuTarget[]> 
       title: cmsPages.title,
       slug: cmsPages.slug,
       status: cmsPages.status,
+      moduleKey: cmsPages.moduleKey,
+      policyType: cmsPages.policyType,
     }).from(cmsPages).orderBy(asc(cmsPages.title)),
     db.select({
       id: blogPosts.id,
@@ -111,7 +142,9 @@ export async function getAvailableMenuTargets(): Promise<AvailableMenuTarget[]> 
       type: "cms_page",
       label: page.title,
       href: `/${page.slug}`,
-      meta: page.status === "published" ? "CMS page" : "Draft CMS page",
+      meta: page.policyType
+        ? `${page.status === "published" ? "Policy page" : "Draft policy"} · ${page.policyType} · ${page.moduleKey}`
+        : page.status === "published" ? "CMS page" : "Draft CMS page",
     })),
     ...posts.map((post) => ({
       id: post.id,
@@ -132,6 +165,25 @@ export async function getAvailableMenuTargets(): Promise<AvailableMenuTarget[]> 
 
 export function isMenuKey(value: string): value is MenuKey {
   return MENU_KEYS.includes(value as MenuKey);
+}
+
+function stripMenuKey(item: MenuTreeItem, seen = new Set<string>()): PublicMenuItem {
+  const publicItem: PublicMenuItem = {
+    id: item.id,
+    label: item.label,
+    href: item.href,
+    itemType: item.itemType,
+    opensNewTab: item.opensNewTab,
+    parentItemId: item.parentItemId,
+  };
+  if (seen.has(item.id)) {
+    return publicItem;
+  }
+  const nextSeen = new Set(seen);
+  nextSeen.add(item.id);
+  const children = item.children?.map((child) => stripMenuKey(child, nextSeen)) ?? [];
+  if (children.length > 0) publicItem.children = children;
+  return publicItem;
 }
 
 export function emptyMenus(): PublicMenus {

@@ -27,7 +27,7 @@ APRAS Naturals
 │   ├── Rich HTML sanitizer
 │   ├── Observability: Sentry envelope capture
 │   ├── Brand logos: admin logo + website logo via DB config, including the custom landing topbar
-│   ├── Compliance: GDPR/DPDP checklist, evidence, module visibility
+│   ├── Compliance: GDPR/DPDP checklist, evidence, module visibility, policy coverage
 │   ├── Theme: Public Sans + persisted light/dark mode
 │   └── /admin/media
 │
@@ -43,10 +43,10 @@ APRAS Naturals
 │   ├── cms_sections
 │   ├── cms_pages
 │   ├── cms_menus
-│   ├── cms_menu_items
-│   ├── Policy CMS pages: terms, privacy, refund, shipping, cookie
+│   ├── cms_menu_items with parent_item_id nested submenu support
+│   ├── Policy CMS pages: terms, privacy, data protection/consent, refund, returns, cancellation, shipping, cookie
 │   ├── testimonials
-│   └── Structured landing content builder, pages, menus, media, and scroll-scrub hero video
+│   └── Structured landing content builder, pages, nested menus, media, and scroll-scrub hero video
 │
 ├── SEO Module
 │   ├── /admin/seo
@@ -175,7 +175,7 @@ Admin
   /admin/cms/pages/[id]/edit
   /admin/cms/menus
   /admin/seo
-  /admin/compliance
+  /admin/compliance          GDPR/DPDP evidence, policies, module coverage
   /admin/analytics           Commerce + first-party traffic analytics
   /admin/settings              Tabbed modules, brand, providers, localization, commerce, notifications, OTP
 ```
@@ -324,6 +324,7 @@ cms_sections
 cms_pages
 cms_menus
   └── cms_menu_items
+      └── parent_item_id nested submenu relation
 seo_page_overrides
 seo_internal_links
 seo_search_submissions
@@ -404,13 +405,14 @@ Current:
 - ✅ `/admin/cms/[sectionKey]` edits enabled state, sort order, and structured section content, with JSON as advanced fallback.
 - ✅ `/admin/cms/pages` creates and edits published CMS pages at `/{slug}`.
 - ✅ CMS page editor includes on-page SEO, module visibility, policy type, canonical/robots fields, and OG crop upload.
-- ✅ Policy pages are seeded for terms, privacy, refund, shipping, and cookie coverage.
-- ✅ `/admin/cms/menus` manages landing header, other-pages header, and footer menus with drag-and-drop ordering.
+- ✅ Policy pages are seeded for terms, privacy, data protection/consent, refund, return/replacement, cancellation, shipping, and cookie coverage.
+- ✅ `/admin/cms/menus` manages landing header, other-pages header, and footer menus with drag-and-drop ordering and parent submenu assignment.
 - ✅ Available menu targets include CMS pages, blog listing/posts, shop listing/products, landing anchors, and external links.
 - ✅ `/admin/seo` manages sitewide SEO, analytics tags, verification codes, route overrides, internal links, and search submission logs.
 - ✅ `/admin/settings` owns core brand logos: admin panel logo 144x144 and website logo 360x96 via `MediaUploader`.
 - ✅ `/admin/settings` is tabbed and logo upload previews have clear/reset controls.
 - ✅ Landing custom topbar/drawer uses the configured website logo.
+- ✅ Landing custom topbar, other-page header, mobile drawers, and footer render nested policy submenus from CMS menus.
 
 ---
 
@@ -590,7 +592,7 @@ Latest local verification on 2026-06-02:
 - ✅ Admin role model includes `qbiqal` for notification wallet crediting.
 - ✅ Live E2E verifies forgot/reset password, email verification, notifications, sitemap, and robots.
 - ✅ Live E2E verifies real order creation, signed proof upload, stock decrement, admin payment verification, and shipping.
-- ✅ Build includes `/admin/blog/comments`, `/admin/reviews`, `/admin/refunds`, `/admin/compliance`, blog comments, product reviews, and refund APIs.
+- ✅ Build includes `/admin/blog/comments`, `/admin/reviews`, `/admin/refunds`, `/admin/compliance`, blog comments, product reviews, refund APIs, 8 policy CMS pages, and nested CMS menus.
 
 ---
 

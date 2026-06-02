@@ -36,6 +36,7 @@ interface MenuItemDraft {
   href: string;
   itemType: string;
   targetId?: string;
+  parentItemId?: string | null;
   opensNewTab: boolean;
   isEnabled: boolean;
   pageId?: string | null;
@@ -126,7 +127,9 @@ export default function MenuManagerClient() {
   }
 
   function removeItem(id: string) {
-    updateActiveItems((items) => items.filter((item) => item.id !== id));
+    updateActiveItems((items) => items
+      .filter((item) => item.id !== id)
+      .map((item) => item.parentItemId === id ? { ...item, parentItemId: null } : item));
   }
 
   function updateItem(id: string, patch: Partial<MenuItemDraft>) {
@@ -215,7 +218,7 @@ export default function MenuManagerClient() {
           <div className={styles.canvasHeader}>
             <div>
               <h2>{activeMenu.label}</h2>
-              <p>{activeMenu.items.length} menu items</p>
+              <p>{activeMenu.items.length} menu items · {activeMenu.items.filter((item) => item.parentItemId).length} submenu links</p>
             </div>
             <label className={styles.enableToggle}>
               <input
@@ -236,6 +239,8 @@ export default function MenuManagerClient() {
                   <SortableMenuItem
                     key={item.id}
                     item={item}
+                    parentOptions={activeMenu.items.filter((candidate) => candidate.id !== item.id && !candidate.parentItemId)}
+                    hasChildren={activeMenu.items.some((candidate) => candidate.parentItemId === item.id)}
                     onChange={(patch) => updateItem(item.id, patch)}
                     onRemove={() => removeItem(item.id)}
                   />
@@ -251,10 +256,14 @@ export default function MenuManagerClient() {
 
 function SortableMenuItem({
   item,
+  parentOptions,
+  hasChildren,
   onChange,
   onRemove,
 }: {
   item: MenuItemDraft;
+  parentOptions: MenuItemDraft[];
+  hasChildren: boolean;
   onChange: (patch: Partial<MenuItemDraft>) => void;
   onRemove: () => void;
 }) {
@@ -262,15 +271,29 @@ function SortableMenuItem({
   return (
     <div
       ref={setNodeRef}
-      className={[styles.menuItem, isDragging ? styles.dragging : ""].join(" ")}
+      className={[styles.menuItem, item.parentItemId ? styles.subMenuItem : "", isDragging ? styles.dragging : ""].join(" ")}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
       <button className={styles.dragHandle} type="button" {...attributes} {...listeners} aria-label="Drag menu item">::</button>
       <div className={styles.itemFields}>
         <Input label="Label" value={item.label} onChange={(e) => onChange({ label: e.target.value })} />
         <Input label="URL" value={item.href} onChange={(e) => onChange({ href: e.target.value })} />
+        <label className={styles.parentSelect}>
+          <span>Parent menu</span>
+          <select
+            value={item.parentItemId ?? ""}
+            disabled={hasChildren}
+            onChange={(e) => onChange({ parentItemId: e.target.value || null })}
+          >
+            <option value="">Top level</option>
+            {parentOptions.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>{candidate.label || candidate.href}</option>
+            ))}
+          </select>
+        </label>
       </div>
       <div className={styles.itemControls}>
+        {hasChildren && <span className={styles.childBadge}>Parent</span>}
         <label><input type="checkbox" checked={item.opensNewTab} onChange={(e) => onChange({ opensNewTab: e.target.checked })} /> New tab</label>
         <label><input type="checkbox" checked={item.isEnabled} onChange={(e) => onChange({ isEnabled: e.target.checked })} /> Enabled</label>
         <button type="button" onClick={onRemove}>Remove</button>

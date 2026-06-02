@@ -61,6 +61,12 @@ export async function PATCH(req: NextRequest) {
     if (!menu) throw new NotFoundError("CMS menu");
 
     const values = body.items.map((item, index) => normalizeItem(menu.id, item, index));
+    const validIds = new Set(values.map((item) => item.id));
+    for (const value of values) {
+      if (value.parentItemId && (!validIds.has(value.parentItemId) || value.parentItemId === value.id)) {
+        value.parentItemId = null;
+      }
+    }
     await db.transaction(async (tx) => {
       await tx.update(cmsMenus).set({
         isEnabled: body.isEnabled !== false,
@@ -79,10 +85,12 @@ export async function PATCH(req: NextRequest) {
 }
 
 interface MenuItemInput {
+  id?: string;
   label?: string;
   href?: string;
   itemType?: string;
   targetId?: string;
+  parentItemId?: string | null;
   opensNewTab?: boolean;
   isEnabled?: boolean;
 }
@@ -95,6 +103,7 @@ function normalizeItem(menuId: string, item: MenuItemInput, index: number) {
 
   const itemType = String(item.itemType || "external");
   return {
+    id: safeItemId(item.id),
     menuId,
     label,
     href,
@@ -102,10 +111,16 @@ function normalizeItem(menuId: string, item: MenuItemInput, index: number) {
     pageId: itemType === "cms_page" ? item.targetId ?? null : null,
     blogPostId: itemType === "blog_post" ? item.targetId ?? null : null,
     productId: itemType === "product" ? item.targetId ?? null : null,
+    parentItemId: item.parentItemId ? String(item.parentItemId) : null,
     opensNewTab: item.opensNewTab === true,
     isEnabled: item.isEnabled !== false,
     sortOrder: index,
   };
+}
+
+function safeItemId(value: unknown): string {
+  const id = String(value ?? "").trim();
+  return /^[a-zA-Z0-9_-]{8,80}$/.test(id) ? id : crypto.randomUUID();
 }
 
 async function ensureMenus() {

@@ -176,6 +176,18 @@
   gap: 11px;
 }
 
+.footerLinkGroup {
+  display: grid;
+  gap: 7px;
+}
+
+.footerSubLinks {
+  display: grid;
+  gap: 6px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255,255,255,0.12);
+}
+
 .links a,
 .contact p,
 .contact a {
@@ -188,6 +200,11 @@
 .links a {
   width: fit-content;
   transition: color 0.15s, transform 0.15s;
+}
+
+.footerSubLinks a {
+  color: rgba(255,255,255,0.46);
+  font-size: 13px;
 }
 
 .links a:hover,

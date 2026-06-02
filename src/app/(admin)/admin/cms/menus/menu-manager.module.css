@@ -186,6 +186,7 @@
 }
 
 .menuItem {
+  position: relative;
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr) 150px;
   gap: 12px;
@@ -195,6 +196,36 @@
   border-radius: 8px;
   background: var(--bg-secondary);
   transition: box-shadow 0.16s, transform 0.16s, border-color 0.16s;
+}
+
+.subMenuItem {
+  margin-left: 42px;
+  padding-left: 24px;
+  border-color: color-mix(in srgb, var(--amber) 38%, var(--border-subtle));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--amber) 10%, transparent), transparent 38%),
+    var(--bg-secondary);
+}
+
+.subMenuItem::before {
+  content: "submenu";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  border-radius: 8px 0 0 8px;
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
+  color: var(--text-secondary);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .menuItem:hover {
@@ -221,15 +252,56 @@
 
 .itemFields {
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.1fr) minmax(160px, 0.55fr);
   gap: 10px;
   min-width: 0;
+}
+
+.parentSelect {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.parentSelect span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.parentSelect select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.parentSelect select:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
 }
 
 .itemControls {
   display: grid;
   gap: 8px;
   justify-items: start;
+}
+
+.childBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .itemControls label {
@@ -256,6 +328,20 @@
   }
   .targetList {
     max-height: 320px;
+  }
+  .menuItem {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+  .itemFields {
+    grid-template-columns: 1fr;
+  }
+  .itemControls {
+    grid-column: 2;
+    grid-template-columns: repeat(3, max-content);
+    align-items: center;
+  }
+  .subMenuItem {
+    margin-left: 18px;
   }
 }
 

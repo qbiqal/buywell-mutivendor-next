@@ -56,10 +56,10 @@
 - ✅ Same-site API mutation hardening in `proxy.ts`.
 - ✅ Sentry server-side capture path with DB config/env fallback.
 - ✅ Rich HTML sanitization for blog content and product long descriptions.
-- ✅ CMS page creator/editor and menu manager for landing header, other-pages header, and footer menus.
+- ✅ CMS page creator/editor and menu manager for landing header, other-pages header, and footer menus, including nested submenu support via `cms_menu_items.parent_item_id`.
 - ✅ CMS page editor has reusable on-page SEO panel, module visibility, policy type, OG image crop upload, keywords, canonical URL, and robots controls.
 - ✅ CMS section editor uses a structured content builder for text, numbers, booleans, arrays, nested objects, and media URL fields, with JSON kept as advanced fallback.
-- ✅ Policy CMS pages seeded for terms, privacy, refund, shipping, and cookies with module-aware visibility.
+- ✅ Policy CMS pages seeded for terms, privacy, DPDP/GDPR data protection and consent, refund, return/replacement, cancellation, shipping, and cookies with module-aware visibility.
 - ✅ Module control plane for Core, CMS, SEO, Blog, E-Commerce, and Offline QR.
 - ✅ Admin settings are grouped into tabs for modules, brand, notifications, OTP, providers, localization, and commerce.
 - ✅ Admin module toggles, locked Core toggle, brand logo uploaders, localization, currency, notification, OTP, and Resend settings.
@@ -70,7 +70,7 @@
 - ✅ Blog comments support member-only comments/replies, likes, approval workflow, and English/Hindi abuse filtering.
 - ✅ Product reviews support member-only review submission, likes, and admin approval workflow.
 - ✅ E-Commerce refunds include customer refund request creation and admin requested/review/approved/rejected/processed workflow with event history.
-- ✅ Core compliance admin page tracks GDPR/DPDP checklist status, evidence, policy coverage, and module visibility.
+- ✅ Core compliance admin page tracks GDPR/DPDP checklist status, evidence, policy coverage, and module visibility with 18 seeded readiness checks.
 - ✅ Module-aware public/admin nav, route gates, API gates, and root providers.
 - ✅ Module-aware dynamic cart provider/header imports so CMS-only/Blog-only installs do not load cart UI.
 - ✅ Offline QR payment gateway abstraction and registry-based order creation.
@@ -125,7 +125,7 @@ Local seed counts after audit:
 | product_images | 12 |
 | cms_sections | 14 |
 | cms_menus | 3 |
-| cms_menu_items | 12 |
+| cms_menu_items | 30 |
 | site_config | 110+ |
 | otp_codes | 0 |
 | notification_deliveries | 0 |
@@ -136,8 +136,8 @@ Local seed counts after audit:
 | blog_categories | 5 |
 | product_categories | 5 |
 | content_tags | 7 |
-| cms_pages | 5 policy pages seeded |
-| compliance_checks | 8 |
+| cms_pages | 8 policy pages seeded |
+| compliance_checks | 18 |
 
 ---
 
@@ -148,7 +148,7 @@ Core
   auth, users, qbiqal super-admin, settings, notification wallets, notifications, OTP, media library, DB, Redis, cache, route protection, module registry, provider key config
 
 CMS Module
-  /home, /admin/cms, /admin/cms/pages, /admin/cms/menus, cms_sections, cms_pages, cms_menus, testimonials, landing content, public CMS pages, policy pages
+  /home, /admin/cms, /admin/cms/pages, /admin/cms/menus, cms_sections, cms_pages, cms_menus, cms_menu_items.parent_item_id, testimonials, landing content, public CMS pages, policy pages, nested header/footer menus
 
 SEO Module
   /admin/seo, reusable SEO panels, seo_page_overrides, seo_internal_links, seo_search_submissions, traffic_events, GTM/GA/Meta Pixel config, sitemap/robots controls

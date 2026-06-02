@@ -1,0 +1,1 @@
+ALTER TABLE "cms_menu_items" ADD COLUMN "parent_item_id" text;

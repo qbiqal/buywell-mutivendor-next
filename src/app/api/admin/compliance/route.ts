@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       success: true,
       data: {
         checks: checks.filter((check) => check.moduleKey === "core" || modules[check.moduleKey as ModuleKey]),
-        policies: pages.filter((page) => page.moduleKey === "core" || modules[page.moduleKey as ModuleKey]),
+        policies: pages.filter((page) => page.policyType && (page.moduleKey === "core" || modules[page.moduleKey as ModuleKey])),
         modules,
       },
     });

@@ -24,6 +24,16 @@ function loadLocalEnv() {
   }
 }
 
+interface SeedMenuItem {
+  label: string;
+  href: string;
+  itemType: string;
+  sortOrder: number;
+  policyType?: string;
+  parentLabel?: string;
+  opensNewTab?: boolean;
+}
+
 async function seed() {
   loadLocalEnv();
   const { db, pool } = await import("./index");
@@ -440,60 +450,6 @@ async function seed() {
   }
   console.log(`✓ ${sections.length} CMS sections seeded`);
 
-  // ── CMS menus ──────────────────────────────────────────────────────────────
-  const defaultMenus = [
-    {
-      menuKey: "landing_header",
-      label: "Landing Page Header",
-      items: [
-        { label: "Shop", href: "/shop", itemType: "shop_index", sortOrder: 1 },
-        { label: "Blog", href: "/blog", itemType: "blog_index", sortOrder: 2 },
-        { label: "Promise", href: "/#promise", itemType: "landing_anchor", sortOrder: 3 },
-        { label: "Contact", href: "/#contact", itemType: "landing_anchor", sortOrder: 4 },
-      ],
-    },
-    {
-      menuKey: "site_header",
-      label: "Other Pages Header",
-      items: [
-        { label: "Home", href: "/", itemType: "landing_anchor", sortOrder: 1 },
-        { label: "Shop", href: "/shop", itemType: "shop_index", sortOrder: 2 },
-        { label: "Blog", href: "/blog", itemType: "blog_index", sortOrder: 3 },
-        { label: "Contact", href: "/#contact", itemType: "landing_anchor", sortOrder: 4 },
-      ],
-    },
-    {
-      menuKey: "footer",
-      label: "Footer Menu",
-      items: [
-        { label: "Blog", href: "/blog", itemType: "blog_index", sortOrder: 1 },
-        { label: "Our Promise", href: "/#promise", itemType: "landing_anchor", sortOrder: 2 },
-        { label: "Community", href: "/#gallery", itemType: "landing_anchor", sortOrder: 3 },
-        { label: "Free Sample", href: "/#contact", itemType: "landing_anchor", sortOrder: 4 },
-      ],
-    },
-  ];
-
-  for (const menuData of defaultMenus) {
-    await db.insert(cmsMenus).values({
-      menuKey: menuData.menuKey,
-      label: menuData.label,
-    }).onConflictDoNothing();
-
-    const [menu] = await db.select().from(cmsMenus).where(eq(cmsMenus.menuKey, menuData.menuKey)).limit(1);
-    if (!menu) continue;
-    const [existingItems] = await db.select({ count: sql<number>`count(*)` }).from(cmsMenuItems).where(eq(cmsMenuItems.menuId, menu.id));
-    if (Number(existingItems?.count ?? 0) > 0) {
-      console.log(`○ ${menuData.label} already has menu items`);
-      continue;
-    }
-    await db.insert(cmsMenuItems).values(menuData.items.map((item) => ({
-      menuId: menu.id,
-      ...item,
-    })));
-    console.log(`✓ ${menuData.label} seeded with ${menuData.items.length} items`);
-  }
-
   // ── Policy CMS pages ───────────────────────────────────────────────────────
   const policyPages = [
     {
@@ -501,16 +457,85 @@ async function seed() {
       slug: "terms-and-conditions",
       policyType: "terms",
       moduleKey: "core",
-      excerpt: "Terms governing use of the APRAS Naturals website and services.",
-      content: "<h2>Terms and Conditions</h2><p>These terms describe how customers may use APRAS Naturals services, place orders, and interact with our website. Administrators should review and adapt this policy before publication.</p><h2>Orders and Accounts</h2><p>Customers are responsible for accurate account, delivery, and payment information.</p><h2>Changes</h2><p>APRAS Naturals may update these terms and will publish the current version on this page.</p>",
+      excerpt: "Terms governing use of APRAS Naturals, orders, accounts, product information, and customer responsibilities.",
+      content: [
+        "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
+        "<p>Welcome to APRAS Naturals. These Terms and Conditions govern your access to our website, account features, product catalogue, CMS pages, blog content, ecommerce checkout, order support, reviews, refunds, and related services. APRAS Naturals offers pure mono-floral honey, A2 Bilona Ghee, and natural wellness products as an authorized partner and CNF of Prakvedaa.</p>",
+        "<h2>Using Our Website</h2>",
+        "<p>You agree to use the website only for lawful personal, household, or permitted business purchase purposes. You must not misuse the platform, interfere with security, scrape data, impersonate another person, upload harmful content, or attempt unauthorized access to admin, customer, payment, notification, or media systems.</p>",
+        "<h2>Accounts and Accuracy</h2>",
+        "<p>You are responsible for keeping account credentials confidential and for providing accurate name, phone, email, billing, delivery, and order information. APRAS Naturals may suspend or restrict access where account activity appears fraudulent, abusive, unlawful, or harmful to customers, staff, partners, or platform integrity.</p>",
+        "<h2>Products and Information</h2>",
+        "<p>We aim to present product descriptions, ingredients, sizes, prices, images, availability, and educational content accurately. Natural products such as raw honey and ghee may vary in colour, aroma, texture, crystallization, and batch character. Product information is not medical advice and should not replace professional health guidance.</p>",
+        "<h2>Orders, Pricing, and Payment</h2>",
+        "<p>Order acceptance depends on product availability, serviceability, payment confirmation, fraud screening, and operational checks. Prices, offers, taxes, shipping fees, and free sample availability may change. If an obvious pricing or listing error occurs, we may cancel, refund, or contact you before processing the order.</p>",
+        "<h2>Shipping, Returns, Refunds, and Cancellations</h2>",
+        "<p>Shipping, replacement, cancellation, and refund requests are governed by the dedicated policies linked from this website. Food and consumable items may have safety-based return restrictions, especially once opened, consumed, damaged after delivery, or handled outside recommended storage conditions.</p>",
+        "<h2>Reviews, Comments, and User Content</h2>",
+        "<p>Members may post reviews or blog comments where enabled. Content must be honest, relevant, non-abusive, non-infringing, and lawful. We may moderate, reject, edit display formatting, or remove content that contains spam, hate, abuse, personal data of others, unsafe claims, or misleading statements.</p>",
+        "<h2>Intellectual Property</h2>",
+        "<p>The APRAS Naturals brand, product presentation, website design, photographs, text, graphics, and software are protected by applicable intellectual property laws. You may not copy, reproduce, resell, or exploit the website content without written permission, except for ordinary personal use and sharing website links.</p>",
+        "<h2>Limitation of Liability</h2>",
+        "<p>To the maximum extent permitted by law, APRAS Naturals is not liable for indirect, incidental, consequential, punitive, or special losses arising from website use, delayed delivery, unavailable products, third-party services, network issues, or customer misuse. Nothing in these terms excludes liability that cannot legally be excluded.</p>",
+        "<h2>Changes and Contact</h2>",
+        "<p>We may update these terms to reflect operational, legal, security, or service changes. The current version will be published on this page. For questions, contact APRAS Naturals at aprasnaturals@gmail.com or +91 9470309006.</p>",
+      ].join(""),
     },
     {
       title: "Privacy Policy",
       slug: "privacy-policy",
       policyType: "privacy",
       moduleKey: "core",
-      excerpt: "How APRAS Naturals collects, uses, stores, and protects personal data.",
-      content: "<h2>Privacy Policy</h2><p>This policy explains the personal data APRAS Naturals collects, why it is processed, and how users can request access, correction, deletion, or grievance support.</p><h2>Data Use</h2><p>We process data for account access, order fulfilment, customer support, analytics, and lawful business operations.</p><h2>User Rights</h2><p>Users may contact APRAS Naturals to request access, correction, deletion, or withdrawal of consent where applicable.</p>",
+      excerpt: "How APRAS Naturals collects, uses, shares, stores, and protects personal data under DPDP and GDPR readiness principles.",
+      content: [
+        "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
+        "<p>This Privacy Policy explains how APRAS Naturals collects and processes personal data when you browse the website, create an account, place orders, request samples, submit reviews or comments, contact support, receive notifications, or interact with our marketing and analytics features.</p>",
+        "<h2>Who We Are</h2>",
+        "<p>APRAS Naturals operates from Ranchi, Jharkhand and offers natural honey, A2 Bilona Ghee, and related wellness products as an authorized partner and CNF of Prakvedaa. For privacy, consent, grievance, and data-rights requests, contact aprasnaturals@gmail.com or +91 9470309006.</p>",
+        "<h2>Personal Data We Collect</h2>",
+        "<p>Depending on how you use the platform, we may collect identity details, contact details, account credentials, addresses, order history, payment reference details, refund requests, customer support messages, review or comment content, notification preferences, device/browser data, cookie identifiers, analytics events, and fraud-prevention or security logs.</p>",
+        "<h2>Why We Process Data</h2>",
+        "<p>We process data to create accounts, authenticate users, fulfil orders, deliver products, process refunds, provide customer support, send order and service notifications, maintain website security, prevent misuse, measure traffic, improve products and content, comply with legal obligations, and manage customer consent and preferences.</p>",
+        "<h2>DPDP Notice and Consent</h2>",
+        "<p>For Indian users, we process digital personal data for lawful purposes connected with the services you request, including purchase fulfilment, support, notifications, security, analytics where configured, and compliance. Where consent is used, it should be specific, informed, clear, and capable of withdrawal through the contact and preference paths we provide.</p>",
+        "<h2>GDPR Readiness Basis</h2>",
+        "<p>Where GDPR applies, our processing may rely on contract performance, consent, legal obligation, legitimate interests such as platform security and service improvement, or another applicable lawful basis. You may request information about the basis used for a specific processing activity.</p>",
+        "<h2>Sharing and Processors</h2>",
+        "<p>We may share data with delivery partners, payment providers, notification providers, analytics tools, hosting infrastructure, security services, professional advisers, and authorities where legally required. Service providers are expected to process data only for instructed purposes and with suitable safeguards.</p>",
+        "<h2>Retention</h2>",
+        "<p>We keep personal data only as long as reasonably needed for the purpose collected, customer relationship, support, fraud prevention, tax/accounting records, legal claims, or applicable law. When the purpose is no longer served and retention is not legally required, records should be deleted, anonymized, or restricted according to operational capability.</p>",
+        "<h2>Security</h2>",
+        "<p>We use technical and organizational safeguards such as authentication, role-based admin access, encrypted sensitive configuration, logging, access controls, and operational review. No online service can guarantee absolute security, but we work to prevent unauthorized access, disclosure, alteration, loss, or misuse.</p>",
+        "<h2>Your Rights</h2>",
+        "<p>Depending on your location and applicable law, you may request access, correction, completion, deletion, grievance redressal, consent withdrawal, portability, restriction, objection, or information about processing. We may need to verify identity before acting on a request, and some rights may be limited by legal, safety, fraud-prevention, or transaction-completion requirements.</p>",
+        "<h2>Children</h2>",
+        "<p>Our ecommerce services are intended for users who can lawfully enter transactions. We do not knowingly target children with behavioural advertising. If a parent or lawful guardian believes a child has provided personal data, they may contact us for review.</p>",
+        "<h2>Updates</h2>",
+        "<p>We may update this policy as the platform, law, analytics configuration, or business operations change. The latest version will be published here.</p>",
+      ].join(""),
+    },
+    {
+      title: "Data Protection and Consent Policy",
+      slug: "data-protection-consent-policy",
+      policyType: "data_protection",
+      moduleKey: "core",
+      excerpt: "How APRAS Naturals handles consent, DPDP/GDPR data rights, grievance intake, retention, and breach readiness.",
+      content: [
+        "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
+        "<p>This policy supplements the Privacy Policy and describes how APRAS Naturals manages consent, data-rights requests, grievance intake, security evidence, and breach-response readiness for DPDP and GDPR compliance operations.</p>",
+        "<h2>Consent Management</h2>",
+        "<p>Consent requests should describe the personal data involved, the purpose of processing, and the way a user can withdraw consent. Withdrawal requests can be sent to aprasnaturals@gmail.com. Withdrawal does not affect processing already completed before withdrawal and may affect our ability to provide requested services that require the data.</p>",
+        "<h2>Data-Rights Request Workflow</h2>",
+        "<p>Users may request access, correction, completion, update, deletion, withdrawal, grievance support, and, where GDPR applies, portability, restriction, objection, or review of automated decisions. APRAS Naturals should verify identity, record the request, assign an owner, assess legal exceptions, respond within the applicable timeline, and keep evidence in the admin compliance panel.</p>",
+        "<h2>Grievance Redressal</h2>",
+        "<p>Privacy grievances should include the user name, contact detail, order number if relevant, request type, and supporting context. The support owner should acknowledge, investigate, resolve or escalate, and record the outcome. Users may also use statutory complaint channels where applicable.</p>",
+        "<h2>Breach Readiness</h2>",
+        "<p>A suspected personal data breach should be escalated immediately to the admin owner. The response should identify affected systems, data categories, users, containment steps, processor involvement, notification obligations, user impact, and corrective action. Evidence should be tracked in the compliance panel.</p>",
+        "<h2>Retention and Deletion</h2>",
+        "<p>Data should be retained only for service, legal, accounting, support, fraud-prevention, security, or dispute-resolution needs. Deletion requests should be assessed against active orders, refunds, tax records, chargeback risk, and legal holds before fulfilment.</p>",
+        "<h2>Processor and Vendor Review</h2>",
+        "<p>Processors such as hosting, payment, delivery, email, SMS, WhatsApp, analytics, and storage providers should be reviewed for purpose limitation, access control, security, retention, and incident support before production use.</p>",
+      ].join(""),
     },
     {
       title: "Refund Policy",
@@ -518,7 +543,18 @@ async function seed() {
       policyType: "refund",
       moduleKey: "ecommerce",
       excerpt: "Refund eligibility, review, approval, and processing timelines.",
-      content: "<h2>Refund Policy</h2><p>Refund requests are reviewed against order status, payment verification, product condition, and customer notes. Approved refunds are processed through the configured refund workflow.</p><h2>How to Request a Refund</h2><p>Members can submit refund requests from their order details or contact customer support with the order number.</p>",
+      content: [
+        "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
+        "<p>APRAS Naturals wants every customer to receive authentic, safe, and properly packed natural products. Refunds are reviewed through the ecommerce refund workflow against order status, payment confirmation, product condition, delivery evidence, and customer notes.</p>",
+        "<h2>Eligible Refund Situations</h2>",
+        "<p>A refund may be considered if the order was prepaid but cancelled before dispatch, the product was unavailable, the wrong product was delivered, the package was damaged in transit, the product arrived unusable, duplicate payment was confirmed, or the support team approves a refund after investigation.</p>",
+        "<h2>Non-Refundable Situations</h2>",
+        "<p>Refunds may be declined where a consumable product has been opened or consumed without verified defect, damage occurred after delivery, storage instructions were not followed, the request is outside the support window, evidence is insufficient, or the issue is caused by incorrect customer information.</p>",
+        "<h2>How to Request</h2>",
+        "<p>Members can submit refund requests from order details where enabled or contact support with order number, product name, issue description, photos/video of packaging and product, delivery date, and preferred resolution.</p>",
+        "<h2>Review and Processing</h2>",
+        "<p>Approved refunds are processed to the original payment method or another approved route according to payment provider capability. Bank, gateway, and settlement timelines may vary. Refund status is visible to admins in the refund workflow.</p>",
+      ].join(""),
     },
     {
       title: "Shipping Policy",
@@ -526,7 +562,18 @@ async function seed() {
       policyType: "shipping",
       moduleKey: "ecommerce",
       excerpt: "Shipping coverage, charges, tracking, and delivery estimates.",
-      content: "<h2>Shipping Policy</h2><p>APRAS Naturals ships eligible products across supported service areas. Shipping fees, free-shipping thresholds, courier details, and tracking information are shown during fulfilment.</p>",
+      content: [
+        "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
+        "<p>APRAS Naturals ships eligible honey, A2 Bilona Ghee, samples, and natural products to serviceable areas using available courier and fulfilment partners.</p>",
+        "<h2>Dispatch and Delivery</h2>",
+        "<p>Dispatch timelines depend on stock, payment confirmation, packaging readiness, courier pickup, holidays, weather, and serviceability. Estimated delivery timelines shown during checkout or support communication are indicative and may change due to courier or regional conditions.</p>",
+        "<h2>Shipping Fees</h2>",
+        "<p>Shipping charges, free-shipping thresholds, COD availability, and special handling fees may vary by order value, location, courier, product weight, and campaign rules. Final charges are shown before order confirmation where ecommerce checkout is enabled.</p>",
+        "<h2>Tracking and Failed Delivery</h2>",
+        "<p>Tracking details may be sent by email, SMS, WhatsApp, or displayed in order details when available. Customers must provide complete address and reachable phone number. Failed delivery due to incorrect address, unavailable recipient, or repeated failed attempts may require re-shipping fees.</p>",
+        "<h2>Damaged or Missing Items</h2>",
+        "<p>If a shipment arrives damaged, leaking, broken, or incomplete, contact support promptly with order number and photos/video of the outer package, label, inner packaging, and product condition.</p>",
+      ].join(""),
     },
     {
       title: "Cookie Policy",
@@ -534,7 +581,52 @@ async function seed() {
       policyType: "cookie",
       moduleKey: "seo",
       excerpt: "Cookies and analytics technologies used on the website.",
-      content: "<h2>Cookie Policy</h2><p>APRAS Naturals may use essential cookies, analytics tags, and first-party traffic events to operate the site and understand performance. Optional analytics settings can be controlled from the SEO module.</p>",
+      content: [
+        "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
+        "<p>This Cookie Policy explains how APRAS Naturals may use cookies, local storage, pixels, tags, analytics scripts, and similar technologies to operate the website, keep users signed in, protect sessions, remember preferences, understand traffic, and improve content.</p>",
+        "<h2>Cookie Types</h2>",
+        "<p><strong>Essential cookies</strong> support login, cart, checkout, security, and admin functions. <strong>Analytics cookies or tags</strong> help measure page traffic, campaign performance, and user journeys where configured. <strong>Marketing tags</strong> may support remarketing or conversion measurement only when enabled by admins.</p>",
+        "<h2>Google Tag Manager and Analytics</h2>",
+        "<p>The SEO module can store Google Tag Manager and analytics-related settings. If enabled, third-party scripts may set their own cookies subject to their provider terms. Admins should enable only the tools that match the published privacy and consent approach.</p>",
+        "<h2>Managing Cookies</h2>",
+        "<p>You can block or delete cookies through browser settings. Some essential features, including login, cart, checkout, and admin functions, may not work correctly if essential storage is disabled.</p>",
+        "<h2>Updates</h2>",
+        "<p>We may update this policy when analytics providers, tag settings, cookie categories, or consent controls change.</p>",
+      ].join(""),
+    },
+    {
+      title: "Return and Replacement Policy",
+      slug: "return-replacement-policy",
+      policyType: "returns",
+      moduleKey: "ecommerce",
+      excerpt: "Return and replacement conditions for damaged, wrong, defective, or unsafe deliveries.",
+      content: [
+        "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
+        "<p>Because APRAS Naturals sells consumable natural products, returns and replacements are handled carefully for customer safety, product integrity, and hygiene.</p>",
+        "<h2>Replacement Eligibility</h2>",
+        "<p>Replacement may be approved for wrong item delivered, damaged jar or bottle, leakage in transit, missing item, verified manufacturing or packing defect, or other support-approved issue. Evidence such as package photos, product photos, unboxing video, invoice, and order number may be required.</p>",
+        "<h2>Return Restrictions</h2>",
+        "<p>Opened, consumed, tampered, improperly stored, or customer-damaged consumables may not be returnable unless a verified defect or safety issue is established. Natural crystallization of raw honey is not a defect.</p>",
+        "<h2>Return Pickup or Self-Ship</h2>",
+        "<p>Where return pickup is available, support will provide instructions. If self-shipping is approved, the item must be packed securely to avoid leakage or breakage. Refund or replacement decisions may be made after inspection.</p>",
+      ].join(""),
+    },
+    {
+      title: "Cancellation Policy",
+      slug: "cancellation-policy",
+      policyType: "cancellation",
+      moduleKey: "ecommerce",
+      excerpt: "Order cancellation rules before dispatch, after dispatch, and for unavailable products.",
+      content: [
+        "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
+        "<p>Customers may request cancellation before dispatch by contacting APRAS Naturals support with the order number. Once the order is packed, dispatched, or handed to courier, cancellation may no longer be possible and the refund or return workflow may apply instead.</p>",
+        "<h2>Pre-Dispatch Cancellation</h2>",
+        "<p>If cancellation is accepted before dispatch, prepaid amounts are refunded through the approved refund route after payment verification.</p>",
+        "<h2>Post-Dispatch Orders</h2>",
+        "<p>For dispatched orders, customers should wait for delivery and then follow the refund, return, or replacement policy if eligible. Courier return-to-origin charges may apply where delivery fails due to incorrect address or recipient unavailability.</p>",
+        "<h2>Cancellation by APRAS Naturals</h2>",
+        "<p>We may cancel orders due to product unavailability, payment failure, serviceability limits, suspected fraud, listing error, operational constraints, or legal restriction. Approved prepaid cancellations are refunded.</p>",
+      ].join(""),
     },
   ];
 
@@ -554,9 +646,116 @@ async function seed() {
       publishedAt: new Date(),
     }).onConflictDoNothing();
     const [saved] = await db.select().from(cmsPages).where(eq(cmsPages.slug, page.slug)).limit(1);
-    if (saved) policyPageIds.set(page.policyType, saved.id);
+    if (saved) {
+      policyPageIds.set(page.policyType, saved.id);
+      if (shouldRefreshSeededPolicy(saved.content)) {
+        await db.update(cmsPages).set({
+          title: page.title,
+          excerpt: page.excerpt,
+          content: page.content,
+          status: "published",
+          template: "policy",
+          moduleKey: page.moduleKey,
+          policyType: page.policyType,
+          metaTitle: page.title,
+          metaDescription: page.excerpt,
+          updatedAt: new Date(),
+        }).where(eq(cmsPages.id, saved.id));
+      }
+    }
   }
   console.log(`✓ ${policyPages.length} policy CMS pages ensured`);
+
+  // ── CMS menus ──────────────────────────────────────────────────────────────
+  const defaultMenus: Array<{ menuKey: string; label: string; items: SeedMenuItem[] }> = [
+    {
+      menuKey: "landing_header",
+      label: "Landing Page Header",
+      items: [
+        { label: "Shop", href: "/shop", itemType: "shop_index", sortOrder: 1 },
+        { label: "Blog", href: "/blog", itemType: "blog_index", sortOrder: 2 },
+        { label: "Promise", href: "/#promise", itemType: "landing_anchor", sortOrder: 3 },
+        { label: "Policies", href: "/privacy-policy", itemType: "cms_page", policyType: "privacy", sortOrder: 4 },
+        { label: "Terms", href: "/terms-and-conditions", itemType: "cms_page", policyType: "terms", parentLabel: "Policies", sortOrder: 5 },
+        { label: "Data Protection", href: "/data-protection-consent-policy", itemType: "cms_page", policyType: "data_protection", parentLabel: "Policies", sortOrder: 6 },
+        { label: "Refunds", href: "/refund-policy", itemType: "cms_page", policyType: "refund", parentLabel: "Policies", sortOrder: 7 },
+        { label: "Shipping", href: "/shipping-policy", itemType: "cms_page", policyType: "shipping", parentLabel: "Policies", sortOrder: 8 },
+        { label: "Contact", href: "/#contact", itemType: "landing_anchor", sortOrder: 9 },
+      ],
+    },
+    {
+      menuKey: "site_header",
+      label: "Other Pages Header",
+      items: [
+        { label: "Home", href: "/", itemType: "landing_anchor", sortOrder: 1 },
+        { label: "Shop", href: "/shop", itemType: "shop_index", sortOrder: 2 },
+        { label: "Blog", href: "/blog", itemType: "blog_index", sortOrder: 3 },
+        { label: "Policies", href: "/privacy-policy", itemType: "cms_page", policyType: "privacy", sortOrder: 4 },
+        { label: "Terms", href: "/terms-and-conditions", itemType: "cms_page", policyType: "terms", parentLabel: "Policies", sortOrder: 5 },
+        { label: "Data Protection", href: "/data-protection-consent-policy", itemType: "cms_page", policyType: "data_protection", parentLabel: "Policies", sortOrder: 6 },
+        { label: "Returns", href: "/return-replacement-policy", itemType: "cms_page", policyType: "returns", parentLabel: "Policies", sortOrder: 7 },
+        { label: "Refunds", href: "/refund-policy", itemType: "cms_page", policyType: "refund", parentLabel: "Policies", sortOrder: 8 },
+        { label: "Contact", href: "/#contact", itemType: "landing_anchor", sortOrder: 9 },
+      ],
+    },
+    {
+      menuKey: "footer",
+      label: "Footer Menu",
+      items: [
+        { label: "Blog", href: "/blog", itemType: "blog_index", sortOrder: 1 },
+        { label: "Our Promise", href: "/#promise", itemType: "landing_anchor", sortOrder: 2 },
+        { label: "Community", href: "/#gallery", itemType: "landing_anchor", sortOrder: 3 },
+        { label: "Policies", href: "/privacy-policy", itemType: "cms_page", policyType: "privacy", sortOrder: 4 },
+        { label: "Terms and Conditions", href: "/terms-and-conditions", itemType: "cms_page", policyType: "terms", parentLabel: "Policies", sortOrder: 5 },
+        { label: "Data Protection", href: "/data-protection-consent-policy", itemType: "cms_page", policyType: "data_protection", parentLabel: "Policies", sortOrder: 6 },
+        { label: "Cookie Policy", href: "/cookie-policy", itemType: "cms_page", policyType: "cookie", parentLabel: "Policies", sortOrder: 7 },
+        { label: "Refund Policy", href: "/refund-policy", itemType: "cms_page", policyType: "refund", parentLabel: "Policies", sortOrder: 8 },
+        { label: "Return and Replacement", href: "/return-replacement-policy", itemType: "cms_page", policyType: "returns", parentLabel: "Policies", sortOrder: 9 },
+        { label: "Cancellation Policy", href: "/cancellation-policy", itemType: "cms_page", policyType: "cancellation", parentLabel: "Policies", sortOrder: 10 },
+        { label: "Shipping Policy", href: "/shipping-policy", itemType: "cms_page", policyType: "shipping", parentLabel: "Policies", sortOrder: 11 },
+        { label: "Free Sample", href: "/#contact", itemType: "landing_anchor", sortOrder: 12 },
+      ],
+    },
+  ];
+
+  for (const menuData of defaultMenus) {
+    await db.insert(cmsMenus).values({
+      menuKey: menuData.menuKey,
+      label: menuData.label,
+    }).onConflictDoNothing();
+
+    const [menu] = await db.select().from(cmsMenus).where(eq(cmsMenus.menuKey, menuData.menuKey)).limit(1);
+    if (!menu) continue;
+
+    const existing = await db.select().from(cmsMenuItems).where(eq(cmsMenuItems.menuId, menu.id));
+    const parentIds = new Map<string, string>();
+    for (const item of existing.filter((item) => !item.parentItemId)) {
+      parentIds.set(item.label, item.id);
+    }
+
+    let insertedCount = 0;
+    for (const item of menuData.items.filter((item) => !("parentLabel" in item))) {
+      const existingItem = existing.find((row) => !row.parentItemId && row.label === item.label && row.href === item.href);
+      if (existingItem) {
+        parentIds.set(item.label, existingItem.id);
+        continue;
+      }
+      const [inserted] = await db.insert(cmsMenuItems).values(menuItemValues(menu.id, item, policyPageIds, null)).returning({ id: cmsMenuItems.id });
+      parentIds.set(item.label, inserted.id);
+      insertedCount += 1;
+    }
+    for (const item of menuData.items.filter((item): item is SeedMenuItem & { parentLabel: string } => "parentLabel" in item && typeof item.parentLabel === "string")) {
+      const parentId = parentIds.get(item.parentLabel);
+      if (!parentId) continue;
+      const existingItem = existing.find((row) => row.parentItemId === parentId && row.label === item.label && row.href === item.href);
+      if (existingItem) continue;
+      await db.insert(cmsMenuItems).values(menuItemValues(menu.id, item, policyPageIds, parentId));
+      insertedCount += 1;
+    }
+    console.log(insertedCount > 0
+      ? `✓ ${menuData.label} seeded with ${insertedCount} missing items`
+      : `○ ${menuData.label} already has seeded menu items`);
+  }
 
   const complianceItems = [
     {
@@ -564,27 +763,37 @@ async function seed() {
       moduleKey: "core",
       parameterKey: "transparent_notice",
       title: "Transparent privacy notice",
-      description: "Privacy information is published in clear language and reachable from public menus.",
+      description: "Privacy information is published in clear language, names APRAS Naturals contact details, and is reachable from nested public policy menus.",
       status: "partial",
       policyType: "privacy",
-      evidence: "Privacy Policy CMS page seeded; admin should review final legal wording.",
+      evidence: "Privacy Policy page seeded with DPDP/GDPR-ready notice; legal owner should approve final publication wording.",
+    },
+    {
+      complianceKey: "gdpr",
+      moduleKey: "core",
+      parameterKey: "lawful_basis_register",
+      title: "Lawful basis and processing purpose register",
+      description: "Each processing activity should identify contract, consent, legal obligation, legitimate interest, or another applicable basis.",
+      status: "partial",
+      policyType: "privacy",
+      evidence: "Privacy Policy describes typical lawful bases; maintain activity-level evidence in admin compliance notes.",
     },
     {
       complianceKey: "gdpr",
       moduleKey: "core",
       parameterKey: "data_subject_requests",
       title: "Data subject request handling",
-      description: "Admin process exists for access, correction, deletion, restriction, and objection requests.",
+      description: "Admin process covers access, rectification, erasure, restriction, portability, objection, and automated-decision review requests.",
       status: "partial",
-      policyType: "privacy",
-      evidence: "Compliance panel tracks evidence; operational request intake should be connected to support.",
+      policyType: "data_protection",
+      evidence: "Data Protection and Consent Policy defines intake workflow; connect request intake to support operations.",
     },
     {
       complianceKey: "gdpr",
       moduleKey: "seo",
       parameterKey: "analytics_consent",
       title: "Analytics and tag transparency",
-      description: "Analytics settings are documented and controlled from the SEO module.",
+      description: "Analytics, Google Tag Manager, and cookie/tag use are documented and controlled from the SEO module.",
       status: "partial",
       policyType: "cookie",
       evidence: "SEO analytics settings and Cookie Policy page are available.",
@@ -592,12 +801,52 @@ async function seed() {
     {
       complianceKey: "gdpr",
       moduleKey: "core",
+      parameterKey: "retention_minimisation",
+      title: "Data minimisation and retention",
+      description: "Personal data should be limited to service purposes and retained only while needed for business, legal, security, or dispute requirements.",
+      status: "partial",
+      policyType: "privacy",
+      evidence: "Privacy Policy includes retention language; operational retention jobs and deletion evidence should be maintained.",
+    },
+    {
+      complianceKey: "gdpr",
+      moduleKey: "core",
+      parameterKey: "processor_governance",
+      title: "Processor and vendor governance",
+      description: "Hosting, payment, courier, email, SMS, WhatsApp, media, and analytics processors should be reviewed for purpose limitation and safeguards.",
+      status: "partial",
+      policyType: "data_protection",
+      evidence: "Vendor review requirement is published; add processor contracts and review dates as evidence.",
+    },
+    {
+      complianceKey: "gdpr",
+      moduleKey: "core",
+      parameterKey: "security_measures",
+      title: "Security measures",
+      description: "Role-based access, encrypted secrets, authentication, logging, and operational safeguards are tracked.",
+      status: "partial",
+      policyType: "data_protection",
+      evidence: "Application has role-based admin controls and encrypted config; complete infra evidence and review cadence.",
+    },
+    {
+      complianceKey: "gdpr",
+      moduleKey: "core",
       parameterKey: "breach_notification",
       title: "Breach response tracking",
       description: "Internal evidence records cover breach response ownership and notification readiness.",
-      status: "missing",
+      status: "partial",
+      policyType: "data_protection",
+      evidence: "Data Protection and Consent Policy includes breach readiness; assign owner, escalation timeline, and drill evidence.",
+    },
+    {
+      complianceKey: "gdpr",
+      moduleKey: "core",
+      parameterKey: "cross_border_transfer_review",
+      title: "Cross-border transfer review",
+      description: "Any overseas hosting, analytics, notification, or payment processing should be assessed before enablement.",
+      status: "partial",
       policyType: "privacy",
-      evidence: "Assign owner, timeline, and escalation channel in this panel.",
+      evidence: "Policy describes processors; admin must document transfer safeguards for enabled vendors.",
     },
     {
       complianceKey: "dpdp",
@@ -607,7 +856,17 @@ async function seed() {
       description: "Data processing notice states lawful purpose, requested data, and user rights.",
       status: "partial",
       policyType: "privacy",
-      evidence: "Privacy Policy page includes baseline language; review for final DPDP wording.",
+      evidence: "Privacy Policy includes lawful purpose, contact path, data categories, and rights summary.",
+    },
+    {
+      complianceKey: "dpdp",
+      moduleKey: "core",
+      parameterKey: "clear_consent",
+      title: "Clear consent request",
+      description: "Consent should be free, specific, informed, unambiguous, clear, and tied to the specified purpose.",
+      status: "partial",
+      policyType: "data_protection",
+      evidence: "Consent requirements are published; confirm all production consent UI copy and storage evidence.",
     },
     {
       complianceKey: "dpdp",
@@ -616,8 +875,8 @@ async function seed() {
       title: "Consent withdrawal and grievance path",
       description: "Users can identify how to withdraw consent and raise grievances.",
       status: "partial",
-      policyType: "privacy",
-      evidence: "Policy page includes contact pathway placeholder.",
+      policyType: "data_protection",
+      evidence: "Data Protection and Consent Policy gives withdrawal and grievance contact path.",
     },
     {
       complianceKey: "dpdp",
@@ -626,8 +885,48 @@ async function seed() {
       title: "Reasonable security safeguards",
       description: "Admin records security safeguards and evidence for personal data protection.",
       status: "partial",
-      policyType: "privacy",
+      policyType: "data_protection",
       evidence: "Authentication, admin gating, and encrypted config exist; complete operational evidence.",
+    },
+    {
+      complianceKey: "dpdp",
+      moduleKey: "core",
+      parameterKey: "breach_intimation",
+      title: "Personal data breach intimation readiness",
+      description: "Breach workflow should identify affected Data Principals, Board intimation needs, containment, and remediation.",
+      status: "partial",
+      policyType: "data_protection",
+      evidence: "Policy defines breach escalation; add incident owner, templates, and drill results.",
+    },
+    {
+      complianceKey: "dpdp",
+      moduleKey: "core",
+      parameterKey: "erasure_when_purpose_served",
+      title: "Erasure when purpose is served",
+      description: "Personal data should be erased when consent is withdrawn or purpose no longer applies unless retention is legally required.",
+      status: "partial",
+      policyType: "privacy",
+      evidence: "Privacy Policy includes retention/erasure language; schedule operational deletion review.",
+    },
+    {
+      complianceKey: "dpdp",
+      moduleKey: "core",
+      parameterKey: "data_processor_controls",
+      title: "Data processor controls",
+      description: "Processors should handle personal data only on instructed purposes with appropriate safeguards.",
+      status: "partial",
+      policyType: "data_protection",
+      evidence: "Vendor review requirement published; upload processor contracts/evidence in admin notes.",
+    },
+    {
+      complianceKey: "dpdp",
+      moduleKey: "core",
+      parameterKey: "children_data_safeguards",
+      title: "Children's data safeguards",
+      description: "The platform should avoid behavioural targeting of children and require guardian review where children data is knowingly processed.",
+      status: "partial",
+      policyType: "privacy",
+      evidence: "Privacy Policy includes children section; confirm production flows do not target children.",
     },
     {
       complianceKey: "dpdp",
@@ -664,8 +963,51 @@ async function seed() {
   }
   console.log(`✓ ${complianceItems.length} compliance checklist items ensured`);
 
+  const { cacheInvalidate } = await import("../cache");
+  await Promise.all([
+    cacheInvalidate.cms(),
+    cacheInvalidate.cmsPages(),
+    cacheInvalidate.menus(),
+  ]);
+  console.log("✓ CMS page and menu caches invalidated");
+  const { redis } = await import("../redis");
+  (redis as { disconnect?: () => void }).disconnect?.();
+  if (global.__redisClient === redis) global.__redisClient = undefined;
+
   console.log("\n✅ Seed complete!");
   await pool.end();
+}
+
+function shouldRefreshSeededPolicy(content: string | null): boolean {
+  const value = content ?? "";
+  return value.length < 700
+    || value.includes("Administrators should review")
+    || value.includes("baseline language")
+    || value.includes("contact pathway placeholder");
+}
+
+function menuItemValues(
+  menuId: string,
+  item: SeedMenuItem,
+  policyPageIds: Map<string, string>,
+  parentItemId: string | null,
+) {
+  const pageId = item.itemType === "cms_page" && item.policyType
+    ? policyPageIds.get(item.policyType) ?? null
+    : null;
+  return {
+    menuId,
+    label: item.label,
+    href: item.href,
+    itemType: item.itemType,
+    pageId,
+    blogPostId: null,
+    productId: null,
+    parentItemId,
+    opensNewTab: item.opensNewTab === true,
+    isEnabled: true,
+    sortOrder: item.sortOrder,
+  };
 }
 
 seed().catch((err) => {
