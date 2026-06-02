@@ -44,9 +44,10 @@
 - ✅ Admin media library with grid/list filters, upload, preview, URL copy, alt/folder edit, and guarded delete.
 - ✅ Admin analytics with revenue/orders/payment/product/customer charts, first-party traffic analytics, Today/2D filters, CSV export, and print-to-PDF export.
 - ✅ Shared admin datatable CSV and print-to-PDF exports on products, orders, customers, and blog.
-- ✅ Admin WhatsApp panel with manual send, template manager, order resend API/buttons, and delivery logs.
+- ✅ Admin WhatsApp panel with WAHA/Meta provider selection, manual send, template manager, order resend API/buttons, wallet-gated sending, and delivery logs.
 - ✅ Auth recovery flow: forgot password, reset password, email verification, resend verification.
-- ✅ Core notification/OTP provider layer with Resend email gateway, in-app notifications, delivery logs, and push subscription storage.
+- ✅ Core notification/OTP provider layer with Resend email gateway, in-app notifications, notification wallets, delivery logs, and push subscription storage.
+- ✅ Qbiqal super-admin role for crediting WhatsApp, email, and SMS notification wallets.
 - ✅ Admin provider key provisions for Resend, SMS, Telegram, Web Push, WhatsApp, R2, Razorpay, Stripe, and Sentry; DB config is primary and `.env` is fallback.
 - ✅ Secret config encryption at rest for provider/API keys.
 - ✅ SEO module with sitewide metadata settings, route overrides, verification codes, GTM/GA/Meta Pixel config, sitemap/robots controls, internal links, and search submission log.
@@ -63,6 +64,7 @@
 - ✅ Admin settings are grouped into tabs for modules, brand, notifications, OTP, providers, localization, and commerce.
 - ✅ Admin module toggles, locked Core toggle, brand logo uploaders, localization, currency, notification, OTP, and Resend settings.
 - ✅ Admin logo uploader crops to 144x144 and website logo uploader crops to 360x96 through `MediaUploader`, with saved-logo clear buttons and crop-modal reset.
+- ✅ Landing page custom topbar/drawer now reflects the uploaded website logo, and admin mobile sidebar behaves as a closed native drawer.
 - ✅ Blog editor has nested categories, on-the-fly category creation, colorful tag suggestions/creation, and full SEO controls.
 - ✅ Product editor has nested product categories, on-the-fly category creation, colorful tags, and full SEO controls.
 - ✅ Blog comments support member-only comments/replies, likes, approval workflow, and English/Hindi abuse filtering.
@@ -117,7 +119,7 @@ Local seed counts after audit:
 
 | Table | Count |
 |---|---:|
-| users | 1 |
+| users | 3 including admin, qbiqal, demo customer |
 | products | 4 |
 | product_variants | 9 |
 | product_images | 12 |
@@ -127,6 +129,8 @@ Local seed counts after audit:
 | site_config | 110+ |
 | otp_codes | 0 |
 | notification_deliveries | 0 |
+| notification_wallets | 3 |
+| notification_wallet_transactions | 0 |
 | push_subscriptions | 0 |
 | whatsapp_logs | 0 |
 | blog_categories | 5 |
@@ -141,7 +145,7 @@ Local seed counts after audit:
 
 ```txt
 Core
-  auth, users, settings, notifications, OTP, media library, DB, Redis, cache, route protection, module registry, provider key config
+  auth, users, qbiqal super-admin, settings, notification wallets, notifications, OTP, media library, DB, Redis, cache, route protection, module registry, provider key config
 
 CMS Module
   /home, /admin/cms, /admin/cms/pages, /admin/cms/menus, cms_sections, cms_pages, cms_menus, testimonials, landing content, public CMS pages, policy pages
@@ -231,7 +235,8 @@ Implemented module behavior:
 | `(admin)/admin/products/*` | Product list/new/edit form | ✅ |
 | `(admin)/admin/customers/*` | Customer list/detail and activate/deactivate | ✅ |
 | `(admin)/admin/media/*` | Media library grid/list/upload/edit/delete | ✅ |
-| `(admin)/admin/whatsapp/*` | WhatsApp manual send/templates/logs | ✅ |
+| `(admin)/admin/whatsapp/*` | WAHA/Meta WhatsApp config, manual send/templates/logs | ✅ |
+| `(admin)/admin/notification-wallets/*` | Qbiqal-only WhatsApp/email/SMS wallet crediting and ledger | ✅ |
 | `(admin)/admin/blog/*` | Blog list/new/edit/category manager | ✅ |
 | `(admin)/admin/blog/comments/*` | Blog comment moderation | ✅ |
 | `(admin)/admin/cms/*` | CMS section list/toggle/detail editor, page editor, menu manager | ✅ |
@@ -289,6 +294,7 @@ Implemented module behavior:
 | `GET /api/admin/media` | Admin | ✅ |
 | `GET/PATCH/DELETE /api/admin/media/[id]` | Admin | ✅ |
 | `GET/PATCH/POST /api/admin/whatsapp` | Admin | ✅ |
+| `GET/POST /api/admin/notification-wallets` | Admin GET, qbiqal POST | ✅ |
 | `POST /api/admin/orders/[id]/whatsapp` | Admin | ✅ |
 | `GET/POST /api/admin/blog` | Admin | ✅ |
 | `GET/PATCH/DELETE /api/admin/blog/[id]` | Admin | ✅ |
@@ -336,16 +342,17 @@ Implemented module behavior:
 |---|---|
 | `db/index.ts` | PostgreSQL pool and Drizzle db |
 | `db/schema.ts` | Tables and inferred types |
-| `db/seed.ts` | Admin/products/CMS/blog category seed |
-| `db/indexes.ts` | 42 performance indexes |
+| `db/seed.ts` | Admin/qbiqal/customer/products/CMS/blog/category/config/wallet seed |
+| `db/indexes.ts` | 57 performance indexes |
 | `redis.ts` | Redis client with `an:` keyPrefix |
 | `cache.ts` | Cache helpers and invalidation |
 | `config.ts` | DB-backed site config, env fallback helpers, and secret encryption |
-| `modules.ts` | Module manifest, state helpers, nav helpers, page/API gates |
+| `modules.ts` | Module manifest, state helpers, role-aware nav helpers, page/API gates |
 | `moderation.ts` | English/Hindi abuse keyword filter for comments and reviews |
 | `auth.ts` | JWT and cookie helpers |
 | `otp.ts` | Hashed OTP creation/verification and auth email templates |
-| `notifications.ts` | Notification provider facade, Resend sending, in-app notifications, delivery logs |
+| `notifications.ts` | Notification provider facade, wallet-gated Resend sending, in-app notifications, delivery logs |
+| `notification-wallet.ts` | WhatsApp/email/SMS wallet balances, atomic debit, credit, and reversal helpers |
 | `rate-limit.ts` | Redis fixed-window request limiting |
 | `middleware.ts` | API guards |
 | `errors.ts` | AppError and API error handling |
@@ -355,7 +362,7 @@ Implemented module behavior:
 | `payment/offline-qr.ts` | Offline QR gateway |
 | `payment/index.ts` | Gateway registry |
 | `order-number.ts` | `AN-YYYY-NNNN` sequence |
-| `whatsapp.ts` | WhatsApp config, templates, sending, and delivery logging |
+| `whatsapp.ts` | WAHA/Meta WhatsApp config, templates, wallet-gated sending, and delivery logging |
 | `email.ts` | Backward-compatible email wrapper over notification provider facade |
 | `observability.ts` | Sentry envelope capture with DB config/env fallback |
 | `upload-token.ts` | Signed payment proof upload token helper |
@@ -399,6 +406,7 @@ Latest local verification completed on 2026-06-02:
 npm run db:generate
 set -a; source .env.local; set +a; npm run db:migrate
 npm run db:seed
+npm run db:indexes
 npm run typecheck
 npm run unit
 npm run build
@@ -410,7 +418,7 @@ npm run e2e
 
 ## Critical Production TODO
 
-- 🔴 Forced seed admin password change.
+- 🔴 Forced seed admin and qbiqal password changes.
 - 🔴 Configure real production credentials in Admin Settings or env fallback.
 - 🟡 Keep deep module package isolation mandatory before adding future heavy MLM/payment plugins.
 - 🟡 Actual SMS/Telegram/Web Push sender adapters need final provider selection.

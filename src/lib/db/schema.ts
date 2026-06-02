@@ -503,6 +503,30 @@ export const notificationDeliveries = pgTable("notification_deliveries", {
   createdAt:         timestamp("created_at").defaultNow().notNull(),
 });
 
+export const notificationWallets = pgTable("notification_wallets", {
+  id:                  text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  channel:             text("channel").notNull().unique(), // whatsapp | email | sms
+  balanceCredits:      integer("balance_credits").default(0).notNull(),
+  lowBalanceThreshold: integer("low_balance_threshold").default(10).notNull(),
+  isEnabled:           boolean("is_enabled").default(true).notNull(),
+  updatedAt:           timestamp("updated_at").defaultNow().notNull(),
+  createdAt:           timestamp("created_at").defaultNow().notNull(),
+});
+
+export const notificationWalletTransactions = pgTable("notification_wallet_transactions", {
+  id:             text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  walletId:       text("wallet_id").references(() => notificationWallets.id, { onDelete: "cascade" }).notNull(),
+  channel:        text("channel").notNull(),
+  type:           text("type").notNull(), // credit | debit | reversal | adjustment
+  credits:        integer("credits").notNull(),
+  balanceAfter:   integer("balance_after").notNull(),
+  reason:         text("reason"),
+  referenceType:  text("reference_type"),
+  referenceId:    text("reference_id"),
+  createdBy:      text("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt:      timestamp("created_at").defaultNow().notNull(),
+});
+
 export const otpCodes = pgTable("otp_codes", {
   id:         text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId:     text("user_id").references(() => users.id, { onDelete: "cascade" }),
@@ -537,7 +561,9 @@ export const whatsappLogs = pgTable("whatsapp_logs", {
   recipientName:     text("recipient_name"),
   message:           text("message").notNull(),
   status:            text("status").notNull(), // sent | skipped | failed
+  provider:          text("provider").default("meta").notNull(),
   providerMessageId: text("provider_message_id"),
+  walletTransactionId: text("wallet_transaction_id").references(() => notificationWalletTransactions.id, { onDelete: "set null" }),
   error:             text("error"),
   sentBy:            text("sent_by").references(() => users.id, { onDelete: "set null" }),
   createdAt:         timestamp("created_at").defaultNow().notNull(),
@@ -588,6 +614,8 @@ export type ComplianceCheck   = typeof complianceChecks.$inferSelect;
 export type Testimonial       = typeof testimonials.$inferSelect;
 export type Notification      = typeof notifications.$inferSelect;
 export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;
+export type NotificationWallet = typeof notificationWallets.$inferSelect;
+export type NotificationWalletTransaction = typeof notificationWalletTransactions.$inferSelect;
 export type OtpCode           = typeof otpCodes.$inferSelect;
 export type PushSubscription  = typeof pushSubscriptions.$inferSelect;
 export type WhatsappLog       = typeof whatsappLogs.$inferSelect;

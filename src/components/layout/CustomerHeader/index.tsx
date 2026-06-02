@@ -74,6 +74,7 @@ export function CustomerHeader({
   const resolvedNavLinks = pathname === "/"
     ? (landingNavLinks?.length ? landingNavLinks : navLinks ?? NAV_LINKS)
     : (siteNavLinks?.length ? siteNavLinks : navLinks ?? NAV_LINKS);
+  const isAdminUser = user?.role === "admin" || user?.role === "qbiqal";
 
   return (
     <>
@@ -113,7 +114,7 @@ export function CustomerHeader({
           {user ? (
             <>
               {/* Admin shortcut — always visible in topbar for admins */}
-              {user.role === "admin" && (
+              {isAdminUser && (
                 <Link href="/admin/dashboard" className={styles.adminBtn}>⚙️ Admin Panel</Link>
               )}
               <div className={styles.userMenu} ref={dropdownRef}>
@@ -128,7 +129,7 @@ export function CustomerHeader({
                 </button>
                 {dropdownOpen && (
                   <div className={styles.dropdown}>
-                    {user.role === "admin" ? (
+                    {isAdminUser ? (
                       /* Admin dropdown — no customer-specific links */
                       <>
                         <Link href="/admin/dashboard" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>📊 Dashboard</Link>

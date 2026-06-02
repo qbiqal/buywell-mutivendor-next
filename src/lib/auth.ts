@@ -5,12 +5,22 @@ import type { NextRequest } from "next/server";
 export const COOKIE_NAME = "an_token";
 const JWT_ALG = "HS256";
 
+export type UserRole = "customer" | "admin" | "qbiqal";
+
 export interface JWTPayload {
   sub: string;      // userId
   email: string;
-  role: "customer" | "admin";
+  role: UserRole;
   iat?: number;
   exp?: number;
+}
+
+export function isAdminRole(role: string | null | undefined): boolean {
+  return role === "admin" || role === "qbiqal";
+}
+
+export function isQbiqalRole(role: string | null | undefined): boolean {
+  return role === "qbiqal";
 }
 
 function getSecret(): Uint8Array {

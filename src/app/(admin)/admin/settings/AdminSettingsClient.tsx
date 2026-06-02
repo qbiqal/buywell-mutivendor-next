@@ -49,6 +49,11 @@ const OTP_KEYS = [
 ];
 
 const EXTERNAL_KEY_SETTINGS = [
+  "whatsapp_provider",
+  "whatsapp_waha_base_url",
+  "whatsapp_waha_session",
+  "whatsapp_waha_api_key",
+  "whatsapp_waha_chat_suffix",
   "whatsapp_phone_number_id",
   "whatsapp_access_token",
   "media_storage",
@@ -193,7 +198,10 @@ export default function AdminSettingsClient() {
       {activeTab === "notifications" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>Notifications & Gateways</h2></CardHeader>
         <CardBody className={styles.cardFields}>
-          <p className={styles.fieldHint}>Core notification channels are toggleable here. Resend is the first email gateway; SMS, Telegram, WhatsApp, and push have provider slots for future adapters.</p>
+          <p className={styles.fieldHint}>
+            Core notification channels are toggleable here. WhatsApp, email, and SMS sends are also gated by their notification wallet balance.
+            {" "}<a href="/admin/notification-wallets">Open wallets</a>
+          </p>
           <div className={styles.moduleGrid}>
             <label className={styles.moduleToggle}>
               <input type="checkbox" checked={(config.notification_in_app_enabled ?? "true") !== "false"} onChange={setCheckbox("notification_in_app_enabled")} />
@@ -309,7 +317,28 @@ export default function AdminSettingsClient() {
           <p className={styles.fieldHint}>Admin values are encrypted before storage. If a field is empty, the matching `.env` value is used as fallback.</p>
 
           <div className={styles.subSection}>
-            <h3 className={styles.subTitle}>WhatsApp Meta Cloud</h3>
+            <h3 className={styles.subTitle}>WhatsApp Gateway</h3>
+            <Select
+              label="WhatsApp Provider"
+              value={config.whatsapp_provider ?? "waha"}
+              onChange={(e) => setConfig((p) => ({ ...p, whatsapp_provider: e.target.value }))}
+              options={[
+                { value: "waha", label: "WAHA self-hosted gateway" },
+                { value: "meta", label: "Meta Cloud API" },
+              ]}
+            />
+            <div className={styles.formRow}>
+              <Input label="WAHA Base URL" value={config.whatsapp_waha_base_url ?? "https://whatsapp-gateway.qbiqal.com/"} onChange={set("whatsapp_waha_base_url")} placeholder="https://whatsapp-gateway.qbiqal.com/" />
+              <Input label="WAHA Session" value={config.whatsapp_waha_session ?? "default"} onChange={set("whatsapp_waha_session")} placeholder="default" />
+            </div>
+            <div className={styles.formRow}>
+              <Input label="WAHA API Key" type="password" value={config.whatsapp_waha_api_key ?? ""} onChange={set("whatsapp_waha_api_key")} placeholder="X-Api-Key if enabled on WAHA" autoComplete="off" />
+              <Input label="WAHA Chat Suffix" value={config.whatsapp_waha_chat_suffix ?? "@c.us"} onChange={set("whatsapp_waha_chat_suffix")} placeholder="@c.us" />
+            </div>
+          </div>
+
+          <div className={styles.subSection}>
+            <h3 className={styles.subTitle}>WhatsApp Meta Cloud Fallback</h3>
             <div className={styles.formRow}>
               <Input label="Phone Number ID" type="password" value={config.whatsapp_phone_number_id ?? ""} onChange={set("whatsapp_phone_number_id")} placeholder="WHATSAPP_PHONE_NUMBER_ID" autoComplete="off" />
               <Input label="Access Token" type="password" value={config.whatsapp_access_token ?? ""} onChange={set("whatsapp_access_token")} placeholder="WHATSAPP_ACCESS_TOKEN" autoComplete="off" />

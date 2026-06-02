@@ -21,6 +21,13 @@
   margin-bottom: 28px;
 }
 
+.headerBadges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 420px;
@@ -58,6 +65,12 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.gatewayGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .inlineCheck {
@@ -182,7 +195,8 @@
 
 @media (max-width: 1000px) {
   .layout,
-  .templateGrid {
+  .templateGrid,
+  .gatewayGrid {
     grid-template-columns: 1fr;
   }
 }

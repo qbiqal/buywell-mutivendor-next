@@ -11,13 +11,14 @@
 APRAS Naturals
 ├── Core
 │   ├── Auth: JWT cookie `an_token`
-│   ├── Users: customer/admin
+│   ├── Users: customer/admin/qbiqal
 │   ├── Settings: DB-backed `site_config`
 │   ├── Cache: Redis `an:` namespace
 │   ├── Health: /api/health
 │   ├── Module registry/state
 │   ├── Locale/currency baseline
 │   ├── Notification provider facade
+│   ├── Notification wallets: WhatsApp/email/SMS credits + ledger
 │   ├── External provider key config with env fallback
 │   ├── Secret config encryption
 │   ├── OTP: email verification + password reset
@@ -25,7 +26,7 @@ APRAS Naturals
 │   ├── Same-site API mutation hardening
 │   ├── Rich HTML sanitizer
 │   ├── Observability: Sentry envelope capture
-│   ├── Brand logos: admin logo + website logo via DB config
+│   ├── Brand logos: admin logo + website logo via DB config, including the custom landing topbar
 │   ├── Compliance: GDPR/DPDP checklist, evidence, module visibility
 │   ├── Theme: Public Sans + persisted light/dark mode
 │   └── /admin/media
@@ -96,15 +97,21 @@ APRAS Naturals
 Core Admin Utilities
 ├── /admin/media
 ├── /admin/whatsapp
+│   ├── WAHA/Meta provider config
 │   ├── Manual send
 │   ├── Template manager
 │   ├── Per-order resend
+│   ├── Wallet-gated sends
 │   └── whatsapp_logs
+├── /admin/notification-wallets
+│   ├── Qbiqal-only credit control
+│   ├── WhatsApp/email/SMS balances
+│   └── notification_wallet_transactions
 └── /admin/settings
     ├── Tabbed sections
     ├── Module toggles
     ├── Resend/SMS/Telegram/Web Push keys
-    ├── WhatsApp/R2/Razorpay/Stripe/Sentry provider keys
+    ├── WAHA/Meta WhatsApp/R2/Razorpay/Stripe/Sentry provider keys
     ├── Notification channel toggles
     ├── OTP TTL/attempt controls
     └── Admin/website logo uploaders with crop reset and clear buttons
@@ -156,6 +163,7 @@ Admin
   /admin/media
   /admin/analytics
   /admin/whatsapp
+  /admin/notification-wallets  Qbiqal-only wallet credit and ledger
   /admin/blog
   /admin/blog/new
   /admin/blog/[id]/edit
@@ -251,12 +259,13 @@ POST /api/auth/verify-email
 
 proxy.ts
   -> /orders, /profile, /notifications require authenticated user
-  -> /admin requires admin role
+  -> /admin requires admin or qbiqal role
   -> logged-in users are redirected away from login/register
 
 API guards
   -> createAuthGuard()
   -> createAdminGuard()
+  -> createQbiqalGuard()
 ```
 
 Current:
@@ -287,6 +296,7 @@ users
   ├── media
   ├── notifications
   ├── notification_deliveries
+  ├── notification_wallet_transactions
   ├── otp_codes
   └── push_subscriptions
 
@@ -320,6 +330,8 @@ seo_search_submissions
 traffic_events
 testimonials
 notification_deliveries
+notification_wallets
+  └── notification_wallet_transactions
 otp_codes
 push_subscriptions
 whatsapp_logs
@@ -398,6 +410,7 @@ Current:
 - ✅ `/admin/seo` manages sitewide SEO, analytics tags, verification codes, route overrides, internal links, and search submission logs.
 - ✅ `/admin/settings` owns core brand logos: admin panel logo 144x144 and website logo 360x96 via `MediaUploader`.
 - ✅ `/admin/settings` is tabbed and logo upload previews have clear/reset controls.
+- ✅ Landing custom topbar/drawer uses the configured website logo.
 
 ---
 
@@ -416,6 +429,7 @@ AdminSidebar
 ├── Media          ✅
 ├── CMS            ✅ list/toggle/detail editor
 ├── WhatsApp       ✅
+├── Wallets        ✅ qbiqal only
 ├── Compliance     ✅
 ├── Analytics      ✅
 └── Settings       ✅
@@ -424,6 +438,8 @@ AdminSidebar
 Current module-aware sidebar:
 
 - Core always shows Dashboard and Settings.
+- Qbiqal role gets Notification Wallets in addition to normal admin nav.
+- Mobile admin sidebar is closed by default and opens as a full drawer.
 - CMS nav shows only if CMS module enabled.
 - E-Commerce nav shows Orders, Products, Reviews, Refunds, Customers, and Analytics only if E-Commerce enabled.
 - Blog nav shows Blog and Blog Comments only if Blog enabled.
@@ -466,6 +482,12 @@ src/lib/notifications.ts
   sendEmailNotification()
   logNotificationDelivery()
 
+src/lib/notification-wallet.ts
+  ensureNotificationWallets()
+  creditNotificationWallet()
+  debitNotificationWallet()
+  reverseNotificationDebit()
+
 src/lib/otp.ts
   createOtp()
   verifyOtpCode()
@@ -475,10 +497,11 @@ src/lib/otp.ts
 
 Provider slots:
 
-- ✅ Email: Resend implemented.
+- ✅ Email: Resend implemented and wallet-gated.
 - ✅ In-app: DB notifications implemented.
 - ✅ Push: subscription storage implemented.
-- ✅ WhatsApp: Meta/manual-send path exists.
+- ✅ WhatsApp: WAHA self-hosted gateway and Meta fallback path exist; sends are wallet-gated.
+- ✅ Notification wallets: WhatsApp/email/SMS balances and Qbiqal credit ledger.
 - ✅ Admin key slots/env fallbacks: SMS, Telegram, Web Push, WhatsApp, R2, Razorpay, Stripe, Sentry.
 - 🟡 Web Push sending worker/provider pending final runtime/provider decision.
 - 🟡 SMS and Telegram adapters pending selected vendor/API contract.
@@ -486,9 +509,12 @@ Provider slots:
 Admin configuration:
 
 - `notification_resend_api_key` is entered in `/admin/settings`.
+- WAHA credentials needed for self-hosted WhatsApp: base URL, session, optional `X-Api-Key`, chat suffix, and admin WhatsApp number.
 - SMS, Telegram, Web Push, WhatsApp, R2, Razorpay, Stripe, and Sentry credentials can be entered in `/admin/settings`.
+- Qbiqal credits WhatsApp/email/SMS wallets from `/admin/notification-wallets`.
 - Empty DB values fall back to environment variables.
 - `notification_email_enabled`, `notification_sms_enabled`, `notification_whatsapp_enabled`, `notification_telegram_enabled`, and `notification_push_enabled` gate each channel.
+- WhatsApp/email/SMS sends require both enabled/configured channel settings and a positive channel wallet balance.
 - `otp_email_verification_ttl_minutes`, `otp_password_reset_ttl_minutes`, and `otp_max_attempts` control OTP behavior.
 
 ---
@@ -524,14 +550,15 @@ Next:
 
 | Risk | Status |
 |---|---|
-| Seed admin password | 🔴 Must harden |
+| Seed admin/qbiqal passwords | 🔴 Must harden |
 | Login/register/recovery rate limiting | ✅ Built with Redis |
 | CSRF hardening | ✅ Same-site mutation checks built |
 | Signed payment-proof uploads | ✅ Built |
 | Proper R2 upload signing | ✅ Built |
 | Deep module package isolation | 🟡 Current cart loading fixed; future heavy modules must keep this rule |
 | Inventory decrement/reservation | ✅ Stock decrement built |
-| WhatsApp Meta credentials | ❌ Production setup pending |
+| WhatsApp WAHA credentials | 🟡 Base URL/session defaulted; API key/admin number must be configured if required |
+| Notification wallet balance | 🟡 Qbiqal must credit enabled paid channels before production sends |
 | Sitemap/robots | ✅ Built |
 | Secret config storage | ✅ Encrypted at rest with app secret |
 | GDPR/DPDP checklist evidence | ✅ Admin tracking built; final legal review still required |
@@ -548,6 +575,7 @@ Latest local verification on 2026-06-02:
 - ✅ `npm run db:generate`
 - ✅ `set -a; source .env.local; set +a; npm run db:migrate`
 - ✅ `npm run db:seed`
+- ✅ `npm run db:indexes`
 - ✅ `npm run typecheck`
 - ✅ `npm run unit`
 - ✅ `npm run build`
@@ -559,6 +587,7 @@ Latest local verification on 2026-06-02:
 - ✅ Live E2E verifies media upload/list/edit/delete and confirms Media remains available when E-Commerce is disabled.
 - ✅ Live E2E verifies analytics page, JSON API, CSV export, and E-Commerce disabled behavior.
 - ✅ Live E2E verifies WhatsApp page, manual log, order resend log, and order resend disabled when E-Commerce is disabled.
+- ✅ Admin role model includes `qbiqal` for notification wallet crediting.
 - ✅ Live E2E verifies forgot/reset password, email verification, notifications, sitemap, and robots.
 - ✅ Live E2E verifies real order creation, signed proof upload, stock decrement, admin payment verification, and shipping.
 - ✅ Build includes `/admin/blog/comments`, `/admin/reviews`, `/admin/refunds`, `/admin/compliance`, blog comments, product reviews, and refund APIs.

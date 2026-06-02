@@ -5,7 +5,7 @@ import { products, productVariants, productImages } from "@/lib/db/schema";
 import { eq, and, asc, ne } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
 import { requireModulePage } from "@/lib/modules";
-import { getTokenFromCookies, verifyToken } from "@/lib/auth";
+import { getTokenFromCookies, isAdminRole, verifyToken } from "@/lib/auth";
 import { buildSeoMetadata } from "@/lib/seo";
 import ProductDetailClient from "./ProductDetailClient";
 
@@ -55,7 +55,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const { slug } = await params;
   const token = await getTokenFromCookies();
   const payload = token ? await verifyToken(token) : null;
-  const canEdit = payload?.role === "admin";
+  const canEdit = isAdminRole(payload?.role);
 
   const product = await withCache(`query:product:${slug}`, CACHE_TTL.QUERY, async () => {
     const rows = await db

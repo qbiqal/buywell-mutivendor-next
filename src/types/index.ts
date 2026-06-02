@@ -1,6 +1,6 @@
 // Shared TypeScript types across the app
 
-export type UserRole = "customer" | "admin";
+export type UserRole = "customer" | "admin" | "qbiqal";
 export type OrderStatus =
   | "pending"
   | "payment_pending"

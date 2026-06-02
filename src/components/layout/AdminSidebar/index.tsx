@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./AdminSidebar.module.css";
@@ -28,16 +28,33 @@ export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS,
   const pathname  = usePathname();
   const router    = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    setMobileOpen(false);
     router.push("/login");
     router.refresh();
   }
 
   return (
     <>
-      <aside className={[styles.sidebar, collapsed ? styles.collapsed : ""].join(" ")}>
+      <button
+        type="button"
+        className={styles.mobileMenuBtn}
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open admin menu"
+        aria-expanded={mobileOpen}
+      >
+        ☰
+      </button>
+      {mobileOpen && <button type="button" className={styles.mobileOverlay} aria-label="Close admin menu" onClick={() => setMobileOpen(false)} />}
+      <aside className={[styles.sidebar, collapsed ? styles.collapsed : "", mobileOpen ? styles.mobileOpen : ""].join(" ")}>
         {/* Logo + collapse toggle */}
         <div className={styles.logo}>
           <div className={styles.logoIcon}>
@@ -59,6 +76,14 @@ export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS,
         >
           {collapsed ? "›" : "‹"}
         </button>
+        <button
+          type="button"
+          className={styles.mobileCloseBtn}
+          onClick={() => setMobileOpen(false)}
+          aria-label="Close admin menu"
+        >
+          ×
+        </button>
 
         {/* Nav */}
         <nav className={styles.nav}>
@@ -70,6 +95,7 @@ export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS,
                 href={item.href}
                 className={[styles.navItem, isActive ? styles.active : ""].join(" ")}
                 title={collapsed ? item.label : undefined}
+                onClick={() => setMobileOpen(false)}
               >
                 <span className={styles.navIcon}>{item.icon}</span>
                 {!collapsed && <span className={styles.navLabel}>{item.label}</span>}
@@ -83,7 +109,7 @@ export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS,
 
         {/* Bottom */}
         <div className={styles.bottom}>
-          <Link href={viewSiteHref} className={styles.viewSiteLink} title="View Site">
+          <Link href={viewSiteHref} className={styles.viewSiteLink} title="View Site" onClick={() => setMobileOpen(false)}>
             <span>🌐</span>
             {!collapsed && <span>View Site</span>}
           </Link>

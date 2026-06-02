@@ -33,7 +33,8 @@ export default function LoginClient() {
       }
 
       const redirect = params.get("redirect");
-      router.push(redirect && redirect.startsWith("/") ? redirect : (data.data.role === "admin" ? "/admin/dashboard" : "/orders"));
+      const isAdmin = data.data.role === "admin" || data.data.role === "qbiqal";
+      router.push(redirect && redirect.startsWith("/") ? redirect : (isAdmin ? "/admin/dashboard" : "/orders"));
       router.refresh();
     } finally {
       setLoading(false);

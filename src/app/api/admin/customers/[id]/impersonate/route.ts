@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { createAdminGuard, getAuthPayload } from "@/lib/middleware";
-import { signToken, getTokenFromRequest, COOKIE_NAME, getTokenCookieOptions } from "@/lib/auth";
+import { signToken, getTokenFromRequest, COOKIE_NAME, getTokenCookieOptions, isAdminRole } from "@/lib/auth";
 import { handleApiError, NotFoundError } from "@/lib/errors";
 
 const IMPERSONATION_COOKIE = "an_impersonate_admin";
@@ -27,7 +27,7 @@ export async function POST(
       .where(eq(users.id, customerId));
 
     if (!rows[0]) throw new NotFoundError("Customer");
-    if (rows[0].role === "admin") {
+    if (isAdminRole(rows[0].role)) {
       return NextResponse.json({ success: false, error: "Cannot impersonate another admin" }, { status: 400 });
     }
 

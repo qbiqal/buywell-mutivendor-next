@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { NextResponse } from "next/server";
+import { isQbiqalRole } from "./auth";
 import { getAllSiteConfig } from "./config";
 
 export type ModuleKey = "core" | "cms" | "seo" | "blog" | "ecommerce";
@@ -21,6 +22,10 @@ export interface AppModule {
   publicNav: NavItem[];
   dependencies?: ModuleKey[];
 }
+
+const QBIQAL_ADMIN_NAV: NavItem[] = [
+  { label: "Notification Wallets", href: "/admin/notification-wallets", icon: "💳" },
+];
 
 export const APP_MODULES: AppModule[] = [
   {
@@ -154,10 +159,11 @@ export async function requireModuleApi(key: ModuleKey): Promise<NextResponse | n
   );
 }
 
-export function getEnabledAdminNav(state: ModuleState): NavItem[] {
-  return APP_MODULES
+export function getEnabledAdminNav(state: ModuleState, role?: string): NavItem[] {
+  const nav = APP_MODULES
     .filter((mod) => state[mod.key])
     .flatMap((mod) => mod.adminNav);
+  return isQbiqalRole(role) ? [...nav, ...QBIQAL_ADMIN_NAV] : nav;
 }
 
 export function getEnabledPublicNav(state: ModuleState): NavItem[] {

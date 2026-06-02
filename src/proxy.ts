@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken, getTokenFromRequest, COOKIE_NAME } from "@/lib/auth";
+import { verifyToken, getTokenFromRequest, isAdminRole } from "@/lib/auth";
 
 const PROTECTED_CUSTOMER_PREFIXES = ["/orders", "/profile", "/notifications"];
 const PROTECTED_ADMIN_PREFIXES    = ["/admin"];
@@ -34,7 +34,7 @@ export async function proxy(req: NextRequest) {
     if (!token) return redirectToLogin(req, "/admin");
     const payload = await verifyToken(token);
     if (!payload) return redirectToLogin(req, "/admin");
-    if (payload.role !== "admin") {
+    if (!isAdminRole(payload.role)) {
       return NextResponse.redirect(new URL("/", req.url));
     }
     return NextResponse.next();
@@ -46,7 +46,7 @@ export async function proxy(req: NextRequest) {
     if (token) {
       const payload = await verifyToken(token);
       if (payload) {
-        const dest = payload.role === "admin" ? "/admin/dashboard" : "/orders";
+        const dest = isAdminRole(payload.role) ? "/admin/dashboard" : "/orders";
         return NextResponse.redirect(new URL(dest, req.url));
       }
     }

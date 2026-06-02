@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthPayload, type JWTPayload } from "./auth";
+import { getAuthPayload, isAdminRole, isQbiqalRole, type JWTPayload } from "./auth";
 
 type AuthGuard = (req: NextRequest) => Promise<NextResponse | null>;
 
@@ -27,9 +27,28 @@ export function createAdminGuard(): AuthGuard {
         { status: 401 }
       );
     }
-    if (payload.role !== "admin") {
+    if (!isAdminRole(payload.role)) {
       return NextResponse.json(
         { success: false, error: "Forbidden: admin access required" },
+        { status: 403 }
+      );
+    }
+    return null;
+  };
+}
+
+export function createQbiqalGuard(): AuthGuard {
+  return async (req: NextRequest) => {
+    const payload = await getAuthPayload(req);
+    if (!payload) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+    if (!isQbiqalRole(payload.role)) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: qbiqal access required" },
         { status: 403 }
       );
     }

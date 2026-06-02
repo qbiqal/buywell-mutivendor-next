@@ -12,6 +12,7 @@ const TITLES: Array<{ prefix: string; title: string }> = [
   { prefix: "/admin/customers", title: "Customers" },
   { prefix: "/admin/media", title: "Media Library" },
   { prefix: "/admin/analytics", title: "Analytics" },
+  { prefix: "/admin/notification-wallets", title: "Notification Wallets" },
   { prefix: "/admin/whatsapp", title: "WhatsApp" },
   { prefix: "/admin/blog", title: "Blog" },
   { prefix: "/admin/cms", title: "CMS" },
@@ -34,4 +35,3 @@ export function AdminTopbar() {
     </header>
   );
 }
-

@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { getTokenFromCookies, verifyToken } from "@/lib/auth";
+import { getTokenFromCookies, isAdminRole, verifyToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -19,7 +19,7 @@ export default async function PublicLayout({ children }: { children: React.React
   let impersonatedAs: string | null = null;
   if (impersonationAdminToken) {
     const adminPayload = await verifyToken(impersonationAdminToken);
-    if (adminPayload?.role === "admin") {
+    if (isAdminRole(adminPayload?.role)) {
       // Valid impersonation — get the current (customer) user email
       const token = await getTokenFromCookies();
       if (token) {

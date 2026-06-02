@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { COOKIE_NAME, getTokenCookieOptions, verifyToken } from "@/lib/auth";
+import { COOKIE_NAME, getTokenCookieOptions, isAdminRole, verifyToken } from "@/lib/auth";
 import { handleApiError } from "@/lib/errors";
 
 const IMPERSONATION_COOKIE = "an_impersonate_admin";
@@ -13,7 +13,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const payload = await verifyToken(adminToken);
-    if (!payload || payload.role !== "admin") {
+    if (!payload || !isAdminRole(payload.role)) {
       return NextResponse.json({ success: false, error: "Invalid admin token" }, { status: 401 });
     }
 

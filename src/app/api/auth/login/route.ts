@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { signToken, getTokenCookieOptions } from "@/lib/auth";
+import { signToken, getTokenCookieOptions, type UserRole } from "@/lib/auth";
 import { handleApiError, ValidationError, AppError } from "@/lib/errors";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const token = await signToken({
       sub: user.id,
       email: user.email,
-      role: user.role as "customer" | "admin",
+      role: user.role as UserRole,
     });
 
     const response = NextResponse.json({

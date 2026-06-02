@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Input, Textarea } from "@/components/ui/Input";
+import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/ui/Toast";
 import styles from "./admin-whatsapp.module.css";
@@ -20,6 +20,8 @@ interface WhatsAppLog {
   message: string;
   status: "sent" | "skipped" | "failed";
   providerMessageId: string | null;
+  provider: "waha" | "meta";
+  walletTransactionId: string | null;
   error: string | null;
   createdAt: string;
 }
@@ -29,7 +31,18 @@ interface WhatsAppData {
     enabled: boolean;
     orderNotify: boolean;
     adminNumber: string;
+    provider: "waha" | "meta";
+    wahaBaseUrl: string;
+    wahaSession: string;
+    wahaApiKey: string;
+    wahaChatSuffix: string;
     templates: Record<TemplateKey, string>;
+  };
+  wallet: {
+    channel: string;
+    balanceCredits: number;
+    lowBalanceThreshold: number;
+    isEnabled: boolean;
   };
   logs: WhatsAppLog[];
   pagination: { page: number; limit: number; total: number; pages: number };
@@ -56,6 +69,11 @@ export default function AdminWhatsAppClient() {
     enabled: true,
     orderNotify: true,
     adminNumber: "",
+    provider: "waha" as "waha" | "meta",
+    wahaBaseUrl: "https://whatsapp-gateway.qbiqal.com/",
+    wahaSession: "default",
+    wahaApiKey: "",
+    wahaChatSuffix: "@c.us",
     templates: {} as Record<TemplateKey, string>,
   });
   const [sendForm, setSendForm] = useState({
@@ -79,6 +97,11 @@ export default function AdminWhatsAppClient() {
           enabled: json.data.config.enabled,
           orderNotify: json.data.config.orderNotify,
           adminNumber: json.data.config.adminNumber,
+          provider: json.data.config.provider,
+          wahaBaseUrl: json.data.config.wahaBaseUrl,
+          wahaSession: json.data.config.wahaSession,
+          wahaApiKey: json.data.config.wahaApiKey,
+          wahaChatSuffix: json.data.config.wahaChatSuffix,
           templates: json.data.config.templates,
         });
       })
@@ -99,6 +122,11 @@ export default function AdminWhatsAppClient() {
         whatsapp_enabled: configForm.enabled ? "true" : "false",
         whatsapp_order_notify: configForm.orderNotify ? "true" : "false",
         whatsapp_admin_number: configForm.adminNumber,
+        whatsapp_provider: configForm.provider,
+        whatsapp_waha_base_url: configForm.wahaBaseUrl,
+        whatsapp_waha_session: configForm.wahaSession,
+        whatsapp_waha_api_key: configForm.wahaApiKey,
+        whatsapp_waha_chat_suffix: configForm.wahaChatSuffix,
       };
       for (const key of TEMPLATE_KEYS) {
         payload[`whatsapp_template_${key}`] = configForm.templates[key] ?? "";
@@ -154,9 +182,14 @@ export default function AdminWhatsAppClient() {
       <div className={styles.pageHeader}>
         <div>
           <h1 className="admin-page-title">WhatsApp</h1>
-          <p className="admin-page-subtitle">Manual sends, order templates, and delivery logs</p>
+          <p className="admin-page-subtitle">WAHA gateway, manual sends, order templates, wallet-gated delivery logs</p>
         </div>
-        <Badge variant={configForm.enabled ? "success" : "danger"}>{configForm.enabled ? "Enabled" : "Disabled"}</Badge>
+        <div className={styles.headerBadges}>
+          <Badge variant={configForm.enabled ? "success" : "danger"}>{configForm.enabled ? "Enabled" : "Disabled"}</Badge>
+          <Badge variant={data.wallet.balanceCredits > 0 && data.wallet.isEnabled ? "success" : "warning"}>
+            {data.wallet.balanceCredits} WhatsApp credits
+          </Badge>
+        </div>
       </div>
 
       <div className={styles.layout}>
@@ -211,6 +244,48 @@ export default function AdminWhatsAppClient() {
               onChange={(e) => setConfigForm((current) => ({ ...current, adminNumber: e.target.value }))}
               placeholder="+919470309006"
             />
+            <Select
+              label="Provider"
+              value={configForm.provider}
+              onChange={(e) => setConfigForm((current) => ({ ...current, provider: e.target.value as "waha" | "meta" }))}
+              options={[
+                { value: "waha", label: "WAHA self-hosted gateway" },
+                { value: "meta", label: "Meta Cloud API" },
+              ]}
+            />
+            <div className={styles.gatewayGrid}>
+              <Input
+                label="WAHA Base URL"
+                value={configForm.wahaBaseUrl}
+                onChange={(e) => setConfigForm((current) => ({ ...current, wahaBaseUrl: e.target.value }))}
+                placeholder="https://whatsapp-gateway.qbiqal.com/"
+              />
+              <Input
+                label="WAHA Session"
+                value={configForm.wahaSession}
+                onChange={(e) => setConfigForm((current) => ({ ...current, wahaSession: e.target.value }))}
+                placeholder="default"
+              />
+            </div>
+            <div className={styles.gatewayGrid}>
+              <Input
+                label="WAHA API Key"
+                type="password"
+                value={configForm.wahaApiKey}
+                onChange={(e) => setConfigForm((current) => ({ ...current, wahaApiKey: e.target.value }))}
+                placeholder="X-Api-Key if configured on WAHA"
+                autoComplete="off"
+              />
+              <Input
+                label="WAHA Chat Suffix"
+                value={configForm.wahaChatSuffix}
+                onChange={(e) => setConfigForm((current) => ({ ...current, wahaChatSuffix: e.target.value }))}
+                placeholder="@c.us"
+              />
+            </div>
+            <p className={styles.hint}>
+              WAHA credentials needed: gateway base URL, session name, optional API key, and the recipient/admin WhatsApp number.
+            </p>
             <Button variant="primary" loading={saving} onClick={saveSettings}>Save Settings</Button>
           </div>
         </section>
@@ -249,6 +324,7 @@ export default function AdminWhatsAppClient() {
                 <th>Recipient</th>
                 <th>Template</th>
                 <th>Status</th>
+                <th>Provider</th>
                 <th>Order</th>
                 <th>Time</th>
                 <th>Error</th>
@@ -256,7 +332,7 @@ export default function AdminWhatsAppClient() {
             </thead>
             <tbody>
               {data.logs.length === 0 ? (
-                <tr><td colSpan={6} className={styles.empty}>No WhatsApp logs yet.</td></tr>
+                <tr><td colSpan={7} className={styles.empty}>No WhatsApp logs yet.</td></tr>
               ) : data.logs.map((log) => (
                 <tr key={log.id}>
                   <td>
@@ -265,6 +341,7 @@ export default function AdminWhatsAppClient() {
                   </td>
                   <td>{log.templateKey.replace(/_/g, " ")}</td>
                   <td><Badge variant={log.status === "sent" ? "success" : log.status === "failed" ? "danger" : "warning"}>{log.status}</Badge></td>
+                  <td>{log.provider}</td>
                   <td>{log.orderId ? <Link href={`/admin/orders/${log.orderId}`}>{log.orderNumber ?? "Order"}</Link> : "-"}</td>
                   <td>{new Date(log.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
                   <td className={styles.errorText}>{log.error ?? "-"}</td>

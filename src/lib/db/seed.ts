@@ -5,6 +5,7 @@ import {
   blogCategories, cmsSections, siteConfig,
   cmsMenus, cmsMenuItems, productCategories,
   contentTags, cmsPages, complianceChecks,
+  notificationWallets,
 } from "./schema";
 import bcrypt from "bcryptjs";
 import { and, eq, sql } from "drizzle-orm";
@@ -48,6 +49,24 @@ async function seed() {
     console.log("○ Admin user already exists");
   }
 
+  const qbiqalEmail = "qbiqal@qbiqal.com";
+  const existingQbiqal = await db.select().from(users).where(eq(users.email, qbiqalEmail));
+  if (existingQbiqal.length === 0) {
+    await db.insert(users).values({
+      email: qbiqalEmail,
+      passwordHash: await bcrypt.hash("qbiqal123", 12),
+      firstName: "Qbiqal",
+      lastName: "Super Admin",
+      role: "qbiqal",
+      isActive: true,
+      emailVerified: true,
+    });
+    console.log("✓ Qbiqal super admin created: qbiqal@qbiqal.com / qbiqal123");
+    console.log("  ⚠️  CHANGE THIS PASSWORD IMMEDIATELY AFTER FIRST LOGIN!");
+  } else {
+    console.log("○ Qbiqal super admin already exists");
+  }
+
   // ── Development customer user ──────────────────────────────────────────────
   const customerEmail = "customer@aprasnaturals.com";
   const existingCustomer = await db.select().from(users).where(eq(users.email, customerEmail));
@@ -66,6 +85,49 @@ async function seed() {
   } else {
     console.log("○ Demo customer already exists");
   }
+
+  // ── Site configuration defaults ────────────────────────────────────────────
+  const configDefaults = [
+    { key: "whatsapp_provider", value: "waha", category: "whatsapp", label: "WhatsApp Provider" },
+    { key: "whatsapp_waha_base_url", value: "https://whatsapp-gateway.qbiqal.com/", category: "whatsapp", label: "WAHA Base URL" },
+    { key: "whatsapp_waha_session", value: "default", category: "whatsapp", label: "WAHA Session" },
+    { key: "whatsapp_waha_chat_suffix", value: "@c.us", category: "whatsapp", label: "WAHA Chat Suffix" },
+    { key: "notification_whatsapp_enabled", value: "true", category: "notification", label: "WhatsApp Notifications" },
+    { key: "notification_email_enabled", value: "true", category: "notification", label: "Email Notifications" },
+    { key: "notification_sms_enabled", value: "false", category: "notification", label: "SMS Notifications" },
+  ];
+  for (const item of configDefaults) {
+    await db.insert(siteConfig).values(item).onConflictDoUpdate({
+      target: siteConfig.key,
+      set: { category: item.category, label: item.label, updatedAt: new Date() },
+    });
+  }
+  const configCategoryBackfill = [
+    { prefix: "module_", category: "modules" },
+    { prefix: "notification_", category: "notification" },
+    { prefix: "otp_", category: "otp" },
+    { prefix: "whatsapp_", category: "whatsapp" },
+    { prefix: "media_", category: "media" },
+    { prefix: "payment_", category: "payment" },
+    { prefix: "shipping_", category: "shipping" },
+    { prefix: "locale_", category: "localization" },
+    { prefix: "locales_", category: "localization" },
+    { prefix: "currency_", category: "localization" },
+    { prefix: "currencies_", category: "localization" },
+    { prefix: "sentry_", category: "observability" },
+  ];
+  for (const item of configCategoryBackfill) {
+    await db.update(siteConfig)
+      .set({ category: item.category, updatedAt: new Date() })
+      .where(sql`${siteConfig.key} like ${`${item.prefix}%`}`);
+  }
+  console.log(`✓ ${configDefaults.length} site configuration defaults ensured`);
+
+  const walletChannels = ["whatsapp", "email", "sms"] as const;
+  for (const channel of walletChannels) {
+    await db.insert(notificationWallets).values({ channel }).onConflictDoNothing();
+  }
+  console.log(`✓ ${walletChannels.length} notification wallets ensured`);
 
   // ── Honey products ──────────────────────────────────────────────────────────
   const productCats = [

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getTokenFromCookies, verifyToken } from "@/lib/auth";
+import { getTokenFromCookies, isAdminRole, verifyToken } from "@/lib/auth";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { getAllSiteConfig } from "@/lib/config";
@@ -11,12 +11,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!token) redirect("/login?redirect=/admin/dashboard");
 
   const payload = await verifyToken(token);
-  if (!payload || payload.role !== "admin") redirect("/");
+  if (!payload || !isAdminRole(payload.role)) redirect("/");
   const [modules, generalConfig] = await Promise.all([
     getModuleState(),
     getAllSiteConfig("general"),
   ]);
-  const navItems = getEnabledAdminNav(modules);
+  const navItems = getEnabledAdminNav(modules, payload.role);
 
   return (
     <div className={styles.shell}>

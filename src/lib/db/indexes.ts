@@ -37,6 +37,9 @@ const indexes = [
   `CREATE INDEX IF NOT EXISTS idx_notification_deliveries_channel ON notification_deliveries(channel)`,
   `CREATE INDEX IF NOT EXISTS idx_notification_deliveries_status ON notification_deliveries(status)`,
   `CREATE INDEX IF NOT EXISTS idx_notification_deliveries_created_at ON notification_deliveries(created_at DESC)`,
+  `CREATE INDEX IF NOT EXISTS idx_notification_wallet_transactions_wallet_id ON notification_wallet_transactions(wallet_id)`,
+  `CREATE INDEX IF NOT EXISTS idx_notification_wallet_transactions_channel ON notification_wallet_transactions(channel)`,
+  `CREATE INDEX IF NOT EXISTS idx_notification_wallet_transactions_created_at ON notification_wallet_transactions(created_at DESC)`,
   // OTP / push
   `CREATE INDEX IF NOT EXISTS idx_otp_codes_user_id ON otp_codes(user_id)`,
   `CREATE INDEX IF NOT EXISTS idx_otp_codes_purpose_target ON otp_codes(purpose, target)`,
@@ -47,6 +50,7 @@ const indexes = [
   // WhatsApp logs
   `CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_order_id ON whatsapp_logs(order_id)`,
   `CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_status ON whatsapp_logs(status)`,
+  `CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_provider ON whatsapp_logs(provider)`,
   `CREATE INDEX IF NOT EXISTS idx_whatsapp_logs_created_at ON whatsapp_logs(created_at DESC)`,
   // Addresses
   `CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id)`,

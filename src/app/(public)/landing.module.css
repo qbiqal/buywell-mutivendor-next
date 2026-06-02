@@ -167,6 +167,14 @@
   font-weight: 700;
 }
 
+.navLogoImage {
+  width: auto;
+  height: 46px;
+  max-width: 184px;
+  object-fit: contain;
+  display: block;
+}
+
 .navLogo span span {
   color: var(--landing-green);
 }
@@ -1726,6 +1734,11 @@
 
   .nav {
     padding: 0 24px;
+  }
+
+  .navLogoImage {
+    height: 40px;
+    max-width: 150px;
   }
 
   .promiseGrid,

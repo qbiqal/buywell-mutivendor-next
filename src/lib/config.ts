@@ -20,6 +20,7 @@ const SECRET_CONFIG_KEYS = new Set([
   "notification_push_vapid_private_key",
   "whatsapp_access_token",
   "whatsapp_phone_number_id",
+  "whatsapp_waha_api_key",
   "media_r2_access_key_id",
   "media_r2_secret_access_key",
   "payment_razorpay_key_id",
@@ -50,7 +51,7 @@ export async function setSiteConfig(key: string, value: string, category = "gene
     .values({ key, value: storedValue, category })
     .onConflictDoUpdate({
       target: siteConfig.key,
-      set: { value: storedValue, updatedAt: new Date() },
+      set: { value: storedValue, category, updatedAt: new Date() },
     });
   await deleteCached(`config:${key}`);
   await invalidateByPrefix("config:all:");

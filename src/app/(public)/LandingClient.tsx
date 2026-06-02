@@ -201,6 +201,8 @@ export default function LandingClient({ sections, siteConfig, featuredProducts, 
   const contact = sections.contact ?? {};
   const sitePhone = siteConfig.site_phone || "+919470309006";
   const siteEmail = siteConfig.site_email || "aprasnaturals@gmail.com";
+  const siteLogoUrl = siteConfig.site_logo_url || "";
+  const siteName = siteConfig.site_name || "APRAS Naturals";
   const productLinks = useMemo(() => new Map(featuredProducts.map((p) => [p.slug, `/shop/${p.slug}`])), [featuredProducts]);
   const heroVideoUrl = str(hero, "videoUrl", `${A}/videos/APRUS.mp4`);
   const honeyItems = objectList<HoneyItem>(productsSection, "items", defaultHoneyProducts);
@@ -334,8 +336,14 @@ export default function LandingClient({ sections, siteConfig, featuredProducts, 
             <span className="material-icons">menu</span>
           </button>
           <button className={styles.navLogo} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-            <span className={styles.navLogoIcon}><span className="material-icons">spa</span></span>
-            <span>APRAS <span>Naturals</span></span>
+            {siteLogoUrl ? (
+              <img src={siteLogoUrl} alt={siteName} className={styles.navLogoImage} />
+            ) : (
+              <>
+                <span className={styles.navLogoIcon}><span className="material-icons">spa</span></span>
+                <span>APRAS <span>Naturals</span></span>
+              </>
+            )}
           </button>
         </div>
         <div className={styles.navLinks}>
@@ -372,8 +380,14 @@ export default function LandingClient({ sections, siteConfig, featuredProducts, 
             >
               <div className={styles.drawerHeader}>
                 <span className={styles.navLogo}>
-                  <span className={styles.navLogoIcon}><span className="material-icons">spa</span></span>
-                  <span>APRAS <span>Naturals</span></span>
+                  {siteLogoUrl ? (
+                    <img src={siteLogoUrl} alt={siteName} className={styles.navLogoImage} />
+                  ) : (
+                    <>
+                      <span className={styles.navLogoIcon}><span className="material-icons">spa</span></span>
+                      <span>APRAS <span>Naturals</span></span>
+                    </>
+                  )}
                 </span>
                 <button className={styles.drawerClose} aria-label="Close menu" onClick={() => setDrawerOpen(false)}>
                   <span className="material-icons">close</span>

@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { notifications, notificationDeliveries } from "./db/schema";
 import { getAllSiteConfig } from "./config";
+import { debitNotificationWallet, reverseNotificationDebit } from "./notification-wallet";
 
 export type NotificationChannel = "in_app" | "email" | "sms" | "whatsapp" | "telegram" | "push";
 export type NotificationStatus = "sent" | "skipped" | "failed";
@@ -12,6 +13,7 @@ export interface NotificationDeliveryResult {
   provider: string;
   configured: boolean;
   providerMessageId?: string;
+  walletTransactionId?: string;
   error?: string;
 }
 
@@ -160,7 +162,49 @@ export async function sendEmailNotification(options: EmailNotificationOptions): 
     return result;
   }
 
+  if (!config.resendEnabled || !config.resendApiKey) {
+    const result: NotificationDeliveryResult = {
+      success: false,
+      status: "skipped",
+      channel: "email",
+      provider: "resend",
+      configured: false,
+      error: "Resend is disabled or API key is not configured",
+    };
+    await logNotificationDeliveryFromResult(result, options, recipient);
+    return result;
+  }
+
+  const debit = await debitNotificationWallet({
+    channel: "email",
+    credits: 1,
+    reason: options.subject,
+    referenceType: "email",
+    referenceId: recipient,
+  });
+
+  if (!debit.success) {
+    const result: NotificationDeliveryResult = {
+      success: false,
+      status: "skipped",
+      channel: "email",
+      provider,
+      configured: false,
+      error: debit.error,
+    };
+    await logNotificationDeliveryFromResult(result, options, recipient);
+    return result;
+  }
+
   const result = await sendViaResend(options, config);
+  result.walletTransactionId = debit.transactionId;
+  if (!result.success) {
+    await reverseNotificationDebit({
+      channel: "email",
+      debitTransactionId: debit.transactionId,
+      reason: `Email send failed: ${result.error ?? "unknown error"}`,
+    }).catch(() => {});
+  }
   await logNotificationDeliveryFromResult(result, options, recipient);
   return result;
 }
@@ -244,6 +288,7 @@ async function logNotificationDeliveryFromResult(
     providerMessageId: result.providerMessageId ?? null,
     error: result.error ?? null,
     metadata: options.metadata ?? null,
+    walletTransactionId: result.walletTransactionId ?? null,
   });
 }
 
@@ -259,6 +304,7 @@ export async function logNotificationDelivery(params: {
   providerMessageId?: string | null;
   error?: string | null;
   metadata?: Record<string, unknown> | null;
+  walletTransactionId?: string | null;
 }) {
   await db.insert(notificationDeliveries).values({
     notificationId: params.notificationId ?? null,
@@ -271,7 +317,10 @@ export async function logNotificationDelivery(params: {
     status: params.status,
     providerMessageId: params.providerMessageId ?? null,
     error: params.error ?? null,
-    metadata: params.metadata ?? null,
+    metadata: {
+      ...(params.metadata ?? {}),
+      ...(params.walletTransactionId ? { walletTransactionId: params.walletTransactionId } : {}),
+    },
   });
 }
 

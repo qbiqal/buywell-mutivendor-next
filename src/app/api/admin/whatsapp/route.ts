@@ -5,6 +5,8 @@ import { orders, whatsappLogs } from "@/lib/db/schema";
 import { createAdminGuard, getAuthPayload } from "@/lib/middleware";
 import { handleApiError, ValidationError } from "@/lib/errors";
 import { setSiteConfig } from "@/lib/config";
+import { cacheInvalidate } from "@/lib/cache";
+import { ensureNotificationWallet } from "@/lib/notification-wallet";
 import {
   getWhatsAppConfig,
   renderWhatsAppTemplate,
@@ -23,8 +25,9 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(50, parseInt(searchParams.get("limit") ?? "20"));
     const offset = (page - 1) * limit;
 
-    const [config, rows, countRows] = await Promise.all([
+    const [config, wallet, rows, countRows] = await Promise.all([
       getWhatsAppConfig(),
+      ensureNotificationWallet("whatsapp"),
       db
         .select({
           id: whatsappLogs.id,
@@ -35,7 +38,9 @@ export async function GET(req: NextRequest) {
           recipientName: whatsappLogs.recipientName,
           message: whatsappLogs.message,
           status: whatsappLogs.status,
+          provider: whatsappLogs.provider,
           providerMessageId: whatsappLogs.providerMessageId,
+          walletTransactionId: whatsappLogs.walletTransactionId,
           error: whatsappLogs.error,
           sentBy: whatsappLogs.sentBy,
           createdAt: whatsappLogs.createdAt,
@@ -53,6 +58,7 @@ export async function GET(req: NextRequest) {
       success: true,
       data: {
         config,
+        wallet,
         logs: rows,
         pagination: { page, limit, total, pages: Math.ceil(total / limit) },
       },
@@ -72,6 +78,13 @@ export async function PATCH(req: NextRequest) {
       "whatsapp_enabled",
       "whatsapp_order_notify",
       "whatsapp_admin_number",
+      "whatsapp_provider",
+      "whatsapp_waha_base_url",
+      "whatsapp_waha_session",
+      "whatsapp_waha_api_key",
+      "whatsapp_waha_chat_suffix",
+      "whatsapp_phone_number_id",
+      "whatsapp_access_token",
       ...WHATSAPP_TEMPLATE_KEYS.map((key) => `whatsapp_template_${key}`),
     ]);
 
@@ -80,6 +93,7 @@ export async function PATCH(req: NextRequest) {
       await setSiteConfig(key, value ?? "", "whatsapp");
     }
 
+    await cacheInvalidate.config();
     return NextResponse.json({ success: true });
   } catch (err) {
     return handleApiError(err);
