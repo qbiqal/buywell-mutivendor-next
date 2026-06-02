@@ -406,6 +406,7 @@ Current:
 - ✅ `/admin/cms/pages` creates and edits published CMS pages at `/{slug}`.
 - ✅ CMS page editor includes on-page SEO, module visibility, policy type, canonical/robots fields, and OG crop upload.
 - ✅ Policy pages are seeded for terms, privacy, data protection/consent, refund, return/replacement, cancellation, shipping, and cookie coverage.
+- ✅ Production startup runs a safe CMS content seed so policy pages, compliance rows, and nested public menu links are created on deploy without the local bootstrap seed.
 - ✅ `/admin/cms/menus` manages landing header, other-pages header, and footer menus with drag-and-drop ordering and parent submenu assignment.
 - ✅ Available menu targets include CMS pages, blog listing/posts, shop listing/products, landing anchors, and external links.
 - ✅ `/admin/seo` manages sitewide SEO, analytics tags, verification codes, route overrides, internal links, and search submission logs.
@@ -577,6 +578,7 @@ Latest local verification on 2026-06-02:
 - ✅ `npm run db:generate`
 - ✅ `set -a; source .env.local; set +a; npm run db:migrate`
 - ✅ `npm run db:seed`
+- ✅ `npm run db:content-seed`
 - ✅ `npm run db:indexes`
 - ✅ `npm run typecheck`
 - ✅ `npm run unit`

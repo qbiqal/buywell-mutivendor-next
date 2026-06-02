@@ -30,6 +30,7 @@
 - ✅ Local PostgreSQL database created and initialized.
 - ✅ Redis connectivity verified.
 - ✅ Migrations, seed, config seed, and indexes applied locally.
+- ✅ Production startup runs migrations plus idempotent config/content seeds; the content seed fills missing policy pages, compliance checks, and nested public menu links without running the local bootstrap seed.
 - ✅ `/` full CMS landing page is active.
 - ✅ `/home` remains a CMS landing alias.
 - ✅ `/coming-soon` keeps the previous Coming Soon page.
@@ -106,6 +107,7 @@ set -a; . ./.env.local; set +a
 npm run db:migrate
 npm run db:seed
 node -e "require('./scripts/config-seed.js')().then(()=>console.log('config defaults seeded'))"
+npm run db:content-seed
 npm run db:indexes
 npm run typecheck
 npm run unit
@@ -185,8 +187,9 @@ Implemented module behavior:
 | `drizzle.config.ts` | Drizzle migration config |
 | `next.config.ts` | Next standalone output, remote images, pg external package |
 | `package.json` | Scripts and dependencies |
-| `scripts/startup.js` | Production startup: migrate, seed config, start server |
+| `scripts/startup.js` | Production startup: migrate, seed config/content defaults, start server |
 | `scripts/config-seed.js` | Idempotent `site_config` defaults |
+| `scripts/content-seed.js` | Idempotent production CMS policy/compliance/menu defaults |
 | `scripts/smoke.ts` | Local smoke checks for seeded config/modules/localization/currency/notification/OTP |
 | `scripts/e2e.ts` | Live Next dev E2E for route/API/auth/notification/module-gate checks |
 | `docs/roadmap.md` | Current tracker and next phases |

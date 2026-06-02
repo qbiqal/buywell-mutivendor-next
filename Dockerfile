@@ -59,6 +59,7 @@ COPY --from=deps /app/node_modules/pgpass ./node_modules/pgpass
 # Startup scripts
 COPY --chown=nextjs:nodejs scripts/startup.js ./startup.js
 COPY --chown=nextjs:nodejs scripts/config-seed.js ./config-seed.js
+COPY --chown=nextjs:nodejs scripts/content-seed.js ./content-seed.js
 
 USER nextjs
 

@@ -1,5 +1,5 @@
 // startup.js — runs on every container start (via Dockerfile CMD)
-// Order: DB migrations → config seed → Next.js server
+// Order: DB migrations -> config seed -> content seed -> Next.js server
 //
 // DATA-SAFETY GUARANTEE:
 //   1. migrate()       — Drizzle tracks applied migrations in __drizzle_migrations.
@@ -7,6 +7,10 @@
 //                        migrations are never re-run. Zero data loss on redeploy.
 //   2. config-seed.js  — Every INSERT uses ON CONFLICT DO NOTHING.
 //                        Admin-configured values are NEVER overwritten.
+//   3. content-seed.js — Inserts only missing CMS policy pages, compliance
+//                        checklist rows, and default menu links. Existing
+//                        products, users, orders, settings, and edited content
+//                        are not recreated or truncated.
 //
 // ⚠️  DO NOT add npm run db:seed here. That script is a one-time local-only
 //      bootstrap and will truncate/duplicate production data if run on deploy.
@@ -55,7 +59,16 @@ async function main() {
     console.error('[startup] Config seed warning:', err.message);
   }
 
-  // ── 3. Start Next.js standalone server ────────────────────────────────────
+  // ── 3. Seed production-safe CMS defaults (idempotent) ─────────────────────
+  console.log('[startup] Seeding CMS content defaults...');
+  try {
+    await require('./content-seed.js')();
+    console.log('[startup] CMS content seed complete.');
+  } catch (err) {
+    console.error('[startup] CMS content seed warning:', err.message);
+  }
+
+  // ── 4. Start Next.js standalone server ────────────────────────────────────
   console.log('[startup] Starting Next.js server on port', process.env.PORT || 3000);
   require('./server.js');
 }
