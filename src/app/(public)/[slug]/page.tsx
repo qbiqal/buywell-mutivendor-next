@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCmsPageBySlug } from "@/lib/cms";
-import { requireModulePage } from "@/lib/modules";
+import { isModuleEnabled, type ModuleKey } from "@/lib/modules";
 import { buildSeoMetadata } from "@/lib/seo";
 import styles from "./cms-page.module.css";
 
@@ -24,10 +24,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function PublicCMSPage({ params }: { params: Promise<{ slug: string }> }) {
-  await requireModulePage("cms");
   const { slug } = await params;
   const page = await getCmsPageBySlug(slug);
   if (!page) notFound();
+  if (!(await isVisibleModule(page.moduleKey))) notFound();
 
   return (
     <article className={styles.page}>
@@ -39,4 +39,9 @@ export default async function PublicCMSPage({ params }: { params: Promise<{ slug
       <div className={styles.content} dangerouslySetInnerHTML={{ __html: page.content }} />
     </article>
   );
+}
+
+async function isVisibleModule(moduleKey: string): Promise<boolean> {
+  if (moduleKey === "core") return true;
+  return isModuleEnabled(moduleKey as ModuleKey);
 }

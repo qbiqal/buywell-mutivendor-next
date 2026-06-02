@@ -42,7 +42,8 @@
 - ✅ Reusable admin datatable filter panel on products, customers, orders, and blog with search, status, date range, amount/price/stock/content filters where applicable.
 - ✅ Admin customer list/detail with search, spend/order stats, addresses, orders, and deactivate/reactivate.
 - ✅ Admin media library with grid/list filters, upload, preview, URL copy, alt/folder edit, and guarded delete.
-- ✅ Admin analytics with revenue/orders/payment/product/customer charts, first-party traffic analytics, and CSV export.
+- ✅ Admin analytics with revenue/orders/payment/product/customer charts, first-party traffic analytics, Today/2D filters, CSV export, and print-to-PDF export.
+- ✅ Shared admin datatable CSV and print-to-PDF exports on products, orders, customers, and blog.
 - ✅ Admin WhatsApp panel with manual send, template manager, order resend API/buttons, and delivery logs.
 - ✅ Auth recovery flow: forgot password, reset password, email verification, resend verification.
 - ✅ Core notification/OTP provider layer with Resend email gateway, in-app notifications, delivery logs, and push subscription storage.
@@ -55,9 +56,19 @@
 - ✅ Sentry server-side capture path with DB config/env fallback.
 - ✅ Rich HTML sanitization for blog content and product long descriptions.
 - ✅ CMS page creator/editor and menu manager for landing header, other-pages header, and footer menus.
+- ✅ CMS page editor has reusable on-page SEO panel, module visibility, policy type, OG image crop upload, keywords, canonical URL, and robots controls.
+- ✅ CMS section editor uses a structured content builder for text, numbers, booleans, arrays, nested objects, and media URL fields, with JSON kept as advanced fallback.
+- ✅ Policy CMS pages seeded for terms, privacy, refund, shipping, and cookies with module-aware visibility.
 - ✅ Module control plane for Core, CMS, SEO, Blog, E-Commerce, and Offline QR.
+- ✅ Admin settings are grouped into tabs for modules, brand, notifications, OTP, providers, localization, and commerce.
 - ✅ Admin module toggles, locked Core toggle, brand logo uploaders, localization, currency, notification, OTP, and Resend settings.
-- ✅ Admin logo uploader crops to 144x144 and website logo uploader crops to 360x96 through `MediaUploader`.
+- ✅ Admin logo uploader crops to 144x144 and website logo uploader crops to 360x96 through `MediaUploader`, with saved-logo clear buttons and crop-modal reset.
+- ✅ Blog editor has nested categories, on-the-fly category creation, colorful tag suggestions/creation, and full SEO controls.
+- ✅ Product editor has nested product categories, on-the-fly category creation, colorful tags, and full SEO controls.
+- ✅ Blog comments support member-only comments/replies, likes, approval workflow, and English/Hindi abuse filtering.
+- ✅ Product reviews support member-only review submission, likes, and admin approval workflow.
+- ✅ E-Commerce refunds include customer refund request creation and admin requested/review/approved/rejected/processed workflow with event history.
+- ✅ Core compliance admin page tracks GDPR/DPDP checklist status, evidence, policy coverage, and module visibility.
 - ✅ Module-aware public/admin nav, route gates, API gates, and root providers.
 - ✅ Module-aware dynamic cart provider/header imports so CMS-only/Blog-only installs do not load cart UI.
 - ✅ Offline QR payment gateway abstraction and registry-based order creation.
@@ -118,7 +129,11 @@ Local seed counts after audit:
 | notification_deliveries | 0 |
 | push_subscriptions | 0 |
 | whatsapp_logs | 0 |
-| blog_categories | 4 |
+| blog_categories | 5 |
+| product_categories | 5 |
+| content_tags | 7 |
+| cms_pages | 5 policy pages seeded |
+| compliance_checks | 8 |
 
 ---
 
@@ -129,16 +144,16 @@ Core
   auth, users, settings, notifications, OTP, media library, DB, Redis, cache, route protection, module registry, provider key config
 
 CMS Module
-  /home, /admin/cms, /admin/cms/pages, /admin/cms/menus, cms_sections, cms_pages, cms_menus, testimonials, landing content, public CMS pages
+  /home, /admin/cms, /admin/cms/pages, /admin/cms/menus, cms_sections, cms_pages, cms_menus, testimonials, landing content, public CMS pages, policy pages
 
 SEO Module
-  /admin/seo, seo_page_overrides, seo_internal_links, seo_search_submissions, traffic_events, GTM/GA/Meta Pixel config, sitemap/robots controls
+  /admin/seo, reusable SEO panels, seo_page_overrides, seo_internal_links, seo_search_submissions, traffic_events, GTM/GA/Meta Pixel config, sitemap/robots controls
 
 E-Commerce Module
-  /shop, /checkout, /orders, /profile, admin orders/products/customers, products, variants, orders
+  /shop, /checkout, /orders, /profile, admin orders/products/customers/reviews/refunds, products, nested categories, variants, orders, refunds, reviews
 
 Blog Module
-  /blog, /admin/blog, blog_posts, blog_categories
+  /blog, /admin/blog, /admin/blog/comments, blog_posts, nested blog_categories, tags, comments, comment likes
 
 Payment Submodules
   offline_qr now; Razorpay/Stripe/etc later
@@ -191,9 +206,11 @@ Implemented module behavior:
 | `(public)/shop/ShopClient.tsx` | Shop listing UI/filter | ✅ |
 | `(public)/shop/[slug]/page.tsx` | Product detail shell/metadata | ✅ |
 | `(public)/shop/[slug]/ProductDetailClient.tsx` | Product gallery/variant/cart UI | ✅ |
+| `(public)/shop/[slug]/ProductReviews.tsx` | Member-only product reviews, likes, login prompt | ✅ |
 | `(public)/blog/page.tsx` | Blog listing shell | ✅ |
 | `(public)/blog/BlogListingClient.tsx` | Blog listing UI | ✅ |
 | `(public)/blog/[slug]/page.tsx` | Blog detail | ✅ |
+| `(public)/blog/[slug]/BlogComments.tsx` | Nested member comments, likes, login prompt | ✅ |
 | `(auth)/login/*` | Login page/client | ✅ |
 | `(auth)/register/*` | Register page/client | ✅ |
 | `(auth)/forgot-password/*` | Forgot password request | ✅ |
@@ -202,19 +219,24 @@ Implemented module behavior:
 | `(auth)/verify-email/*` | Email verification with OTP | ✅ |
 | `(customer)/layout.tsx` | Customer shell | ✅ |
 | `(customer)/orders/*` | Customer order list/detail | ✅ |
+| `(customer)/orders/[id]/OrderDetailClient.tsx` | Customer order detail with refund request form | ✅ |
 | `(customer)/profile/*` | Profile, addresses, password | ✅ |
 | `(customer)/notifications/*` | In-app notification center | ✅ |
 | `(admin)/layout.tsx` | Admin shell, auth check, module-aware nav | ✅ |
 | `(admin)/admin/dashboard/*` | Module-aware admin dashboard | ✅ |
 | `(admin)/admin/analytics/*` | Revenue/order/product/customer and first-party traffic analytics | ✅ |
+| `(admin)/admin/refunds/*` | Refund workflow management | ✅ |
+| `(admin)/admin/reviews/*` | Product review moderation | ✅ |
 | `(admin)/admin/orders/*` | Admin order list/detail | ✅ |
 | `(admin)/admin/products/*` | Product list/new/edit form | ✅ |
 | `(admin)/admin/customers/*` | Customer list/detail and activate/deactivate | ✅ |
 | `(admin)/admin/media/*` | Media library grid/list/upload/edit/delete | ✅ |
 | `(admin)/admin/whatsapp/*` | WhatsApp manual send/templates/logs | ✅ |
 | `(admin)/admin/blog/*` | Blog list/new/edit/category manager | ✅ |
+| `(admin)/admin/blog/comments/*` | Blog comment moderation | ✅ |
 | `(admin)/admin/cms/*` | CMS section list/toggle/detail editor, page editor, menu manager | ✅ |
 | `(admin)/admin/seo/*` | SEO, analytics tags, route overrides, internal links, search submissions | ✅ |
+| `(admin)/admin/compliance/*` | GDPR/DPDP checklist, evidence, policy visibility | ✅ |
 | `(admin)/admin/settings/*` | Module, brand logos, localization, currency, site, payment, shipping, notification, OTP, external provider settings | ✅ |
 | `checkout/*` | Checkout/payment/confirmation | ✅ |
 | `sitemap.ts` | Module-aware XML sitemap | ✅ |
@@ -237,14 +259,19 @@ Implemented module behavior:
 | `POST /api/notifications/push-subscriptions` | Customer/admin | ✅ storage only |
 | `GET /api/products` | None | ✅ |
 | `GET /api/products/[slug]` | None | ✅ |
+| `GET/POST /api/products/[slug]/reviews` | Public GET, customer POST | ✅ |
+| `POST /api/products/reviews/[id]/like` | Customer | ✅ |
 | `POST /api/orders` | Optional | ✅ |
 | `POST /api/orders/[id]/upload-proof` | Signed order token | ✅ |
 | `GET /api/customer/orders` | Customer | ✅ |
 | `GET /api/customer/orders/[id]` | Customer | ✅ |
+| `GET/POST /api/customer/refunds` | Customer | ✅ |
 | `GET/PATCH /api/customer/profile` | Customer | ✅ |
 | `POST/DELETE /api/customer/addresses` | Customer | ✅ |
 | `GET /api/blog` | None | ✅ |
 | `GET /api/blog/[slug]` | None | ✅ |
+| `GET/POST /api/blog/[slug]/comments` | Public GET, customer POST | ✅ |
+| `POST /api/blog/comments/[id]/like` | Customer | ✅ |
 | `GET /api/cms` | None | ✅ |
 | `POST /api/media/upload` | Admin | ✅ |
 | `GET /api/admin/analytics` | Admin | ✅ |
@@ -254,6 +281,9 @@ Implemented module behavior:
 | `GET /api/admin/orders` | Admin | ✅ |
 | `GET/POST /api/admin/products` | Admin | ✅ |
 | `GET/PUT/DELETE /api/admin/products/[id]` | Admin | ✅ |
+| `GET/POST/PATCH/DELETE /api/admin/products/categories` | Admin | ✅ |
+| `GET/PATCH /api/admin/reviews` | Admin | ✅ |
+| `GET/PATCH /api/admin/refunds` | Admin | ✅ |
 | `GET /api/admin/customers` | Admin | ✅ |
 | `GET/PATCH /api/admin/customers/[id]` | Admin | ✅ |
 | `GET /api/admin/media` | Admin | ✅ |
@@ -263,12 +293,15 @@ Implemented module behavior:
 | `GET/POST /api/admin/blog` | Admin | ✅ |
 | `GET/PATCH/DELETE /api/admin/blog/[id]` | Admin | ✅ |
 | `GET/POST/PATCH/DELETE /api/admin/blog/categories` | Admin | ✅ |
+| `GET/PATCH /api/admin/blog/comments` | Admin | ✅ |
 | `GET /api/admin/cms` | Admin | ✅ |
 | `GET/PUT /api/admin/cms/[sectionKey]` | Admin | ✅ API |
 | `GET/POST /api/admin/cms/pages` | Admin | ✅ |
 | `GET/PATCH/DELETE /api/admin/cms/pages/[id]` | Admin | ✅ |
 | `GET/PATCH /api/admin/cms/menus` | Admin | ✅ |
 | `GET/PATCH/POST /api/admin/seo` | Admin | ✅ |
+| `GET/PATCH /api/admin/compliance` | Admin | ✅ |
+| `GET/POST /api/admin/tags` | Admin | ✅ |
 | `GET/PATCH /api/admin/config` | Admin | ✅ |
 
 ### `src/components`
@@ -286,6 +319,9 @@ Implemented module behavior:
 | `layout/CustomerHeader` | Public/customer top nav and cart trigger |
 | `layout/AdminSidebar` | Module-aware admin sidebar |
 | `layout/Footer` | Footer |
+| `admin/TagSelector` | Color chip tag selector with suggestions and one-click create |
+| `admin/NestedCategoryPicker` | Nested category select and inline child category creation |
+| `admin/SeoPanel` | Shared meta title/description/keywords/canonical/OG/robots panel |
 | `shop/ProductCard` | Product card |
 | `shop/Cart/CartContext.tsx` | Cart state and localStorage |
 | `shop/CartDrawer` | Slide-out cart |
@@ -306,6 +342,7 @@ Implemented module behavior:
 | `cache.ts` | Cache helpers and invalidation |
 | `config.ts` | DB-backed site config, env fallback helpers, and secret encryption |
 | `modules.ts` | Module manifest, state helpers, nav helpers, page/API gates |
+| `moderation.ts` | English/Hindi abuse keyword filter for comments and reviews |
 | `auth.ts` | JWT and cookie helpers |
 | `otp.ts` | Hashed OTP creation/verification and auth email templates |
 | `notifications.ts` | Notification provider facade, Resend sending, in-app notifications, delivery logs |
@@ -355,6 +392,19 @@ Important invalidation groups:
 - `cacheInvalidate.menus()` refreshes header/footer menu consumers.
 - `cacheInvalidate.seo()` refreshes SEO overrides, sitemap, and robots.
 - `cacheInvalidate.traffic()` refreshes admin traffic analytics.
+
+Latest local verification completed on 2026-06-02:
+
+```bash
+npm run db:generate
+set -a; source .env.local; set +a; npm run db:migrate
+npm run db:seed
+npm run typecheck
+npm run unit
+npm run build
+npm run smoke
+npm run e2e
+```
 
 ---
 

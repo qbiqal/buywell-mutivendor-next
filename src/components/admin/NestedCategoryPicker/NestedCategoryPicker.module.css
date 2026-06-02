@@ -1,0 +1,71 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field span {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.field select,
+.creator input,
+.creator select {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  padding: 0 12px;
+}
+
+.field select:focus,
+.creator input:focus,
+.creator select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(45,125,70,0.14);
+}
+
+.creator {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 48px 64px;
+  gap: 8px;
+}
+
+.creator input[type="color"] {
+  padding: 4px;
+}
+
+.creator button {
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.creator button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 620px) {
+  .creator {
+    grid-template-columns: 1fr;
+  }
+}

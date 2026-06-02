@@ -1,5 +1,32 @@
 .content { padding: 32px; max-width: 800px; }
 .settingsCard { margin-bottom: 24px; }
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0 18px;
+  background: var(--bg-primary);
+}
+.tabs button {
+  flex: 0 0 auto;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 900;
+}
+.tabs .activeTab {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
 .sectionTitle { font-size: 16px; font-weight: 700; color: var(--text-primary); }
 .cardFields { display: flex; flex-direction: column; gap: 16px; }
 .formRow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -38,7 +65,7 @@
 }
 .logoPreview {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 72px minmax(0, 1fr) 30px;
   align-items: center;
   gap: 12px;
 }
@@ -56,6 +83,16 @@
   font-family: monospace;
   font-size: 12px;
   overflow-wrap: anywhere;
+}
+.logoPreview button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+  cursor: pointer;
+  font-weight: 900;
 }
 .moduleGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .moduleToggle {

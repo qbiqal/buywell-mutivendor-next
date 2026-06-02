@@ -32,6 +32,7 @@ export const APP_MODULES: AppModule[] = [
       { label: "Dashboard", href: "/admin/dashboard", icon: "📊" },
       { label: "Media", href: "/admin/media", icon: "🖼️" },
       { label: "WhatsApp", href: "/admin/whatsapp", icon: "💬" },
+      { label: "Compliance", href: "/admin/compliance", icon: "✅" },
       { label: "Settings", href: "/admin/settings", icon: "⚙️" },
       { label: "Change Password", href: "/admin/settings/password", icon: "🔑" },
     ],
@@ -63,7 +64,10 @@ export const APP_MODULES: AppModule[] = [
     name: "Blog",
     canDisable: true,
     defaultEnabled: true,
-    adminNav: [{ label: "Blog", href: "/admin/blog", icon: "📝" }],
+    adminNav: [
+      { label: "Blog", href: "/admin/blog", icon: "📝" },
+      { label: "Blog Comments", href: "/admin/blog/comments", icon: "💬" },
+    ],
     publicNav: [{ label: "Blog", href: "/blog" }],
   },
   {
@@ -74,6 +78,8 @@ export const APP_MODULES: AppModule[] = [
     adminNav: [
       { label: "Orders", href: "/admin/orders", icon: "📦", badge: "orders" },
       { label: "Products", href: "/admin/products", icon: "🛍️" },
+      { label: "Reviews", href: "/admin/reviews", icon: "⭐" },
+      { label: "Refunds", href: "/admin/refunds", icon: "↩️" },
       { label: "Customers", href: "/admin/customers", icon: "👥" },
       { label: "Analytics", href: "/admin/analytics", icon: "📈" },
     ],

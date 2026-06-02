@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { blogPosts, blogCategories } from "@/lib/db/schema";
+import { blogPosts, contentTags } from "@/lib/db/schema";
 import { eq, desc, and, ilike, or, gte, lte, type SQL } from "drizzle-orm";
 import { createAdminGuard, getAuthPayload } from "@/lib/middleware";
 import { handleApiError, ValidationError } from "@/lib/errors";
@@ -73,7 +73,10 @@ export async function POST(req: NextRequest) {
 
     const payload = await getAuthPayload(req);
     const body    = await req.json();
-    const { title, content, excerpt, coverImageUrl, categoryId, status, metaTitle, metaDesc, tags, readTime, isFeatured } = body;
+    const {
+      title, content, excerpt, coverImageUrl, categoryId, status, metaTitle, metaDesc,
+      seoKeywords, canonicalUrl, ogImageUrl, noIndex, noFollow, tags, readTime, isFeatured,
+    } = body;
 
     if (!title || !content) throw new ValidationError("Title and content are required");
 
@@ -86,12 +89,27 @@ export async function POST(req: NextRequest) {
     while (usedSlugs.has(slug)) { slug = `${baseSlug}-${counter++}`; }
 
     const [post] = await db.insert(blogPosts).values({
-      title, slug, content: sanitizeHtml(content), excerpt, coverImageUrl, categoryId,
+      title,
+      slug,
+      content: sanitizeHtml(content),
+      excerpt: nullableText(excerpt),
+      coverImageUrl: nullableText(coverImageUrl),
+      categoryId: categoryId || null,
       status:   status ?? "draft",
       authorId: payload!.sub,
-      metaTitle, metaDesc, tags, readTime, isFeatured,
+      metaTitle: nullableText(metaTitle),
+      metaDesc: nullableText(metaDesc),
+      seoKeywords: parseList(seoKeywords),
+      canonicalUrl: nullableText(canonicalUrl),
+      ogImageUrl: nullableText(ogImageUrl),
+      noIndex: noIndex === true,
+      noFollow: noFollow === true,
+      tags: parseList(tags),
+      readTime: parseInt(String(readTime || "5"), 10),
+      isFeatured: isFeatured === true,
       publishedAt: status === "published" ? new Date() : null,
     }).returning();
+    await ensureTags("blog", parseList(tags));
 
     if (status === "published") await cacheInvalidate.blog();
 
@@ -99,4 +117,33 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return handleApiError(err);
   }
+}
+
+function nullableText(value: unknown): string | null {
+  const text = String(value ?? "").trim();
+  return text ? text : null;
+}
+
+function parseList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String).map((item) => item.trim()).filter(Boolean);
+  return String(value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+async function ensureTags(moduleKey: string, names: string[]) {
+  for (const name of names) {
+    const slug = `${moduleKey}-${slugify(name, { lower: true, strict: true })}`.slice(0, 120);
+    if (!slug) continue;
+    await db.insert(contentTags).values({
+      name,
+      slug,
+      moduleKey,
+      color: colorForName(name),
+    }).onConflictDoNothing();
+  }
+}
+
+function colorForName(value: string): string {
+  const colors = ["#D97706", "#16A34A", "#2563EB", "#C026D3", "#DC2626", "#0891B2"];
+  const sum = Array.from(value).reduce((total, char) => total + char.charCodeAt(0), 0);
+  return colors[sum % colors.length];
 }

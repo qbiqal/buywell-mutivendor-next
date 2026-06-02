@@ -27,7 +27,12 @@
 .mainCol, .sideCol { display: flex; flex-direction: column; gap: 20px; }
 
 /* Section cards */
-.section { overflow: visible; }
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: visible;
+}
 .sectionTitle { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 0; }
 .sectionHeaderRow { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .cardFields { display: flex; flex-direction: column; gap: 16px; }

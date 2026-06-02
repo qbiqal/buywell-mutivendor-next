@@ -29,7 +29,13 @@ interface AnalyticsData {
   };
 }
 
-const RANGES = [7, 30, 90];
+const RANGES = [
+  { days: 1, label: "Today" },
+  { days: 2, label: "2D" },
+  { days: 7, label: "7D" },
+  { days: 30, label: "30D" },
+  { days: 90, label: "90D" },
+];
 
 export default function AdminAnalyticsClient() {
   const [days, setDays] = useState(30);
@@ -64,22 +70,23 @@ export default function AdminAnalyticsClient() {
       <div className={styles.pageHeader}>
         <div>
           <h1 className="admin-page-title">Analytics</h1>
-          <p className="admin-page-subtitle">Last {data.range.days} days</p>
+          <p className="admin-page-subtitle">{data.range.days === 1 ? "Today" : `Last ${data.range.days} days`}</p>
         </div>
         <div className={styles.headerActions}>
           <div className={styles.rangeTabs}>
             {RANGES.map((range) => (
               <button
-                key={range}
+                key={range.days}
                 type="button"
-                className={days === range ? styles.activeRange : ""}
-                onClick={() => setDays(range)}
+                className={days === range.days ? styles.activeRange : ""}
+                onClick={() => setDays(range.days)}
               >
-                {range}D
+                {range.label}
               </button>
             ))}
           </div>
           <a href={`/api/admin/analytics?days=${days}&format=csv`} className={styles.exportBtn}>Export CSV</a>
+          <button type="button" className={styles.exportBtn} onClick={() => exportAnalyticsPdf(data)}>Export PDF</button>
         </div>
       </div>
 
@@ -247,4 +254,36 @@ function TrafficRows({ rows }: { rows: Array<{ label: string; value: string; met
 
 function formatMoney(paise: number): string {
   return (paise / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+}
+
+function exportAnalyticsPdf(data: AnalyticsData) {
+  const popup = window.open("", "_blank", "noopener,noreferrer,width=1100,height=800");
+  if (!popup) return;
+  const rows = [
+    ["Verified Revenue", `₹${formatMoney(data.summary.verifiedRevenueInr)}`],
+    ["Orders", String(data.summary.totalOrders)],
+    ["Average Order", `₹${formatMoney(data.summary.averageOrderInr)}`],
+    ["Pending Verification", String(data.summary.pendingVerification)],
+    ["Page Views", String(data.traffic.pageViews)],
+    ["Visitors", String(data.traffic.uniqueVisitors)],
+    ["Sessions", String(data.traffic.sessions)],
+  ];
+  popup.document.write(`<!doctype html><html><head><title>APRAS Analytics</title><style>
+    body{font-family:Arial,sans-serif;margin:24px;color:#111827}
+    h1{font-size:20px;margin:0 0 8px} p{margin:0 0 18px;color:#4b5563}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
+    th,td{border:1px solid #d1d5db;padding:8px;text-align:left}
+    th{background:#f3f4f6}
+  </style></head><body><h1>APRAS Analytics</h1><p>${data.range.days === 1 ? "Today" : `Last ${data.range.days} days`}</p><table><tbody>${rows.map(([key, value]) => `<tr><th>${key}</th><td>${value}</td></tr>`).join("")}</tbody></table><h2>Top Products</h2><table><thead><tr><th>Product</th><th>Quantity</th><th>Revenue</th></tr></thead><tbody>${data.topProducts.map((row) => `<tr><td>${escapeHtml(row.productName)}</td><td>${row.quantity}</td><td>₹${formatMoney(row.revenueInr)}</td></tr>`).join("")}</tbody></table><h2>Top Pages</h2><table><thead><tr><th>Path</th><th>Views</th><th>Visitors</th></tr></thead><tbody>${data.traffic.topPages.map((row) => `<tr><td>${escapeHtml(row.path)}</td><td>${row.views}</td><td>${row.visitors}</td></tr>`).join("")}</tbody></table><script>window.print();</script></body></html>`);
+  popup.document.close();
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#039;",
+  }[char] ?? char));
 }

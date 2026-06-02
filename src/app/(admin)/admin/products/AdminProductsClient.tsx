@@ -140,6 +140,17 @@ export default function AdminProductsClient() {
         fields={filterFields}
         onReset={resetFilters}
         resultLabel={`${total} result${total !== 1 ? "s" : ""}`}
+        exportFileName="apras-products"
+        exportRows={products.map((product) => ({
+          name: product.name,
+          slug: product.slug,
+          category: product.subCategory ?? product.category,
+          sku: product.sku,
+          active: product.isActive ? "Yes" : "No",
+          featured: product.isFeatured ? "Yes" : "No",
+          variants: product.variants.length,
+          stock: product.variants.reduce((sum, variant) => sum + variant.stock, 0),
+        }))}
       />
 
       {/* Table */}

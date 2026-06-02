@@ -32,6 +32,11 @@ export default function OrderDetailClient() {
   const router   = useRouter();
   const [order,   setOrder]   = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refundReason, setRefundReason] = useState("");
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundNote, setRefundNote] = useState("");
+  const [refundMessage, setRefundMessage] = useState("");
+  const [submittingRefund, setSubmittingRefund] = useState(false);
 
   useEffect(() => {
     fetch(`/api/customer/orders/${params.id}`)
@@ -42,8 +47,38 @@ export default function OrderDetailClient() {
 
   if (loading) return <div className="customer-content"><Spinner size="lg" /></div>;
   if (!order)  return <div className="customer-content"><p>Order not found.</p></div>;
+  const currentOrder = order;
 
-  const addr = order.addressSnapshot;
+  const addr = currentOrder.addressSnapshot;
+  const canRequestRefund = !currentOrder.isSampleRequest && ["payment_verified", "confirmed", "processing", "shipped", "delivered"].includes(currentOrder.status);
+
+  async function submitRefund() {
+    setSubmittingRefund(true);
+    setRefundMessage("");
+    try {
+      const amountPaise = refundAmount ? Math.round(Number(refundAmount) * 100) : currentOrder.totalInr;
+      const json = await fetch("/api/customer/refunds", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: currentOrder.id,
+          requestedAmountInr: amountPaise,
+          reason: refundReason,
+          customerNote: refundNote,
+        }),
+      }).then((res) => res.json());
+      if (json.success) {
+        setRefundReason("");
+        setRefundAmount("");
+        setRefundNote("");
+        setRefundMessage("Refund request submitted for review.");
+      } else {
+        setRefundMessage(json.error ?? "Refund request failed");
+      }
+    } finally {
+      setSubmittingRefund(false);
+    }
+  }
 
   return (
     <div className="customer-content">
@@ -155,6 +190,36 @@ export default function OrderDetailClient() {
           )}
 
           {/* Support */}
+          {canRequestRefund && (
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>Request Refund</h2>
+              <div className={styles.refundForm}>
+                <input
+                  type="number"
+                  min="1"
+                  max={order.totalInr / 100}
+                  step="0.01"
+                  value={refundAmount}
+                  onChange={(event) => setRefundAmount(event.target.value)}
+                  placeholder={`Amount up to Rs ${(order.totalInr / 100).toFixed(2)}`}
+                />
+                <select value={refundReason} onChange={(event) => setRefundReason(event.target.value)}>
+                  <option value="">Select reason</option>
+                  <option value="damaged_product">Damaged product</option>
+                  <option value="wrong_item">Wrong item</option>
+                  <option value="quality_issue">Quality issue</option>
+                  <option value="delivery_issue">Delivery issue</option>
+                  <option value="other">Other</option>
+                </select>
+                <textarea value={refundNote} onChange={(event) => setRefundNote(event.target.value)} placeholder="Add details for support" />
+                <Button variant="outline" fullWidth loading={submittingRefund} disabled={!refundReason} onClick={submitRefund}>
+                  Submit Refund Request
+                </Button>
+                {refundMessage && <p className={styles.refundMessage}>{refundMessage}</p>}
+              </div>
+            </div>
+          )}
+
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Need Help?</h2>
             <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 12 }}>

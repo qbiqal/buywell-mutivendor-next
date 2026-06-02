@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { blogPosts } from "@/lib/db/schema";
+import { blogPosts, contentTags } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError, NotFoundError } from "@/lib/errors";
@@ -49,10 +49,15 @@ export async function PATCH(
       ...(body.coverImageUrl !== undefined && { coverImageUrl: body.coverImageUrl }),
       ...(body.categoryId !== undefined && { categoryId: body.categoryId || null }),
       ...(body.status !== undefined && { status: body.status }),
-      ...(body.metaTitle !== undefined && { metaTitle: body.metaTitle }),
-      ...(body.metaDesc !== undefined && { metaDesc: body.metaDesc }),
-      ...(body.tags !== undefined && { tags: body.tags }),
-      ...(body.readTime !== undefined && { readTime: body.readTime }),
+      ...(body.metaTitle !== undefined && { metaTitle: nullableText(body.metaTitle) }),
+      ...(body.metaDesc !== undefined && { metaDesc: nullableText(body.metaDesc) }),
+      ...(body.seoKeywords !== undefined && { seoKeywords: parseList(body.seoKeywords) }),
+      ...(body.canonicalUrl !== undefined && { canonicalUrl: nullableText(body.canonicalUrl) }),
+      ...(body.ogImageUrl !== undefined && { ogImageUrl: nullableText(body.ogImageUrl) }),
+      ...(body.noIndex !== undefined && { noIndex: body.noIndex === true }),
+      ...(body.noFollow !== undefined && { noFollow: body.noFollow === true }),
+      ...(body.tags !== undefined && { tags: parseList(body.tags) }),
+      ...(body.readTime !== undefined && { readTime: parseInt(String(body.readTime || "5"), 10) }),
       ...(body.isFeatured !== undefined && { isFeatured: body.isFeatured }),
       updatedAt: new Date(),
     };
@@ -62,12 +67,42 @@ export async function PATCH(
     }
 
     await db.update(blogPosts).set(updates).where(eq(blogPosts.id, id));
+    if (body.tags !== undefined) await ensureTags("blog", parseList(body.tags));
     await cacheInvalidate.blog();
 
     return NextResponse.json({ success: true });
   } catch (err) {
     return handleApiError(err);
   }
+}
+
+function nullableText(value: unknown): string | null {
+  const text = String(value ?? "").trim();
+  return text ? text : null;
+}
+
+function parseList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String).map((item) => item.trim()).filter(Boolean);
+  return String(value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+async function ensureTags(moduleKey: string, names: string[]) {
+  for (const name of names) {
+    const slug = `${moduleKey}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`.slice(0, 120);
+    if (!slug) continue;
+    await db.insert(contentTags).values({
+      name,
+      slug,
+      moduleKey,
+      color: colorForName(name),
+    }).onConflictDoNothing();
+  }
+}
+
+function colorForName(value: string): string {
+  const colors = ["#D97706", "#16A34A", "#2563EB", "#C026D3", "#DC2626", "#0891B2"];
+  const sum = Array.from(value).reduce((total, char) => total + char.charCodeAt(0), 0);
+  return colors[sum % colors.length];
 }
 
 export async function DELETE(

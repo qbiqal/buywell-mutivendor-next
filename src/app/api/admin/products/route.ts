@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { products, productVariants, productImages } from "@/lib/db/schema";
+import { contentTags, products, productVariants, productImages } from "@/lib/db/schema";
 import { eq, and, asc, ilike, or, sql, desc, gte, lte, type SQL } from "drizzle-orm";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError, ValidationError } from "@/lib/errors";
@@ -102,7 +102,11 @@ export async function POST(req: NextRequest) {
     if (moduleResult) return moduleResult;
 
     const body = await req.json();
-    const { name, slug, category, subCategory, description, longDesc, sku, isActive, isFeatured, sortOrder, metaTitle, metaDesc, variants = [], images = [] } = body;
+    const {
+      name, slug, category, categoryId, subCategory, description, longDesc, sku,
+      isActive, isFeatured, sortOrder, metaTitle, metaDesc, seoKeywords,
+      ogImageUrl, canonicalUrl, noIndex, noFollow, tags, variants = [], images = [],
+    } = body;
 
     if (!name || !slug || !category || !sku) {
       throw new ValidationError("name, slug, category and sku are required");
@@ -113,6 +117,7 @@ export async function POST(req: NextRequest) {
     await db.insert(products).values({
       id: productId,
       name, slug, category,
+      categoryId: categoryId || null,
       subCategory: subCategory || null,
       description: description || null,
       longDesc: longDesc ? sanitizeHtml(longDesc) : null,
@@ -122,7 +127,14 @@ export async function POST(req: NextRequest) {
       sortOrder: sortOrder ?? 0,
       metaTitle: metaTitle || null,
       metaDesc: metaDesc || null,
+      seoKeywords: parseList(seoKeywords),
+      ogImageUrl: nullableText(ogImageUrl),
+      canonicalUrl: nullableText(canonicalUrl),
+      noIndex: noIndex === true,
+      noFollow: noFollow === true,
+      tags: parseList(tags),
     });
+    await ensureTags("product", parseList(tags));
 
     // Insert variants
     if (variants.length > 0) {
@@ -164,4 +176,33 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return handleApiError(err);
   }
+}
+
+function nullableText(value: unknown): string | null {
+  const text = String(value ?? "").trim();
+  return text ? text : null;
+}
+
+function parseList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String).map((item) => item.trim()).filter(Boolean);
+  return String(value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+async function ensureTags(moduleKey: string, names: string[]) {
+  for (const name of names) {
+    const slug = `${moduleKey}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`.slice(0, 120);
+    if (!slug) continue;
+    await db.insert(contentTags).values({
+      name,
+      slug,
+      moduleKey,
+      color: colorForName(name),
+    }).onConflictDoNothing();
+  }
+}
+
+function colorForName(value: string): string {
+  const colors = ["#D97706", "#16A34A", "#2563EB", "#C026D3", "#DC2626", "#0891B2"];
+  const sum = Array.from(value).reduce((total, char) => total + char.charCodeAt(0), 0);
+  return colors[sum % colors.length];
 }

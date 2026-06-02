@@ -55,6 +55,7 @@ export const products = pgTable("products", {
   name:         text("name").notNull(),
   slug:         text("slug").notNull().unique(),
   category:     text("category").notNull(),      // honey | ghee | other
+  categoryId:   text("category_id"),
   subCategory:  text("sub_category"),            // tulsi | karanj | moringa | a2-bilona
   description:  text("description"),
   longDesc:     text("long_desc"),               // rich text HTML
@@ -64,8 +65,29 @@ export const products = pgTable("products", {
   sortOrder:    integer("sort_order").default(0).notNull(),
   metaTitle:    text("meta_title"),
   metaDesc:     text("meta_desc"),
+  seoKeywords:  text("seo_keywords").array(),
+  ogImageUrl:   text("og_image_url"),
+  canonicalUrl: text("canonical_url"),
+  noIndex:      boolean("no_index").default(false).notNull(),
+  noFollow:     boolean("no_follow").default(false).notNull(),
+  tags:         text("tags").array(),
   createdAt:    timestamp("created_at").defaultNow().notNull(),
   updatedAt:    timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const productCategories = pgTable("product_categories", {
+  id:             text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name:           text("name").notNull(),
+  slug:           text("slug").notNull().unique(),
+  parentId:       text("parent_id"),
+  color:          text("color").default("#2D7D46"),
+  description:    text("description"),
+  seoTitle:       text("seo_title"),
+  seoDescription: text("seo_description"),
+  sortOrder:      integer("sort_order").default(0).notNull(),
+  isActive:       boolean("is_active").default(true).notNull(),
+  createdAt:      timestamp("created_at").defaultNow().notNull(),
+  updatedAt:      timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const productVariants = pgTable("product_variants", {
@@ -157,11 +179,17 @@ export const orderStatusHistory = pgTable("order_status_history", {
 // ── Blog ───────────────────────────────────────────────────────────────────────
 
 export const blogCategories = pgTable("blog_categories", {
-  id:         text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name:       text("name").notNull(),
-  slug:       text("slug").notNull().unique(),
-  color:      text("color").default("#D97706"), // hex
-  sortOrder:  integer("sort_order").default(0).notNull(),
+  id:             text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name:           text("name").notNull(),
+  slug:           text("slug").notNull().unique(),
+  parentId:       text("parent_id"),
+  color:          text("color").default("#D97706"), // hex
+  description:    text("description"),
+  seoTitle:       text("seo_title"),
+  seoDescription: text("seo_description"),
+  sortOrder:      integer("sort_order").default(0).notNull(),
+  createdAt:      timestamp("created_at").defaultNow().notNull(),
+  updatedAt:      timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const blogPosts = pgTable("blog_posts", {
@@ -178,12 +206,49 @@ export const blogPosts = pgTable("blog_posts", {
   readTime:     integer("read_time"),            // estimated minutes
   metaTitle:    text("meta_title"),
   metaDesc:     text("meta_desc"),
+  seoKeywords:  text("seo_keywords").array(),
+  canonicalUrl: text("canonical_url"),
+  ogImageUrl:   text("og_image_url"),
+  noIndex:      boolean("no_index").default(false).notNull(),
+  noFollow:     boolean("no_follow").default(false).notNull(),
   tags:         text("tags").array(),
   viewCount:    integer("view_count").default(0).notNull(),
   isFeatured:   boolean("is_featured").default(false).notNull(),
   sortOrder:    integer("sort_order").default(0).notNull(),
   createdAt:    timestamp("created_at").defaultNow().notNull(),
   updatedAt:    timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const contentTags = pgTable("content_tags", {
+  id:         text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name:       text("name").notNull(),
+  slug:       text("slug").notNull().unique(),
+  moduleKey:  text("module_key").notNull(), // blog | product | cms | seo
+  color:      text("color").default("#D97706").notNull(),
+  usageCount: integer("usage_count").default(0).notNull(),
+  createdAt:  timestamp("created_at").defaultNow().notNull(),
+  updatedAt:  timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const blogComments = pgTable("blog_comments", {
+  id:          text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  postId:      text("post_id").references(() => blogPosts.id, { onDelete: "cascade" }).notNull(),
+  parentId:    text("parent_id"),
+  userId:      text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  body:        text("body").notNull(),
+  status:      text("status").default("pending").notNull(), // pending | approved | rejected | spam
+  likeCount:   integer("like_count").default(0).notNull(),
+  moderatedBy: text("moderated_by").references(() => users.id, { onDelete: "set null" }),
+  moderatedAt: timestamp("moderated_at"),
+  createdAt:   timestamp("created_at").defaultNow().notNull(),
+  updatedAt:   timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const blogCommentLikes = pgTable("blog_comment_likes", {
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  commentId: text("comment_id").references(() => blogComments.id, { onDelete: "cascade" }).notNull(),
+  userId:    text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ── Media Library ──────────────────────────────────────────────────────────────
@@ -234,6 +299,8 @@ export const cmsPages = pgTable("cms_pages", {
   content:         text("content").notNull(),
   status:          text("status").default("draft").notNull(), // draft | published | archived
   template:        text("template").default("standard").notNull(),
+  moduleKey:       text("module_key").default("cms").notNull(),
+  policyType:      text("policy_type"),
   metaTitle:       text("meta_title"),
   metaDescription: text("meta_description"),
   keywords:        text("keywords").array(),
@@ -246,6 +313,74 @@ export const cmsPages = pgTable("cms_pages", {
   publishedAt:     timestamp("published_at"),
   createdAt:       timestamp("created_at").defaultNow().notNull(),
   updatedAt:       timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ── Reviews, Refunds, Compliance ─────────────────────────────────────────────
+
+export const productReviews = pgTable("product_reviews", {
+  id:           text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  productId:    text("product_id").references(() => products.id, { onDelete: "cascade" }).notNull(),
+  userId:       text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  orderId:      text("order_id").references(() => orders.id, { onDelete: "set null" }),
+  rating:       integer("rating").notNull(),
+  title:        text("title"),
+  body:         text("body").notNull(),
+  status:       text("status").default("pending").notNull(), // pending | approved | rejected | spam
+  likeCount:    integer("like_count").default(0).notNull(),
+  mediaUrl:     text("media_url"),
+  moderatedBy:  text("moderated_by").references(() => users.id, { onDelete: "set null" }),
+  moderatedAt:  timestamp("moderated_at"),
+  createdAt:    timestamp("created_at").defaultNow().notNull(),
+  updatedAt:    timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const productReviewLikes = pgTable("product_review_likes", {
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  reviewId:  text("review_id").references(() => productReviews.id, { onDelete: "cascade" }).notNull(),
+  userId:    text("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const refundRequests = pgTable("refund_requests", {
+  id:                 text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  orderId:            text("order_id").references(() => orders.id, { onDelete: "cascade" }).notNull(),
+  userId:             text("user_id").references(() => users.id, { onDelete: "set null" }),
+  requestedAmountInr: integer("requested_amount_inr").notNull(),
+  approvedAmountInr:  integer("approved_amount_inr"),
+  reason:             text("reason").notNull(),
+  customerNote:       text("customer_note"),
+  adminNote:          text("admin_note"),
+  status:             text("status").default("requested").notNull(),
+  // requested | under_review | approved | rejected | processed | cancelled
+  refundMethod:       text("refund_method"),
+  refundReference:    text("refund_reference"),
+  proofUrl:           text("proof_url"),
+  requestedAt:        timestamp("requested_at").defaultNow().notNull(),
+  processedAt:        timestamp("processed_at"),
+  createdAt:          timestamp("created_at").defaultNow().notNull(),
+  updatedAt:          timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const refundEvents = pgTable("refund_events", {
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  refundId:  text("refund_id").references(() => refundRequests.id, { onDelete: "cascade" }).notNull(),
+  status:    text("status").notNull(),
+  note:      text("note"),
+  changedBy: text("changed_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const complianceChecks = pgTable("compliance_checks", {
+  id:            text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  complianceKey: text("compliance_key").notNull(), // gdpr | dpdp
+  moduleKey:     text("module_key").default("core").notNull(),
+  parameterKey:  text("parameter_key").notNull(),
+  title:         text("title").notNull(),
+  description:   text("description"),
+  status:        text("status").default("partial").notNull(), // fulfilled | partial | missing | not_applicable
+  evidence:      text("evidence"),
+  policyPageId:  text("policy_page_id").references(() => cmsPages.id, { onDelete: "set null" }),
+  updatedAt:     timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const cmsMenus = pgTable("cms_menus", {
@@ -422,6 +557,7 @@ export type User              = typeof users.$inferSelect;
 export type NewUser           = typeof users.$inferInsert;
 export type Address           = typeof addresses.$inferSelect;
 export type Product           = typeof products.$inferSelect;
+export type ProductCategory   = typeof productCategories.$inferSelect;
 export type ProductVariant    = typeof productVariants.$inferSelect;
 export type ProductImage      = typeof productImages.$inferSelect;
 export type Order             = typeof orders.$inferSelect;
@@ -430,6 +566,9 @@ export type OrderItem         = typeof orderItems.$inferSelect;
 export type OrderStatusHistory= typeof orderStatusHistory.$inferSelect;
 export type BlogPost          = typeof blogPosts.$inferSelect;
 export type BlogCategory      = typeof blogCategories.$inferSelect;
+export type ContentTag        = typeof contentTags.$inferSelect;
+export type BlogComment       = typeof blogComments.$inferSelect;
+export type BlogCommentLike   = typeof blogCommentLikes.$inferSelect;
 export type Media             = typeof media.$inferSelect;
 export type SiteConfig        = typeof siteConfig.$inferSelect;
 export type CmsSection        = typeof cmsSections.$inferSelect;
@@ -441,6 +580,11 @@ export type SeoPageOverride   = typeof seoPageOverrides.$inferSelect;
 export type SeoSearchSubmission = typeof seoSearchSubmissions.$inferSelect;
 export type SeoInternalLink   = typeof seoInternalLinks.$inferSelect;
 export type TrafficEvent      = typeof trafficEvents.$inferSelect;
+export type ProductReview     = typeof productReviews.$inferSelect;
+export type ProductReviewLike = typeof productReviewLikes.$inferSelect;
+export type RefundRequest     = typeof refundRequests.$inferSelect;
+export type RefundEvent       = typeof refundEvents.$inferSelect;
+export type ComplianceCheck   = typeof complianceChecks.$inferSelect;
 export type Testimonial       = typeof testimonials.$inferSelect;
 export type Notification      = typeof notifications.$inferSelect;
 export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;

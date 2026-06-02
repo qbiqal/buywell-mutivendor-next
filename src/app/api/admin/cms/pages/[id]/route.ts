@@ -59,6 +59,8 @@ export async function PATCH(
       content: body.content !== undefined ? sanitizeHtml(String(body.content ?? "")) : existing.content,
       status,
       template: body.template !== undefined ? String(body.template || "standard") : existing.template,
+      moduleKey: body.moduleKey !== undefined ? normalizeModuleKey(body.moduleKey) : existing.moduleKey,
+      policyType: body.policyType !== undefined ? nullableText(body.policyType) : existing.policyType,
       metaTitle: body.metaTitle !== undefined ? nullableText(body.metaTitle) : existing.metaTitle,
       metaDescription: body.metaDescription !== undefined ? nullableText(body.metaDescription) : existing.metaDescription,
       keywords: body.keywords !== undefined ? parseKeywords(body.keywords) : existing.keywords,
@@ -113,6 +115,11 @@ function normalizeSlug(value: unknown): string {
 function normalizeStatus(value: unknown): string {
   const status = String(value ?? "draft");
   return ["draft", "published", "archived"].includes(status) ? status : "draft";
+}
+
+function normalizeModuleKey(value: unknown): string {
+  const moduleKey = String(value ?? "cms");
+  return ["core", "cms", "seo", "blog", "ecommerce"].includes(moduleKey) ? moduleKey : "cms";
 }
 
 function nullableText(value: unknown): string | null {

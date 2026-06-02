@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { products, productVariants, productImages, orderItems } from "@/lib/db/schema";
+import { contentTags, products, productVariants, productImages, orderItems } from "@/lib/db/schema";
 import { and, eq, asc, notInArray, sql } from "drizzle-orm";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError, NotFoundError } from "@/lib/errors";
@@ -48,13 +48,18 @@ export async function PUT(
     if (!rows[0]) throw new NotFoundError("Product");
 
     const body = await req.json();
-    const { name, slug, category, subCategory, description, longDesc, sku, isActive, isFeatured, sortOrder, metaTitle, metaDesc, variants, images } = body;
+    const {
+      name, slug, category, categoryId, subCategory, description, longDesc, sku,
+      isActive, isFeatured, sortOrder, metaTitle, metaDesc, seoKeywords,
+      ogImageUrl, canonicalUrl, noIndex, noFollow, tags, variants, images,
+    } = body;
 
     // Update product
     await db.update(products).set({
       ...(name        !== undefined && { name }),
       ...(slug        !== undefined && { slug }),
       ...(category    !== undefined && { category }),
+      ...(categoryId  !== undefined && { categoryId: categoryId || null }),
       ...(subCategory !== undefined && { subCategory: subCategory || null }),
       ...(description !== undefined && { description: description || null }),
       ...(longDesc    !== undefined && { longDesc: longDesc ? sanitizeHtml(longDesc) : null }),
@@ -64,8 +69,15 @@ export async function PUT(
       ...(sortOrder   !== undefined && { sortOrder }),
       ...(metaTitle   !== undefined && { metaTitle: metaTitle || null }),
       ...(metaDesc    !== undefined && { metaDesc: metaDesc || null }),
+      ...(seoKeywords !== undefined && { seoKeywords: parseList(seoKeywords) }),
+      ...(ogImageUrl  !== undefined && { ogImageUrl: nullableText(ogImageUrl) }),
+      ...(canonicalUrl !== undefined && { canonicalUrl: nullableText(canonicalUrl) }),
+      ...(noIndex     !== undefined && { noIndex: noIndex === true }),
+      ...(noFollow    !== undefined && { noFollow: noFollow === true }),
+      ...(tags        !== undefined && { tags: parseList(tags) }),
       updatedAt: new Date(),
     }).where(eq(products.id, id));
+    if (tags !== undefined) await ensureTags("product", parseList(tags));
 
     // Replace variants if provided
     if (variants !== undefined) {
@@ -177,4 +189,33 @@ export async function DELETE(
   } catch (err) {
     return handleApiError(err);
   }
+}
+
+function nullableText(value: unknown): string | null {
+  const text = String(value ?? "").trim();
+  return text ? text : null;
+}
+
+function parseList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String).map((item) => item.trim()).filter(Boolean);
+  return String(value ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+async function ensureTags(moduleKey: string, names: string[]) {
+  for (const name of names) {
+    const slug = `${moduleKey}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`.slice(0, 120);
+    if (!slug) continue;
+    await db.insert(contentTags).values({
+      name,
+      slug,
+      moduleKey,
+      color: colorForName(name),
+    }).onConflictDoNothing();
+  }
+}
+
+function colorForName(value: string): string {
+  const colors = ["#D97706", "#16A34A", "#2563EB", "#C026D3", "#DC2626", "#0891B2"];
+  const sum = Array.from(value).reduce((total, char) => total + char.charCodeAt(0), 0);
+  return colors[sum % colors.length];
 }

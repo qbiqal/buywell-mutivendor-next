@@ -60,3 +60,29 @@
   text-decoration: none;
 }
 .trackLink:hover { text-decoration: underline; }
+
+.refundForm {
+  display: grid;
+  gap: 10px;
+}
+.refundForm input,
+.refundForm select,
+.refundForm textarea {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+  padding: 10px 12px;
+}
+.refundForm textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+.refundMessage {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}

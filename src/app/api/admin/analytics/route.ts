@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     if (moduleResult) return moduleResult;
 
     const { searchParams } = req.nextUrl;
-    const days = clamp(parseInt(searchParams.get("days") ?? "30"), 7, 365);
+    const days = clamp(parseInt(searchParams.get("days") ?? "30"), 1, 365);
     const format = searchParams.get("format");
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 

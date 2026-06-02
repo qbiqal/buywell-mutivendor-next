@@ -6,12 +6,14 @@
  */
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Input, Select, Textarea } from "@/components/ui/Input";
+import { Input, Select } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import { MediaUploader } from "@/components/media/MediaUploader";
+import { NestedCategoryPicker } from "@/components/admin/NestedCategoryPicker";
+import { SeoPanel, type SeoPanelValue } from "@/components/admin/SeoPanel";
+import { TagSelector } from "@/components/admin/TagSelector";
 import { useToast } from "@/components/ui/Toast";
-import type { BlogCategory, BlogPost } from "@/lib/db/schema";
+import type { BlogPost } from "@/lib/db/schema";
 import styles from "./blog-editor.module.css";
 
 interface BlogEditorProps {
@@ -36,17 +38,18 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
   const [status,        setStatus]        = useState("draft");
   const [metaTitle,     setMetaTitle]     = useState("");
   const [metaDesc,      setMetaDesc]      = useState("");
-  const [tags,          setTagsRaw]       = useState("");
+  const [seoKeywords,   setSeoKeywords]   = useState<string[]>([]);
+  const [canonicalUrl,  setCanonicalUrl]  = useState("");
+  const [ogImageUrl,    setOgImageUrl]    = useState("");
+  const [noIndex,       setNoIndex]       = useState(false);
+  const [noFollow,      setNoFollow]      = useState(false);
+  const [tags,          setTags]          = useState<string[]>([]);
   const [readTime,      setReadTime]      = useState("5");
   const [isFeatured,    setIsFeatured]    = useState(false);
   const [saving,        setSaving]        = useState(false);
   const [loading,       setLoading]       = useState(!!postId);
-  const [categories,    setCategories]    = useState<BlogCategory[]>([]);
 
   useEffect(() => {
-    fetch("/api/admin/blog/categories")
-      .then((r) => r.json())
-      .then((d) => { if (d.success) setCategories(d.data); });
     if (!postId) return;
     fetch(`/api/admin/blog/${postId}`)
       .then((r) => r.json())
@@ -60,7 +63,12 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
         setStatus(p.status);
         setMetaTitle(p.metaTitle ?? "");
         setMetaDesc(p.metaDesc ?? "");
-        setTagsRaw((p.tags ?? []).join(", "));
+        setSeoKeywords(p.seoKeywords ?? []);
+        setCanonicalUrl(p.canonicalUrl ?? "");
+        setOgImageUrl(p.ogImageUrl ?? "");
+        setNoIndex(p.noIndex ?? false);
+        setNoFollow(p.noFollow ?? false);
+        setTags(p.tags ?? []);
         setReadTime(String(p.readTime ?? 5));
         setIsFeatured(p.isFeatured);
         if (editorRef.current) editorRef.current.innerHTML = p.content;
@@ -82,8 +90,8 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
     try {
       const body = {
         title, content, excerpt, coverImageUrl, categoryId: categoryId || null, status: saveStatus,
-        metaTitle, metaDesc, readTime: parseInt(readTime), isFeatured,
-        tags: tagsRaw.split(",").map((t) => t.trim()).filter(Boolean),
+        metaTitle, metaDesc, seoKeywords, canonicalUrl, ogImageUrl, noIndex, noFollow,
+        readTime: parseInt(readTime), isFeatured, tags,
       };
 
       const res = postId
@@ -99,9 +107,17 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
     }
   }
 
-  const tagsRaw = tags;
-
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
+
+  const seoValue: SeoPanelValue = {
+    metaTitle,
+    metaDescription: metaDesc,
+    keywords: seoKeywords,
+    canonicalUrl,
+    ogImageUrl,
+    noIndex,
+    noFollow,
+  };
 
   return (
     <div className={styles.editor}>
@@ -174,11 +190,13 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
             <label className={styles.sectionLabel}>Status</label>
             <Select value={status} onChange={(e) => setStatus(e.target.value)} options={STATUS_OPTS} />
             <div style={{ marginTop: 12 }}>
-              <Select
-                label="Category"
+              <NestedCategoryPicker
+                endpoint="/api/admin/blog/categories"
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                options={[{ value: "", label: "Uncategorized" }, ...categories.map((category) => ({ value: category.id, label: category.name }))]}
+                onChange={setCategoryId}
+                label="Nested Blog Category"
+                emptyLabel="Uncategorized"
+                defaultColor="#D97706"
               />
             </div>
 
@@ -192,14 +210,29 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
 
           <div className={styles.sideCard}>
             <Input label="Excerpt" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} placeholder="Short summary..." />
-            <Input label="Tags (comma-separated)" value={tagsRaw} onChange={(e) => setTagsRaw(e.target.value)} placeholder="wellness, honey, health" style={{ marginTop: 12 }} />
+            <div style={{ marginTop: 12 }}>
+              <TagSelector moduleKey="blog" value={tags} onChange={setTags} label="SEO Tags" placeholder="Search or create blog tags" />
+            </div>
             <Input label="Read Time (minutes)" type="number" value={readTime} onChange={(e) => setReadTime(e.target.value)} style={{ marginTop: 12 }} />
           </div>
 
           <div className={styles.sideCard}>
             <p className={styles.sectionLabel}>SEO</p>
-            <Input label="Meta Title" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder={title} />
-            <Textarea label="Meta Description" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Search engine description..." rows={2} style={{ marginTop: 12 }} />
+            <SeoPanel
+              value={seoValue}
+              titleFallback={title}
+              descriptionFallback={excerpt}
+              tagModule="blog"
+              onChange={(next) => {
+                setMetaTitle(next.metaTitle);
+                setMetaDesc(next.metaDescription);
+                setSeoKeywords(next.keywords);
+                setCanonicalUrl(next.canonicalUrl);
+                setOgImageUrl(next.ogImageUrl);
+                setNoIndex(next.noIndex);
+                setNoFollow(next.noFollow);
+              }}
+            />
           </div>
         </div>
       </div>

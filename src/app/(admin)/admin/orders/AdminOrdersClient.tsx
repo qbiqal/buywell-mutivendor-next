@@ -106,6 +106,16 @@ export default function AdminOrdersClient() {
         fields={filterFields}
         onReset={resetFilters}
         resultLabel={`${total} result${total !== 1 ? "s" : ""}`}
+        exportFileName="apras-orders"
+        exportRows={orders.map((order) => ({
+          orderNumber: order.orderNumber,
+          customer: order.guestName ?? "",
+          phone: order.guestPhone ?? "",
+          amountInr: (order.totalInr / 100).toFixed(2),
+          paymentStatus: order.paymentStatus,
+          orderStatus: order.status,
+          date: new Date(order.createdAt).toISOString(),
+        }))}
       />
 
       {loading ? (

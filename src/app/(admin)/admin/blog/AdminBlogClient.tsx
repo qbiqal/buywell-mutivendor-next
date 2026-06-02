@@ -30,7 +30,7 @@ export default function AdminBlogClient() {
   const [minReadTime, setMinReadTime] = useState("");
   const [maxReadTime, setMaxReadTime] = useState("");
   const [categories, setCategories] = useState<BlogCategory[]>([]);
-  const [categoryForm, setCategoryForm] = useState({ id: "", name: "", slug: "", color: "#D97706", sortOrder: "0" });
+  const [categoryForm, setCategoryForm] = useState({ id: "", name: "", slug: "", parentId: "", color: "#D97706", sortOrder: "0" });
   const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
@@ -144,7 +144,7 @@ export default function AdminBlogClient() {
     const data = await res.json();
     if (!data.success) { showError(data.error ?? "Category save failed"); return; }
     success(categoryForm.id ? "Category updated" : "Category created");
-    setCategoryForm({ id: "", name: "", slug: "", color: "#D97706", sortOrder: "0" });
+    setCategoryForm({ id: "", name: "", slug: "", parentId: "", color: "#D97706", sortOrder: "0" });
     const refreshed = await fetch("/api/admin/blog/categories").then((r) => r.json());
     if (refreshed.success) setCategories(refreshed.data);
   }
@@ -183,16 +183,32 @@ export default function AdminBlogClient() {
         fields={filterFields}
         onReset={resetFilters}
         resultLabel={`${posts.length} ${posts.length === 1 ? "post" : "posts"}`}
+        exportFileName="apras-blog-posts"
+        exportRows={posts.map((post) => ({
+          title: post.title,
+          slug: post.slug,
+          status: post.status,
+          publishedAt: post.publishedAt ? new Date(post.publishedAt).toISOString() : "",
+          views: post.viewCount,
+          readTime: post.readTime ?? "",
+          tags: (post.tags ?? []).join(", "),
+        }))}
       />
 
       <section className={styles.categoryPanel}>
         <div className={styles.categoryHeader}>
           <h2>Categories</h2>
-          {categoryForm.id && <button className={styles.deleteBtn} onClick={() => setCategoryForm({ id: "", name: "", slug: "", color: "#D97706", sortOrder: "0" })}>Cancel edit</button>}
+          {categoryForm.id && <button className={styles.deleteBtn} onClick={() => setCategoryForm({ id: "", name: "", slug: "", parentId: "", color: "#D97706", sortOrder: "0" })}>Cancel edit</button>}
         </div>
         <div className={styles.categoryForm}>
           <input value={categoryForm.name} onChange={(e) => setCategoryForm((p) => ({ ...p, name: e.target.value }))} placeholder="Category name" />
           <input value={categoryForm.slug} onChange={(e) => setCategoryForm((p) => ({ ...p, slug: e.target.value }))} placeholder="slug" />
+          <select value={categoryForm.parentId} onChange={(e) => setCategoryForm((p) => ({ ...p, parentId: e.target.value }))}>
+            <option value="">Top level</option>
+            {categories.filter((category) => category.id !== categoryForm.id).map((category) => (
+              <option key={category.id} value={category.id}>{category.name}</option>
+            ))}
+          </select>
           <input type="color" value={categoryForm.color} onChange={(e) => setCategoryForm((p) => ({ ...p, color: e.target.value }))} aria-label="Category color" />
           <input type="number" value={categoryForm.sortOrder} onChange={(e) => setCategoryForm((p) => ({ ...p, sortOrder: e.target.value }))} placeholder="Sort" />
           <Button variant="outline" size="sm" onClick={saveCategory}>{categoryForm.id ? "Update" : "Add"}</Button>
@@ -207,6 +223,7 @@ export default function AdminBlogClient() {
                 id: category.id,
                 name: category.name,
                 slug: category.slug,
+                parentId: category.parentId ?? "",
                 color: category.color ?? "#D97706",
                 sortOrder: String(category.sortOrder),
               })}>Edit</button>

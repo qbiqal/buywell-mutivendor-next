@@ -59,6 +59,8 @@ export async function POST(req: NextRequest) {
       content: sanitizeHtml(String(body.content ?? "")),
       status,
       template: String(body.template || "standard"),
+      moduleKey: normalizeModuleKey(body.moduleKey),
+      policyType: nullableText(body.policyType),
       metaTitle: nullableText(body.metaTitle),
       metaDescription: nullableText(body.metaDescription),
       keywords: parseKeywords(body.keywords),
@@ -86,6 +88,11 @@ function normalizeSlug(value: unknown): string {
 function normalizeStatus(value: unknown): string {
   const status = String(value ?? "draft");
   return ["draft", "published", "archived"].includes(status) ? status : "draft";
+}
+
+function normalizeModuleKey(value: unknown): string {
+  const moduleKey = String(value ?? "cms");
+  return ["core", "cms", "seo", "blog", "ecommerce"].includes(moduleKey) ? moduleKey : "cms";
 }
 
 function nullableText(value: unknown): string | null {

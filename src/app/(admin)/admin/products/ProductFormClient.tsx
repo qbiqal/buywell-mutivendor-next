@@ -5,6 +5,9 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { MediaUploader, type UploadedFile } from "@/components/media/MediaUploader";
+import { NestedCategoryPicker } from "@/components/admin/NestedCategoryPicker";
+import { SeoPanel, type SeoPanelValue } from "@/components/admin/SeoPanel";
+import { TagSelector } from "@/components/admin/TagSelector";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/ui/Toast";
 import styles from "./product-form.module.css";
@@ -44,6 +47,7 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
   const [name,        setName]        = useState("");
   const [slug,        setSlug]        = useState("");
   const [category,    setCategory]    = useState("honey");
+  const [categoryId,  setCategoryId]  = useState("");
   const [subCategory, setSubCategory] = useState("");
   const [description, setDescription] = useState("");
   const [longDesc,    setLongDesc]    = useState("");
@@ -53,6 +57,12 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
   const [sortOrder,   setSortOrder]   = useState(0);
   const [metaTitle,   setMetaTitle]   = useState("");
   const [metaDesc,    setMetaDesc]    = useState("");
+  const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
+  const [ogImageUrl,  setOgImageUrl]  = useState("");
+  const [canonicalUrl,setCanonicalUrl]= useState("");
+  const [noIndex,     setNoIndex]     = useState(false);
+  const [noFollow,    setNoFollow]    = useState(false);
+  const [tags,        setTags]        = useState<string[]>([]);
   const [variants,    setVariants]    = useState<Variant[]>([{ ...EMPTY_VARIANT }]);
   const [images,      setImages]      = useState<ProductImage[]>([]);
 
@@ -73,11 +83,18 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
         if (!d.success) { showError("Product not found"); router.push("/admin/products"); return; }
         const p = d.data;
         setName(p.name); setSlug(p.slug); setCategory(p.category);
+        setCategoryId(p.categoryId ?? "");
         setSubCategory(p.subCategory ?? ""); setDescription(p.description ?? "");
         setLongDesc(p.longDesc ?? ""); setSku(p.sku);
         setIsActive(p.isActive); setIsFeatured(p.isFeatured);
         setSortOrder(p.sortOrder); setMetaTitle(p.metaTitle ?? "");
         setMetaDesc(p.metaDesc ?? "");
+        setSeoKeywords(p.seoKeywords ?? []);
+        setOgImageUrl(p.ogImageUrl ?? "");
+        setCanonicalUrl(p.canonicalUrl ?? "");
+        setNoIndex(p.noIndex ?? false);
+        setNoFollow(p.noFollow ?? false);
+        setTags(p.tags ?? []);
         setVariants(p.variants.length > 0 ? p.variants.map((v: Variant) => ({
           id: v.id, name: v.name, priceInr: v.priceInr / 100, mrpInr: (v.mrpInr ?? 0) / 100,
           weight: v.weight ?? "", stock: v.stock, sku: v.sku, isActive: v.isActive,
@@ -115,10 +132,12 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
     setSaving(true);
     try {
       const payload = {
-        name, slug, category, subCategory: subCategory || null,
+        name, slug, category, categoryId: categoryId || null, subCategory: subCategory || null,
         description: description || null, longDesc: longDesc || null, sku,
         isActive, isFeatured, sortOrder: Number(sortOrder),
         metaTitle: metaTitle || null, metaDesc: metaDesc || null,
+        seoKeywords, ogImageUrl: ogImageUrl || null, canonicalUrl: canonicalUrl || null,
+        noIndex, noFollow, tags,
         variants: variants.map((v) => ({
           ...v,
           priceInr: Math.round(Number(v.priceInr) * 100),
@@ -144,6 +163,16 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
   }
 
   if (loading) return <div className={styles.content}><Spinner size="lg" /></div>;
+
+  const seoValue: SeoPanelValue = {
+    metaTitle,
+    metaDescription: metaDesc,
+    keywords: seoKeywords,
+    canonicalUrl,
+    ogImageUrl,
+    noIndex,
+    noFollow,
+  };
 
   return (
     <form onSubmit={handleSubmit} className={styles.content}>
@@ -181,7 +210,16 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
                 </div>
                 <Input label="Sub-category" value={subCategory} onChange={(e) => setSubCategory(e.target.value)} placeholder="tulsi / karanj / moringa / a2-bilona" />
               </div>
+              <NestedCategoryPicker
+                endpoint="/api/admin/products/categories"
+                value={categoryId}
+                onChange={setCategoryId}
+                label="Nested Product Category"
+                emptyLabel="Use legacy category only"
+                defaultColor="#2D7D46"
+              />
               <Input label="SKU *" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="HNY-TLS-001" required />
+              <TagSelector moduleKey="product" value={tags} onChange={setTags} label="Product Tags" placeholder="Search or create colorful product tags" />
               <Textarea label="Short Description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief product description (shown on cards)" rows={3} />
               <Textarea label="Full Description (HTML)" value={longDesc} onChange={(e) => setLongDesc(e.target.value)} placeholder="<p>Rich text / HTML allowed…</p>" rows={8} />
             </CardBody>
@@ -280,8 +318,21 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
           {/* SEO */}
           <Card padding="md" className={styles.section}>
             <h2 className={styles.sectionTitle}>SEO</h2>
-            <Input label="Meta Title" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder={name || "Page title for Google"} />
-            <Textarea label="Meta Description" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Brief description for search results (160 chars)" rows={3} />
+            <SeoPanel
+              value={seoValue}
+              titleFallback={name || "Product title for Google"}
+              descriptionFallback={description || "Brief product description for search results"}
+              tagModule="product"
+              onChange={(next) => {
+                setMetaTitle(next.metaTitle);
+                setMetaDesc(next.metaDescription);
+                setSeoKeywords(next.keywords);
+                setCanonicalUrl(next.canonicalUrl);
+                setOgImageUrl(next.ogImageUrl);
+                setNoIndex(next.noIndex);
+                setNoFollow(next.noFollow);
+              }}
+            />
           </Card>
 
         </div>

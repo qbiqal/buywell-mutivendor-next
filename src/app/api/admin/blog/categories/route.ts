@@ -37,7 +37,11 @@ export async function POST(req: NextRequest) {
     const [row] = await db.insert(blogCategories).values({
       name,
       slug,
+      parentId: body.parentId || null,
       color: body.color || "#D97706",
+      description: nullableText(body.description),
+      seoTitle: nullableText(body.seoTitle),
+      seoDescription: nullableText(body.seoDescription),
       sortOrder: parseInt(String(body.sortOrder ?? "0"), 10),
     }).returning();
     await cacheInvalidate.blog();
@@ -63,14 +67,24 @@ export async function PATCH(req: NextRequest) {
     await db.update(blogCategories).set({
       name: String(body.name ?? existing.name).trim(),
       slug: String(body.slug ?? existing.slug).trim(),
+      parentId: body.parentId !== undefined ? body.parentId || null : existing.parentId,
       color: String(body.color ?? existing.color),
+      description: body.description !== undefined ? nullableText(body.description) : existing.description,
+      seoTitle: body.seoTitle !== undefined ? nullableText(body.seoTitle) : existing.seoTitle,
+      seoDescription: body.seoDescription !== undefined ? nullableText(body.seoDescription) : existing.seoDescription,
       sortOrder: parseInt(String(body.sortOrder ?? existing.sortOrder), 10),
+      updatedAt: new Date(),
     }).where(eq(blogCategories.id, id));
     await cacheInvalidate.blog();
     return NextResponse.json({ success: true });
   } catch (err) {
     return handleApiError(err);
   }
+}
+
+function nullableText(value: unknown): string | null {
+  const text = String(value ?? "").trim();
+  return text ? text : null;
 }
 
 export async function DELETE(req: NextRequest) {

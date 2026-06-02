@@ -6,6 +6,7 @@ import { eq, and, asc, ne } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
 import { requireModulePage } from "@/lib/modules";
 import { getTokenFromCookies, verifyToken } from "@/lib/auth";
+import { buildSeoMetadata } from "@/lib/seo";
 import ProductDetailClient from "./ProductDetailClient";
 
 export async function generateMetadata(
@@ -19,6 +20,11 @@ export async function generateMetadata(
       description: products.description,
       metaTitle: products.metaTitle,
       metaDesc: products.metaDesc,
+      seoKeywords: products.seoKeywords,
+      canonicalUrl: products.canonicalUrl,
+      ogImageUrl: products.ogImageUrl,
+      noIndex: products.noIndex,
+      noFollow: products.noFollow,
       slug: products.slug,
     })
     .from(products)
@@ -32,24 +38,16 @@ export async function generateMetadata(
     .limit(1);
   const title = p.metaTitle ?? p.name;
   const description = p.metaDesc ?? p.description ?? undefined;
-  return {
+  return buildSeoMetadata(`/shop/${p.slug}`, {
     title,
     description,
-    alternates: { canonical: `/shop/${p.slug}` },
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      url: `/shop/${p.slug}`,
-      images: image?.url ? [{ url: image.url, alt: image.alt ?? p.name }] : undefined,
-    },
-    twitter: {
-      card: image?.url ? "summary_large_image" : "summary",
-      title,
-      description,
-      images: image?.url ? [image.url] : undefined,
-    },
-  };
+    keywords: p.seoKeywords,
+    canonicalPath: `/shop/${p.slug}`,
+    canonicalUrl: p.canonicalUrl,
+    ogImageUrl: p.ogImageUrl ?? image?.url,
+    noIndex: p.noIndex,
+    noFollow: p.noFollow,
+  });
 }
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {

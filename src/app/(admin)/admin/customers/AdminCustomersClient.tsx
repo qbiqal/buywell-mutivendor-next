@@ -136,6 +136,17 @@ export default function AdminCustomersClient() {
         fields={filterFields}
         onReset={resetFilters}
         resultLabel={`${total} result${total !== 1 ? "s" : ""}`}
+        exportFileName="apras-customers"
+        exportRows={customers.map((customer) => ({
+          name: `${customer.firstName} ${customer.lastName ?? ""}`.trim(),
+          email: customer.email,
+          phone: customer.phone ?? "",
+          active: customer.isActive ? "Yes" : "No",
+          emailVerified: customer.emailVerified ? "Yes" : "No",
+          orderCount: customer.orderCount,
+          totalSpendInr: (customer.totalSpendInr / 100).toFixed(2),
+          lastOrderAt: customer.lastOrderAt ?? "",
+        }))}
       />
 
       {loading ? (

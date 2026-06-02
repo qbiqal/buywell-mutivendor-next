@@ -4,8 +4,7 @@ import { useRouter } from "next/navigation";
 import slugify from "slugify";
 import { Button } from "@/components/ui/Button";
 import { Input, Select, Textarea } from "@/components/ui/Input";
-import { MediaUploader } from "@/components/media/MediaUploader";
-import type { UploadedFile } from "@/components/media/MediaUploader";
+import { SeoPanel, type SeoPanelValue } from "@/components/admin/SeoPanel";
 import { useToast } from "@/components/ui/Toast";
 import type { CmsPage } from "@/lib/db/schema";
 import styles from "./cms-page-editor.module.css";
@@ -29,9 +28,11 @@ export default function CMSPageEditorClient({ pageId }: Props) {
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [status, setStatus] = useState("draft");
+  const [moduleKey, setModuleKey] = useState("cms");
+  const [policyType, setPolicyType] = useState("");
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
-  const [keywords, setKeywords] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [canonicalUrl, setCanonicalUrl] = useState("");
   const [ogImageUrl, setOgImageUrl] = useState("");
   const [noIndex, setNoIndex] = useState(false);
@@ -54,9 +55,11 @@ export default function CMSPageEditorClient({ pageId }: Props) {
         setSlug(page.slug);
         setExcerpt(page.excerpt ?? "");
         setStatus(page.status);
+        setModuleKey(page.moduleKey ?? "cms");
+        setPolicyType(page.policyType ?? "");
         setMetaTitle(page.metaTitle ?? "");
         setMetaDescription(page.metaDescription ?? "");
-        setKeywords((page.keywords ?? []).join(", "));
+        setKeywords(page.keywords ?? []);
         setCanonicalUrl(page.canonicalUrl ?? "");
         setOgImageUrl(page.ogImageUrl ?? "");
         setNoIndex(page.noIndex);
@@ -91,6 +94,8 @@ export default function CMSPageEditorClient({ pageId }: Props) {
         excerpt,
         content,
         status: nextStatus,
+        moduleKey,
+        policyType,
         metaTitle,
         metaDescription,
         keywords,
@@ -117,6 +122,16 @@ export default function CMSPageEditorClient({ pageId }: Props) {
   }
 
   if (loading) return <div className={styles.loading}>Loading...</div>;
+
+  const seoValue: SeoPanelValue = {
+    metaTitle,
+    metaDescription,
+    keywords,
+    canonicalUrl,
+    ogImageUrl,
+    noIndex,
+    noFollow,
+  };
 
   return (
     <div className={styles.editor}>
@@ -170,35 +185,52 @@ export default function CMSPageEditorClient({ pageId }: Props) {
         <aside className={styles.sidebar}>
           <div className={styles.sidePanel}>
             <Select label="Status" value={status} onChange={(e) => setStatus(e.target.value)} options={STATUS_OPTIONS} />
+            <Select
+              label="Module Visibility"
+              value={moduleKey}
+              onChange={(e) => setModuleKey(e.target.value)}
+              style={{ marginTop: 12 }}
+              options={[
+                { value: "core", label: "Core" },
+                { value: "cms", label: "CMS" },
+                { value: "seo", label: "SEO" },
+                { value: "blog", label: "Blog" },
+                { value: "ecommerce", label: "E-Commerce" },
+              ]}
+            />
+            <Select
+              label="Policy Type"
+              value={policyType}
+              onChange={(e) => setPolicyType(e.target.value)}
+              style={{ marginTop: 12 }}
+              options={[
+                { value: "", label: "Regular CMS page" },
+                { value: "terms", label: "Terms and Conditions" },
+                { value: "privacy", label: "Privacy Policy" },
+                { value: "refund", label: "Refund Policy" },
+                { value: "shipping", label: "Shipping Policy" },
+                { value: "cookie", label: "Cookie Policy" },
+              ]}
+            />
             <Input label="Sort Order" type="number" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} style={{ marginTop: 12 }} />
           </div>
 
           <div className={styles.sidePanel}>
             <p className={styles.sectionLabel}>On-page SEO</p>
-            <Input label="Meta Title" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder={title || "Search title"} />
-            <Textarea label="Meta Description" value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} rows={3} placeholder="Search result description" style={{ marginTop: 12 }} />
-            <Input label="Keywords" value={keywords} onChange={(e) => setKeywords(e.target.value)} placeholder="honey, ghee, wellness" style={{ marginTop: 12 }} />
-            <Input label="Canonical URL" value={canonicalUrl} onChange={(e) => setCanonicalUrl(e.target.value)} placeholder={`/${slug || "page-slug"}`} style={{ marginTop: 12 }} />
-            <div className={styles.checkStack}>
-              <label><input type="checkbox" checked={noIndex} onChange={(e) => setNoIndex(e.target.checked)} /> No index</label>
-              <label><input type="checkbox" checked={noFollow} onChange={(e) => setNoFollow(e.target.checked)} /> No follow</label>
-            </div>
-          </div>
-
-          <div className={styles.sidePanel}>
-            <p className={styles.sectionLabel}>Open Graph Image</p>
-            {ogImageUrl && (
-              <div className={styles.imagePreview}>
-                <img src={ogImageUrl} alt="Open Graph preview" />
-                <button type="button" onClick={() => setOgImageUrl("")}>Remove</button>
-              </div>
-            )}
-            <MediaUploader
-              accept={["image/jpeg", "image/png", "image/webp"]}
-              aspectRatio={1200 / 630}
-              recommendedDimensions={{ width: 1200, height: 630, label: "Open Graph: 1200×630px" }}
-              folder="cms-pages"
-              onUpload={(files: UploadedFile[]) => { if (files[0]) setOgImageUrl(files[0].url); }}
+            <SeoPanel
+              value={seoValue}
+              titleFallback={title}
+              descriptionFallback={excerpt}
+              tagModule="cms"
+              onChange={(next) => {
+                setMetaTitle(next.metaTitle);
+                setMetaDescription(next.metaDescription);
+                setKeywords(next.keywords);
+                setCanonicalUrl(next.canonicalUrl);
+                setOgImageUrl(next.ogImageUrl);
+                setNoIndex(next.noIndex);
+                setNoFollow(next.noFollow);
+              }}
             />
           </div>
         </aside>

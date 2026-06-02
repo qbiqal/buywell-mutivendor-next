@@ -48,3 +48,15 @@
 }
 
 .error { font-size: 12px; color: #EF4444; }
+
+.clearCropBtn {
+  align-self: flex-end;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #b91c1c;
+  cursor: pointer;
+  font-weight: 900;
+}

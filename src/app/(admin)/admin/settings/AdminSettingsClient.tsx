@@ -79,11 +79,24 @@ const BRAND_SETTINGS = [
   "site_logo_url",
 ];
 
+const SETTINGS_TABS = [
+  { key: "modules", label: "Modules" },
+  { key: "brand", label: "Brand" },
+  { key: "notifications", label: "Notifications" },
+  { key: "otp", label: "OTP" },
+  { key: "providers", label: "Providers" },
+  { key: "localization", label: "Localization" },
+  { key: "commerce", label: "Commerce" },
+] as const;
+
+type SettingsTab = typeof SETTINGS_TABS[number]["key"];
+
 export default function AdminSettingsClient() {
   const { success, error: showError } = useToast();
   const [config, setConfig] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<SettingsTab>("modules");
 
   useEffect(() => {
     fetch("/api/admin/config")
@@ -128,8 +141,23 @@ export default function AdminSettingsClient() {
         <p className="admin-page-subtitle">Configure modules, site information, localization, payment, and shipping</p>
       </div>
 
+      <div className={styles.tabs} role="tablist" aria-label="Settings sections">
+        {SETTINGS_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.key}
+            className={activeTab === tab.key ? styles.activeTab : ""}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Module Controls */}
-      <Card padding="none" className={styles.settingsCard}>
+      {activeTab === "modules" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>Modules</h2></CardHeader>
         <CardBody className={styles.cardFields}>
           <p className={styles.fieldHint}>Enable only the modules required for this client install. Core is always on.</p>
@@ -159,10 +187,10 @@ export default function AdminSettingsClient() {
             Save Modules
           </Button>
         </CardFooter>
-      </Card>
+      </Card>}
 
       {/* Notification Gateway Settings */}
-      <Card padding="none" className={styles.settingsCard}>
+      {activeTab === "notifications" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>Notifications & Gateways</h2></CardHeader>
         <CardBody className={styles.cardFields}>
           <p className={styles.fieldHint}>Core notification channels are toggleable here. Resend is the first email gateway; SMS, Telegram, WhatsApp, and push have provider slots for future adapters.</p>
@@ -241,10 +269,10 @@ export default function AdminSettingsClient() {
             Save Notifications
           </Button>
         </CardFooter>
-      </Card>
+      </Card>}
 
       {/* OTP Settings */}
-      <Card padding="none" className={styles.settingsCard}>
+      {activeTab === "otp" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>OTP & Account Recovery</h2></CardHeader>
         <CardBody className={styles.cardFields}>
           <div className={styles.moduleGrid}>
@@ -272,10 +300,10 @@ export default function AdminSettingsClient() {
             Save OTP Settings
           </Button>
         </CardFooter>
-      </Card>
+      </Card>}
 
       {/* External Provider Keys */}
-      <Card padding="none" className={styles.settingsCard}>
+      {activeTab === "providers" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>External Provider Keys</h2></CardHeader>
         <CardBody className={styles.cardFields}>
           <p className={styles.fieldHint}>Admin values are encrypted before storage. If a field is empty, the matching `.env` value is used as fallback.</p>
@@ -347,10 +375,10 @@ export default function AdminSettingsClient() {
             Save External Keys
           </Button>
         </CardFooter>
-      </Card>
+      </Card>}
 
       {/* Site Info */}
-      <Card padding="none" className={styles.settingsCard}>
+      {activeTab === "brand" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>Brand & Site Information</h2></CardHeader>
         <CardBody className={styles.cardFields}>
           <Input label="Site Name"    value={config.site_name    ?? ""} onChange={set("site_name")}    placeholder="APRAS Naturals" />
@@ -368,6 +396,7 @@ export default function AdminSettingsClient() {
                 <div className={styles.logoPreview}>
                   <img src={config.admin_logo_url} alt="Current admin logo" />
                   <span>{config.admin_logo_url}</span>
+                  <button type="button" onClick={() => setConfig((p) => ({ ...p, admin_logo_url: "" }))} aria-label="Clear admin logo">x</button>
                 </div>
               )}
               <MediaUploader
@@ -387,6 +416,7 @@ export default function AdminSettingsClient() {
                 <div className={styles.logoPreview}>
                   <img src={config.site_logo_url} alt="Current website logo" />
                   <span>{config.site_logo_url}</span>
+                  <button type="button" onClick={() => setConfig((p) => ({ ...p, site_logo_url: "" }))} aria-label="Clear website logo">x</button>
                 </div>
               )}
               <MediaUploader
@@ -404,10 +434,10 @@ export default function AdminSettingsClient() {
             Save Brand Settings
           </Button>
         </CardFooter>
-      </Card>
+      </Card>}
 
       {/* Localization */}
-      <Card padding="none" className={styles.settingsCard}>
+      {activeTab === "localization" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>Localization & Currency</h2></CardHeader>
         <CardBody className={styles.cardFields}>
           <div className={styles.formRow}>
@@ -435,10 +465,10 @@ export default function AdminSettingsClient() {
             Save Localization
           </Button>
         </CardFooter>
-      </Card>
+      </Card>}
 
       {/* Payment Settings */}
-      <Card padding="none" className={styles.settingsCard}>
+      {activeTab === "commerce" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>Payment — QR Code Setup</h2></CardHeader>
         <CardBody className={styles.cardFields}>
           <label className={styles.inlineCheck}>
@@ -474,10 +504,10 @@ export default function AdminSettingsClient() {
             Save Payment Settings
           </Button>
         </CardFooter>
-      </Card>
+      </Card>}
 
       {/* Shipping Settings */}
-      <Card padding="none" className={styles.settingsCard}>
+      {activeTab === "commerce" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>Shipping</h2></CardHeader>
         <CardBody className={styles.cardFields}>
           <Input label="Free Shipping Above (₹)" value={String(parseInt(config.shipping_free_above ?? "99900") / 100)} onChange={(e) => setConfig((p) => ({ ...p, shipping_free_above: String(parseInt(e.target.value) * 100) }))} type="number" placeholder="999" />
@@ -488,7 +518,7 @@ export default function AdminSettingsClient() {
             Save Shipping
           </Button>
         </CardFooter>
-      </Card>
+      </Card>}
     </div>
   );
 }

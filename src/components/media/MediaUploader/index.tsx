@@ -127,6 +127,16 @@ export function MediaUploader({
     }
   }
 
+  function clearPendingCrop() {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropModal(false);
+    setCropSrc("");
+    setCrop(undefined);
+    setPendingFile(null);
+    setFiles([]);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
   function applyCrop() {
     if (!imgRef.current || !canvasRef.current || !crop || !pendingFile) return;
     const canvas = canvasRef.current;
@@ -150,7 +160,10 @@ export function MediaUploader({
     canvas.toBlob((blob) => {
       if (!blob) return;
       const croppedFile = new File([blob], pendingFile.name, { type: pendingFile.type });
+      if (cropSrc) URL.revokeObjectURL(cropSrc);
       setCropModal(false);
+      setCropSrc("");
+      setPendingFile(null);
       setFiles([croppedFile]);
       uploadFiles([croppedFile], { width: targetWidth, height: targetHeight });
     }, pendingFile.type, 0.92);
@@ -230,9 +243,12 @@ export function MediaUploader({
         <canvas ref={canvasRef} style={{ display: "none" }} />
 
         {/* Crop modal */}
-        <Modal isOpen={cropModal} onClose={() => setCropModal(false)} title="Crop Image" maxWidth="700px">
+        <Modal isOpen={cropModal} onClose={clearPendingCrop} title="Crop Image" maxWidth="700px">
           {cropSrc && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <button type="button" className={styles.clearCropBtn} onClick={clearPendingCrop} aria-label="Clear selected image">
+                x
+              </button>
               <ReactCrop
                 crop={crop}
                 onChange={(_, pct) => setCrop(pct)}

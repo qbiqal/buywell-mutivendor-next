@@ -3,10 +3,11 @@ import path from "path";
 import {
   users, products, productVariants, productImages,
   blogCategories, cmsSections, siteConfig,
-  cmsMenus, cmsMenuItems,
+  cmsMenus, cmsMenuItems, productCategories,
+  contentTags, cmsPages, complianceChecks,
 } from "./schema";
 import bcrypt from "bcryptjs";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 function loadLocalEnv() {
   const envPath = path.join(process.cwd(), ".env.local");
@@ -67,11 +68,37 @@ async function seed() {
   }
 
   // ── Honey products ──────────────────────────────────────────────────────────
+  const productCats = [
+    { name: "Honey", slug: "honey", color: "#D97706", sortOrder: 1 },
+    { name: "Tulsi Honey", slug: "tulsi-honey-category", parentSlug: "honey", color: "#16A34A", sortOrder: 2 },
+    { name: "Karanj Honey", slug: "karanj-honey-category", parentSlug: "honey", color: "#A16207", sortOrder: 3 },
+    { name: "Moringa Honey", slug: "moringa-honey-category", parentSlug: "honey", color: "#22C55E", sortOrder: 4 },
+    { name: "A2 Ghee", slug: "a2-ghee", color: "#B45309", sortOrder: 5 },
+  ];
+
+  const productCategoryIds = new Map<string, string>();
+  for (const cat of productCats) {
+    const [parent] = cat.parentSlug
+      ? await db.select().from(productCategories).where(eq(productCategories.slug, cat.parentSlug)).limit(1)
+      : [];
+    await db.insert(productCategories).values({
+      name: cat.name,
+      slug: cat.slug,
+      parentId: parent?.id ?? null,
+      color: cat.color,
+      sortOrder: cat.sortOrder,
+    }).onConflictDoNothing();
+    const [saved] = await db.select().from(productCategories).where(eq(productCategories.slug, cat.slug)).limit(1);
+    if (saved) productCategoryIds.set(cat.slug, saved.id);
+  }
+  console.log(`✓ ${productCats.length} product categories ensured`);
+
   const honeyProducts = [
     {
       name: "Tulsi Honey",
       slug: "tulsi-honey",
       category: "honey",
+      categoryId: productCategoryIds.get("tulsi-honey-category") ?? null,
       subCategory: "tulsi",
       description: "Pure mono-floral honey sourced from sacred Tulsi blossoms. Distinct herbal notes with powerful immunity-boosting properties.",
       sku: "TULSI-HONEY",
@@ -86,6 +113,7 @@ async function seed() {
       name: "Karanj Honey",
       slug: "karanj-honey",
       category: "honey",
+      categoryId: productCategoryIds.get("karanj-honey-category") ?? null,
       subCategory: "karanj",
       description: "A unique earthy profile harvested from the Karanj tree — rare, deeply aromatic, and nutrient-rich.",
       sku: "KARANJ-HONEY",
@@ -100,6 +128,7 @@ async function seed() {
       name: "Moringa Honey",
       slug: "moringa-honey",
       category: "honey",
+      categoryId: productCategoryIds.get("moringa-honey-category") ?? null,
       subCategory: "moringa",
       description: "Rich and robust honey collected from Moringa (Miracle Tree) blossoms. Nature's most potent and nourishing honey.",
       sku: "MORINGA-HONEY",
@@ -131,6 +160,7 @@ async function seed() {
       name: "A2 Bilona Cow Ghee",
       slug: gheeSlug,
       category: "ghee",
+      categoryId: productCategoryIds.get("a2-ghee") ?? null,
       subCategory: "a2-bilona",
       description: "Made from the milk of indigenous Kankrej cows using the ancient Bilona method. Wooden-churned, slow-heated. Zero shortcuts.",
       sku: "A2-GHEE",
@@ -146,6 +176,18 @@ async function seed() {
   } else {
     console.log("○ A2 Bilona Ghee already exists");
   }
+
+  const productCategoryBackfill = {
+    "tulsi-honey": productCategoryIds.get("tulsi-honey-category") ?? null,
+    "karanj-honey": productCategoryIds.get("karanj-honey-category") ?? null,
+    "moringa-honey": productCategoryIds.get("moringa-honey-category") ?? null,
+    "a2-bilona-ghee": productCategoryIds.get("a2-ghee") ?? null,
+  } as const;
+  for (const [slug, categoryId] of Object.entries(productCategoryBackfill)) {
+    if (!categoryId) continue;
+    await db.update(products).set({ categoryId, updatedAt: new Date() }).where(eq(products.slug, slug));
+  }
+  console.log("✓ Existing product category links backfilled");
 
   // ── Product image galleries ────────────────────────────────────────────────
   const productGalleries = {
@@ -192,17 +234,36 @@ async function seed() {
   // ── Blog categories ─────────────────────────────────────────────────────────
   const blogCats = [
     { name: "Wellness",   slug: "wellness",   color: "#16A34A" },
+    { name: "Immunity",   slug: "immunity",   color: "#22C55E", parentSlug: "wellness" },
     { name: "Beekeeping", slug: "beekeeping", color: "#D97706" },
     { name: "Recipes",    slug: "recipes",    color: "#EA580C" },
     { name: "News",       slug: "news",       color: "#2563EB" },
   ];
   for (const cat of blogCats) {
+    const { parentSlug, ...catValues } = cat;
+    const [parent] = cat.parentSlug
+      ? await db.select().from(blogCategories).where(eq(blogCategories.slug, cat.parentSlug)).limit(1)
+      : [];
     const exists = await db.select().from(blogCategories).where(eq(blogCategories.slug, cat.slug));
     if (exists.length === 0) {
-      await db.insert(blogCategories).values({ ...cat, sortOrder: blogCats.indexOf(cat) });
+      await db.insert(blogCategories).values({ ...catValues, parentId: parent?.id ?? null, sortOrder: blogCats.indexOf(cat) });
       console.log(`✓ Blog category: ${cat.name}`);
     }
   }
+
+  const defaultTags = [
+    { moduleKey: "blog", name: "Raw Honey", slug: "blog-raw-honey", color: "#D97706" },
+    { moduleKey: "blog", name: "Wellness", slug: "blog-wellness", color: "#16A34A" },
+    { moduleKey: "blog", name: "A2 Ghee", slug: "blog-a2-ghee", color: "#B45309" },
+    { moduleKey: "product", name: "Lab Tested", slug: "product-lab-tested", color: "#2563EB" },
+    { moduleKey: "product", name: "No Added Sugar", slug: "product-no-added-sugar", color: "#16A34A" },
+    { moduleKey: "product", name: "Mono Floral", slug: "product-mono-floral", color: "#D97706" },
+    { moduleKey: "cms", name: "Policy", slug: "cms-policy", color: "#6B7280" },
+  ];
+  for (const tag of defaultTags) {
+    await db.insert(contentTags).values(tag).onConflictDoNothing();
+  }
+  console.log(`✓ ${defaultTags.length} content tags ensured`);
 
   // ── CMS sections default config ─────────────────────────────────────────────
   const sections = [
@@ -370,6 +431,176 @@ async function seed() {
     })));
     console.log(`✓ ${menuData.label} seeded with ${menuData.items.length} items`);
   }
+
+  // ── Policy CMS pages ───────────────────────────────────────────────────────
+  const policyPages = [
+    {
+      title: "Terms and Conditions",
+      slug: "terms-and-conditions",
+      policyType: "terms",
+      moduleKey: "core",
+      excerpt: "Terms governing use of the APRAS Naturals website and services.",
+      content: "<h2>Terms and Conditions</h2><p>These terms describe how customers may use APRAS Naturals services, place orders, and interact with our website. Administrators should review and adapt this policy before publication.</p><h2>Orders and Accounts</h2><p>Customers are responsible for accurate account, delivery, and payment information.</p><h2>Changes</h2><p>APRAS Naturals may update these terms and will publish the current version on this page.</p>",
+    },
+    {
+      title: "Privacy Policy",
+      slug: "privacy-policy",
+      policyType: "privacy",
+      moduleKey: "core",
+      excerpt: "How APRAS Naturals collects, uses, stores, and protects personal data.",
+      content: "<h2>Privacy Policy</h2><p>This policy explains the personal data APRAS Naturals collects, why it is processed, and how users can request access, correction, deletion, or grievance support.</p><h2>Data Use</h2><p>We process data for account access, order fulfilment, customer support, analytics, and lawful business operations.</p><h2>User Rights</h2><p>Users may contact APRAS Naturals to request access, correction, deletion, or withdrawal of consent where applicable.</p>",
+    },
+    {
+      title: "Refund Policy",
+      slug: "refund-policy",
+      policyType: "refund",
+      moduleKey: "ecommerce",
+      excerpt: "Refund eligibility, review, approval, and processing timelines.",
+      content: "<h2>Refund Policy</h2><p>Refund requests are reviewed against order status, payment verification, product condition, and customer notes. Approved refunds are processed through the configured refund workflow.</p><h2>How to Request a Refund</h2><p>Members can submit refund requests from their order details or contact customer support with the order number.</p>",
+    },
+    {
+      title: "Shipping Policy",
+      slug: "shipping-policy",
+      policyType: "shipping",
+      moduleKey: "ecommerce",
+      excerpt: "Shipping coverage, charges, tracking, and delivery estimates.",
+      content: "<h2>Shipping Policy</h2><p>APRAS Naturals ships eligible products across supported service areas. Shipping fees, free-shipping thresholds, courier details, and tracking information are shown during fulfilment.</p>",
+    },
+    {
+      title: "Cookie Policy",
+      slug: "cookie-policy",
+      policyType: "cookie",
+      moduleKey: "seo",
+      excerpt: "Cookies and analytics technologies used on the website.",
+      content: "<h2>Cookie Policy</h2><p>APRAS Naturals may use essential cookies, analytics tags, and first-party traffic events to operate the site and understand performance. Optional analytics settings can be controlled from the SEO module.</p>",
+    },
+  ];
+
+  const policyPageIds = new Map<string, string>();
+  for (const page of policyPages) {
+    await db.insert(cmsPages).values({
+      title: page.title,
+      slug: page.slug,
+      excerpt: page.excerpt,
+      content: page.content,
+      status: "published",
+      template: "policy",
+      moduleKey: page.moduleKey,
+      policyType: page.policyType,
+      metaTitle: page.title,
+      metaDescription: page.excerpt,
+      publishedAt: new Date(),
+    }).onConflictDoNothing();
+    const [saved] = await db.select().from(cmsPages).where(eq(cmsPages.slug, page.slug)).limit(1);
+    if (saved) policyPageIds.set(page.policyType, saved.id);
+  }
+  console.log(`✓ ${policyPages.length} policy CMS pages ensured`);
+
+  const complianceItems = [
+    {
+      complianceKey: "gdpr",
+      moduleKey: "core",
+      parameterKey: "transparent_notice",
+      title: "Transparent privacy notice",
+      description: "Privacy information is published in clear language and reachable from public menus.",
+      status: "partial",
+      policyType: "privacy",
+      evidence: "Privacy Policy CMS page seeded; admin should review final legal wording.",
+    },
+    {
+      complianceKey: "gdpr",
+      moduleKey: "core",
+      parameterKey: "data_subject_requests",
+      title: "Data subject request handling",
+      description: "Admin process exists for access, correction, deletion, restriction, and objection requests.",
+      status: "partial",
+      policyType: "privacy",
+      evidence: "Compliance panel tracks evidence; operational request intake should be connected to support.",
+    },
+    {
+      complianceKey: "gdpr",
+      moduleKey: "seo",
+      parameterKey: "analytics_consent",
+      title: "Analytics and tag transparency",
+      description: "Analytics settings are documented and controlled from the SEO module.",
+      status: "partial",
+      policyType: "cookie",
+      evidence: "SEO analytics settings and Cookie Policy page are available.",
+    },
+    {
+      complianceKey: "gdpr",
+      moduleKey: "core",
+      parameterKey: "breach_notification",
+      title: "Breach response tracking",
+      description: "Internal evidence records cover breach response ownership and notification readiness.",
+      status: "missing",
+      policyType: "privacy",
+      evidence: "Assign owner, timeline, and escalation channel in this panel.",
+    },
+    {
+      complianceKey: "dpdp",
+      moduleKey: "core",
+      parameterKey: "lawful_purpose_notice",
+      title: "Lawful purpose and notice",
+      description: "Data processing notice states lawful purpose, requested data, and user rights.",
+      status: "partial",
+      policyType: "privacy",
+      evidence: "Privacy Policy page includes baseline language; review for final DPDP wording.",
+    },
+    {
+      complianceKey: "dpdp",
+      moduleKey: "core",
+      parameterKey: "consent_withdrawal",
+      title: "Consent withdrawal and grievance path",
+      description: "Users can identify how to withdraw consent and raise grievances.",
+      status: "partial",
+      policyType: "privacy",
+      evidence: "Policy page includes contact pathway placeholder.",
+    },
+    {
+      complianceKey: "dpdp",
+      moduleKey: "core",
+      parameterKey: "security_safeguards",
+      title: "Reasonable security safeguards",
+      description: "Admin records security safeguards and evidence for personal data protection.",
+      status: "partial",
+      policyType: "privacy",
+      evidence: "Authentication, admin gating, and encrypted config exist; complete operational evidence.",
+    },
+    {
+      complianceKey: "dpdp",
+      moduleKey: "ecommerce",
+      parameterKey: "order_data_minimisation",
+      title: "Order data minimisation",
+      description: "Ecommerce data collection is limited to fulfilment, payment verification, and support.",
+      status: "partial",
+      policyType: "terms",
+      evidence: "Order/refund workflows collect purpose-specific fields.",
+    },
+  ];
+
+  for (const item of complianceItems) {
+    const [existingCheck] = await db.select().from(complianceChecks)
+      .where(and(eq(complianceChecks.complianceKey, item.complianceKey), eq(complianceChecks.parameterKey, item.parameterKey)))
+      .limit(1);
+    const values = {
+      complianceKey: item.complianceKey,
+      moduleKey: item.moduleKey,
+      parameterKey: item.parameterKey,
+      title: item.title,
+      description: item.description,
+      status: item.status,
+      evidence: item.evidence,
+      policyPageId: policyPageIds.get(item.policyType) ?? null,
+      updatedAt: new Date(),
+    };
+    if (existingCheck) {
+      await db.update(complianceChecks).set(values).where(eq(complianceChecks.id, existingCheck.id));
+    } else {
+      await db.insert(complianceChecks).values(values);
+    }
+  }
+  console.log(`✓ ${complianceItems.length} compliance checklist items ensured`);
 
   console.log("\n✅ Seed complete!");
   await pool.end();

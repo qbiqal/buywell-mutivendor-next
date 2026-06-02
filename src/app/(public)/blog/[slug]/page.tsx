@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { requireModulePage } from "@/lib/modules";
+import { buildSeoMetadata } from "@/lib/seo";
+import { BlogComments } from "./BlogComments";
 import styles from "./blog-detail.module.css";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -16,31 +18,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     excerpt: blogPosts.excerpt,
     metaTitle: blogPosts.metaTitle,
     metaDesc: blogPosts.metaDesc,
+    seoKeywords: blogPosts.seoKeywords,
+    canonicalUrl: blogPosts.canonicalUrl,
+    ogImageUrl: blogPosts.ogImageUrl,
+    noIndex: blogPosts.noIndex,
+    noFollow: blogPosts.noFollow,
     coverImageUrl: blogPosts.coverImageUrl,
   })
     .from(blogPosts).where(and(eq(blogPosts.slug, slug), eq(blogPosts.status, "published")));
   if (!rows[0]) return {};
   const post = rows[0];
-  const title = post.metaTitle ?? post.title;
-  const description = post.metaDesc ?? post.excerpt ?? undefined;
-  return {
-    title,
-    description,
-    alternates: { canonical: `/blog/${post.slug}` },
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      url: `/blog/${post.slug}`,
-      images: post.coverImageUrl ? [{ url: post.coverImageUrl, alt: post.title }] : undefined,
-    },
-    twitter: {
-      card: post.coverImageUrl ? "summary_large_image" : "summary",
-      title,
-      description,
-      images: post.coverImageUrl ? [post.coverImageUrl] : undefined,
-    },
-  };
+  return buildSeoMetadata(`/blog/${post.slug}`, {
+    title: post.metaTitle ?? post.title,
+    description: post.metaDesc ?? post.excerpt ?? undefined,
+    keywords: post.seoKeywords,
+    canonicalPath: `/blog/${post.slug}`,
+    canonicalUrl: post.canonicalUrl,
+    ogImageUrl: post.ogImageUrl ?? post.coverImageUrl,
+    noIndex: post.noIndex,
+    noFollow: post.noFollow,
+  });
 }
 
 export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -86,6 +83,8 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ slu
           className={styles.content}
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
+
+        <BlogComments slug={post.slug} />
 
         {/* Back */}
         <div className={styles.backWrap}>

@@ -58,6 +58,25 @@
   transition: border-color 0.15s, color 0.15s, transform 0.15s;
 }
 
+.exportButton {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  transition: border-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.exportButton:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
 .resetButton:hover {
   border-color: var(--accent);
   color: var(--accent);
@@ -132,4 +151,3 @@
     grid-column: span 1;
   }
 }
-

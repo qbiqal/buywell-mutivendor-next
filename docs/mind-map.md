@@ -26,6 +26,7 @@ APRAS Naturals
 │   ├── Rich HTML sanitizer
 │   ├── Observability: Sentry envelope capture
 │   ├── Brand logos: admin logo + website logo via DB config
+│   ├── Compliance: GDPR/DPDP checklist, evidence, module visibility
 │   ├── Theme: Public Sans + persisted light/dark mode
 │   └── /admin/media
 │
@@ -42,8 +43,9 @@ APRAS Naturals
 │   ├── cms_pages
 │   ├── cms_menus
 │   ├── cms_menu_items
+│   ├── Policy CMS pages: terms, privacy, refund, shipping, cookie
 │   ├── testimonials
-│   └── Landing content, pages, menus, media, and scroll-scrub hero video
+│   └── Structured landing content builder, pages, menus, media, and scroll-scrub hero video
 │
 ├── SEO Module
 │   ├── /admin/seo
@@ -66,15 +68,23 @@ APRAS Naturals
 │   ├── /admin/orders
 │   ├── /admin/products
 │   ├── /admin/customers
+│   ├── /admin/refunds
+│   ├── /admin/reviews
+│   ├── Nested product categories and colorful tags
+│   ├── Customer refund requests
+│   ├── Product reviews and likes
 │   ├── Reusable admin datatable filters for commerce CRUD
-│   └── products, variants, images, orders, order_items
+│   └── products, variants, images, orders, order_items, refund_requests, product_reviews
 │
 ├── Blog Module
 │   ├── /blog
 │   ├── /blog/[slug]
 │   ├── /admin/blog
+│   ├── /admin/blog/comments
+│   ├── Nested categories and colorful tags
+│   ├── Member-only nested comments and likes
 │   ├── Reusable admin datatable filters for blog CRUD
-│   └── blog_posts, blog_categories
+│   └── blog_posts, blog_categories, blog_comments, blog_comment_likes
 │
 └── Payment Modules
     └── offline_qr
@@ -91,12 +101,13 @@ Core Admin Utilities
 │   ├── Per-order resend
 │   └── whatsapp_logs
 └── /admin/settings
+    ├── Tabbed sections
     ├── Module toggles
     ├── Resend/SMS/Telegram/Web Push keys
     ├── WhatsApp/R2/Razorpay/Stripe/Sentry provider keys
     ├── Notification channel toggles
     ├── OTP TTL/attempt controls
-    └── Admin/website logo uploaders
+    └── Admin/website logo uploaders with crop reset and clear buttons
 ```
 
 ---
@@ -109,9 +120,9 @@ Public
   /home                     CMS landing alias
   /coming-soon              Previous Coming Soon page
   /shop                     Product listing
-  /shop/[slug]              Product detail
+  /shop/[slug]              Product detail + member reviews
   /blog                     Blog listing
-  /blog/[slug]              Blog detail
+  /blog/[slug]              Blog detail + nested member comments
   /[slug]                   Published CMS page
   /checkout                 Checkout / sample request
   /checkout/payment         QR proof upload
@@ -127,7 +138,7 @@ Auth
 
 Customer
   /orders
-  /orders/[id]
+  /orders/[id]              Order detail + refund request form
   /profile
   /notifications
 
@@ -138,6 +149,8 @@ Admin
   /admin/products
   /admin/products/new
   /admin/products/[id]/edit
+  /admin/reviews
+  /admin/refunds
   /admin/customers
   /admin/customers/[id]
   /admin/media
@@ -146,6 +159,7 @@ Admin
   /admin/blog
   /admin/blog/new
   /admin/blog/[id]/edit
+  /admin/blog/comments
   /admin/cms
   /admin/cms/[sectionKey]
   /admin/cms/pages
@@ -153,8 +167,9 @@ Admin
   /admin/cms/pages/[id]/edit
   /admin/cms/menus
   /admin/seo
+  /admin/compliance
   /admin/analytics           Commerce + first-party traffic analytics
-  /admin/settings              Modules, localization, currency, site, payment, shipping, notifications, OTP
+  /admin/settings              Tabbed modules, brand, providers, localization, commerce, notifications, OTP
 ```
 
 ---
@@ -184,6 +199,12 @@ Customer
   /orders
   -> /orders/[id]
   -> OrderTimeline
+  -> optional refund request form for eligible paid orders
+
+Admin
+  /admin/refunds
+  -> requested / under_review / approved / rejected / processed
+  -> refund_events audit history
 ```
 
 Important audit note:
@@ -258,6 +279,11 @@ users
   │   │   └── product_variants -> products
   │   └── order_status_history
   ├── blog_posts
+  ├── blog_comments
+  ├── blog_comment_likes
+  ├── product_reviews
+  ├── product_review_likes
+  ├── refund_requests
   ├── media
   ├── notifications
   ├── notification_deliveries
@@ -266,10 +292,22 @@ users
 
 products
   ├── product_variants
-  └── product_images
+  ├── product_categories
+  ├── product_images
+  └── product_reviews
 
 blog_categories
   └── blog_posts
+      └── blog_comments
+
+content_tags
+refund_requests
+  └── refund_events
+product_reviews
+  └── product_review_likes
+blog_comments
+  └── blog_comment_likes
+compliance_checks
 
 site_config
 cms_sections
@@ -351,12 +389,15 @@ Current:
 
 - ✅ `/home` reads enabled sections.
 - ✅ `/admin/cms` lists/toggles sections.
-- ✅ `/admin/cms/[sectionKey]` edits enabled state, sort order, and section JSON config.
+- ✅ `/admin/cms/[sectionKey]` edits enabled state, sort order, and structured section content, with JSON as advanced fallback.
 - ✅ `/admin/cms/pages` creates and edits published CMS pages at `/{slug}`.
+- ✅ CMS page editor includes on-page SEO, module visibility, policy type, canonical/robots fields, and OG crop upload.
+- ✅ Policy pages are seeded for terms, privacy, refund, shipping, and cookie coverage.
 - ✅ `/admin/cms/menus` manages landing header, other-pages header, and footer menus with drag-and-drop ordering.
 - ✅ Available menu targets include CMS pages, blog listing/posts, shop listing/products, landing anchors, and external links.
 - ✅ `/admin/seo` manages sitewide SEO, analytics tags, verification codes, route overrides, internal links, and search submission logs.
 - ✅ `/admin/settings` owns core brand logos: admin panel logo 144x144 and website logo 360x96 via `MediaUploader`.
+- ✅ `/admin/settings` is tabbed and logo upload previews have clear/reset controls.
 
 ---
 
@@ -367,11 +408,15 @@ AdminSidebar
 ├── Dashboard      ✅
 ├── Orders         ✅
 ├── Products       ✅
+├── Refunds        ✅
+├── Reviews        ✅
 ├── Customers      ✅
 ├── Blog           ✅
+├── Blog Comments  ✅
 ├── Media          ✅
 ├── CMS            ✅ list/toggle/detail editor
 ├── WhatsApp       ✅
+├── Compliance     ✅
 ├── Analytics      ✅
 └── Settings       ✅
 ```
@@ -380,8 +425,9 @@ Current module-aware sidebar:
 
 - Core always shows Dashboard and Settings.
 - CMS nav shows only if CMS module enabled.
-- E-Commerce nav shows Orders, Products, and Customers only if E-Commerce enabled.
-- Blog nav shows only if Blog enabled.
+- E-Commerce nav shows Orders, Products, Reviews, Refunds, Customers, and Analytics only if E-Commerce enabled.
+- Blog nav shows Blog and Blog Comments only if Blog enabled.
+- Compliance is a Core admin page and hides module-specific policy/checklist rows when a module is disabled.
 - Payment gateway controls show under Settings.
 
 ---
@@ -488,6 +534,8 @@ Next:
 | WhatsApp Meta credentials | ❌ Production setup pending |
 | Sitemap/robots | ✅ Built |
 | Secret config storage | ✅ Encrypted at rest with app secret |
+| GDPR/DPDP checklist evidence | ✅ Admin tracking built; final legal review still required |
+| Refund/review/comment moderation | ✅ Built with approval queues and abuse filter |
 | Web Push send provider | 🟡 Provider/runtime decision pending |
 | SMS/Telegram providers | 🟡 Provider selection pending |
 
@@ -495,9 +543,13 @@ Next:
 
 ## 13. Current Build Verification
 
-Latest local verification:
+Latest local verification on 2026-06-02:
 
-- ✅ `npm run verify`
+- ✅ `npm run db:generate`
+- ✅ `set -a; source .env.local; set +a; npm run db:migrate`
+- ✅ `npm run db:seed`
+- ✅ `npm run typecheck`
+- ✅ `npm run unit`
 - ✅ `npm run build`
 - ✅ `npm run smoke`
 - ✅ `npm run e2e`
@@ -509,6 +561,7 @@ Latest local verification:
 - ✅ Live E2E verifies WhatsApp page, manual log, order resend log, and order resend disabled when E-Commerce is disabled.
 - ✅ Live E2E verifies forgot/reset password, email verification, notifications, sitemap, and robots.
 - ✅ Live E2E verifies real order creation, signed proof upload, stock decrement, admin payment verification, and shipping.
+- ✅ Build includes `/admin/blog/comments`, `/admin/reviews`, `/admin/refunds`, `/admin/compliance`, blog comments, product reviews, and refund APIs.
 
 ---
 
@@ -521,7 +574,8 @@ Latest local verification:
 5. ✅ Phase E: WhatsApp operations.
 6. ✅ Phase F: Auth recovery, notification/OTP, sitemap, robots, rate limiting.
 7. ✅ Phase F.2: Security/production hardening for current launch surface.
-8. 🟡 Phase A.2/G: Future heavy-module isolation rules and launch switch from `/home` to `/`.
+8. ✅ Phase G: CMS/SEO/editor polish, comments, reviews, refunds, compliance, and export workflows.
+9. 🟡 Phase A.2/H: Future heavy-module isolation rules and launch switch from `/home` to `/`.
 
 After each completed phase, update:
 

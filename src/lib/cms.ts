@@ -2,6 +2,7 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { CACHE_TTL, withCache } from "./cache";
 import { db } from "./db";
 import { blogPosts, cmsMenuItems, cmsMenus, cmsPages, products } from "./db/schema";
+import { getModuleState, type ModuleKey } from "./modules";
 
 export const MENU_KEYS = ["landing_header", "site_header", "footer"] as const;
 export type MenuKey = typeof MENU_KEYS[number];
@@ -26,18 +27,23 @@ export interface AvailableMenuTarget {
 
 export async function getPublicMenus(): Promise<PublicMenus> {
   return withCache("query:cms:menus:public", CACHE_TTL.CONFIG, async () => {
-    const [menus, items] = await Promise.all([
+    const [menus, items, pages, modules] = await Promise.all([
       db.select().from(cmsMenus).where(eq(cmsMenus.isEnabled, true)),
       db.select().from(cmsMenuItems)
         .where(eq(cmsMenuItems.isEnabled, true))
         .orderBy(asc(cmsMenuItems.sortOrder), asc(cmsMenuItems.label)),
+      db.select({ id: cmsPages.id, moduleKey: cmsPages.moduleKey }).from(cmsPages),
+      getModuleState(),
     ]);
 
     const menuById = new Map(menus.map((menu) => [menu.id, menu]));
+    const pageById = new Map(pages.map((page) => [page.id, page]));
     const result = emptyMenus();
     for (const item of items) {
       const menu = menuById.get(item.menuId);
       if (!menu || !isMenuKey(menu.menuKey)) continue;
+      const page = item.pageId ? pageById.get(item.pageId) : null;
+      if (page && page.moduleKey !== "core" && !modules[page.moduleKey as ModuleKey]) continue;
       result[menu.menuKey].push({
         id: item.id,
         label: item.label,

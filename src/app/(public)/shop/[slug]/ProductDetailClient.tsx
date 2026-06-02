@@ -8,6 +8,7 @@ import { useCart } from "@/components/shop/Cart/CartContext";
 import { useToast } from "@/components/ui/Toast";
 import { ProductCard } from "@/components/shop/ProductCard";
 import type { ProductWithVariants } from "@/types";
+import { ProductReviews } from "./ProductReviews";
 import styles from "./product-detail.module.css";
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -288,6 +289,8 @@ export default function ProductDetailClient({ product, related, canEdit = false 
             />
           </div>
         )}
+
+        <ProductReviews slug={product.slug} />
 
         {/* Related products */}
         {related.length > 0 && (
