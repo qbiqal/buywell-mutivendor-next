@@ -39,7 +39,7 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = "520px", cl
         {title && (
           <div className={styles.header}>
             <h3 className={styles.title}>{title}</h3>
-            <button className={styles.closeBtn} onClick={onClose} aria-label="Close modal">✕</button>
+            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close modal">✕</button>
           </div>
         )}
         <div className={styles.body}>{children}</div>

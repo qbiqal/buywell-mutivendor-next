@@ -19,6 +19,7 @@ interface LandingClientProps {
   featuredProducts: Array<{ id: string; name: string; slug: string; category: string; description: string | null }>;
   testimonials: Array<{ id: string; name: string; content: string; mediaUrl: string | null; mediaType: string | null }>;
   recentPosts: Array<{ id: string; title: string; slug: string; excerpt: string | null; coverImageUrl: string | null; publishedAt: Date | null }>;
+  latestProducts: Array<{ id: string; name: string; slug: string; category: string; subCategory: string | null; description: string | null; imageUrl: string | null | undefined }>;
 }
 
 const A = "/landing-assets";
@@ -182,7 +183,7 @@ function RevealArticle({ children, className, delay = 0, style }: RevealProps) {
   );
 }
 
-export default function LandingClient({ sections, siteConfig, navItems = [], featuredProducts, testimonials, recentPosts }: LandingClientProps) {
+export default function LandingClient({ sections, siteConfig, navItems = [], featuredProducts, testimonials, recentPosts, latestProducts }: LandingClientProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [formSent, setFormSent] = useState(false);
@@ -570,6 +571,38 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
           </div>
         </div>
       </section>
+
+      {latestProducts.length > 0 && (
+        <section className={`${styles.section} ${styles.latestProductsSection}`}>
+          <div className={styles.container}>
+            <Reveal style={{ maxWidth: 600 }}>
+              <p className={styles.eyebrow}>New Arrivals</p>
+              <h2 className={styles.sectionTitle}>Latest <em>Products</em></h2>
+              <p className={styles.sectionLead}>Discover our freshest additions — pure, natural products sourced straight from the heartland of India.</p>
+            </Reveal>
+            <div className={styles.latestCarouselWrap}>
+              {latestProducts.map((product) => (
+                <Link key={product.id} href={`/shop/${product.slug}`} className={styles.latestProductCard}>
+                  <div className={styles.latestProductImg}>
+                    {product.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={product.imageUrl} alt={product.name} loading="lazy" />
+                    ) : (
+                      <div className={styles.latestProductImgFallback}>🍯</div>
+                    )}
+                  </div>
+                  <div className={styles.latestProductBody}>
+                    <span className={styles.latestProductCat}>{product.subCategory ?? product.category}</span>
+                    <h3 className={styles.latestProductName}>{product.name}</h3>
+                    {product.description && <p className={styles.latestProductDesc}>{product.description}</p>}
+                    <span className={styles.latestProductCta}>Shop Now <span className="material-icons">arrow_forward</span></span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className={`${styles.section} ${styles.sampleBanner}`}>
         <div className={styles.container}>

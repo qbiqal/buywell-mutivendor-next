@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { cmsSections, products, testimonials, blogPosts } from "@/lib/db/schema";
+import { cmsSections, products, testimonials, blogPosts, productImages } from "@/lib/db/schema";
 import { eq, and, asc, desc } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
 import { getAllSiteConfig } from "@/lib/config";
@@ -11,7 +11,7 @@ import LandingClient from "./LandingClient";
 export default async function LandingPage() {
   if (!(await isModuleEnabled("cms"))) redirect("/login");
 
-  const [sections, siteConfig, menus, featuredProducts, featuredTestimonials, recentPosts] = await Promise.all([
+  const [sections, siteConfig, menus, featuredProducts, featuredTestimonials, recentPosts, latestProductsRaw] = await Promise.all([
     withCache("query:cms:sections:enabled", CACHE_TTL.CONFIG, async () =>
       db.select().from(cmsSections).where(eq(cmsSections.isEnabled, true)).orderBy(asc(cmsSections.sortOrder))
     ),
@@ -27,6 +27,26 @@ export default async function LandingPage() {
       db.select({ id: blogPosts.id, title: blogPosts.title, slug: blogPosts.slug, excerpt: blogPosts.excerpt, coverImageUrl: blogPosts.coverImageUrl, publishedAt: blogPosts.publishedAt })
         .from(blogPosts).where(eq(blogPosts.status, "published")).orderBy(desc(blogPosts.publishedAt)).limit(3)
     ),
+    withCache("query:products:latest:landing", CACHE_TTL.QUERY, async () => {
+      const rows = await db.select({
+        id:          products.id,
+        name:        products.name,
+        slug:        products.slug,
+        category:    products.category,
+        subCategory: products.subCategory,
+        description: products.description,
+        imageUrl:    productImages.url,
+      })
+      .from(products)
+      .leftJoin(productImages, and(
+        eq(productImages.productId, products.id),
+        eq(productImages.isPrimary, true),
+      ))
+      .where(eq(products.isActive, true))
+      .orderBy(desc(products.createdAt));
+      const seen = new Set<string>();
+      return rows.filter((r) => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+    }),
   ]);
 
   const sectionMap: Record<string, Record<string, unknown>> = {};
@@ -42,6 +62,7 @@ export default async function LandingPage() {
       featuredProducts={featuredProducts}
       testimonials={featuredTestimonials}
       recentPosts={recentPosts}
+      latestProducts={latestProductsRaw}
     />
   );
 }
