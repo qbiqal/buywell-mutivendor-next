@@ -4,11 +4,12 @@ import { vendors, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { createAdminGuard } from "@/lib/middleware";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await createAdminGuard()(req);
   if (authResult) return authResult;
 
-  const id = parseInt(params.id, 10);
+  const { id: idStr } = await params;
+  const id = parseInt(idStr, 10);
   if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   const [row] = await db.select({
@@ -25,11 +26,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json({ success: true, vendor: { ...row.vendor, userEmail: row.userEmail, userName: row.userName } });
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await createAdminGuard()(req);
   if (authResult) return authResult;
 
-  const id = parseInt(params.id, 10);
+  const { id: idStr } = await params;
+  const id = parseInt(idStr, 10);
   if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   const body = await req.json();
@@ -73,11 +75,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ success: true, vendor: updated });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await createAdminGuard()(req);
   if (authResult) return authResult;
 
-  const id = parseInt(params.id, 10);
+  const { id: idStr } = await params;
+  const id = parseInt(idStr, 10);
   if (isNaN(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
 
   const [vendor] = await db.select({ userId: vendors.userId }).from(vendors).where(eq(vendors.id, id)).limit(1);

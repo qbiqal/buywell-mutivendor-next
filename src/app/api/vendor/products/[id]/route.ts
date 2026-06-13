@@ -12,14 +12,15 @@ async function getVendorProduct(vendorId: number, productId: string) {
   return product ?? null;
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await createVendorGuard()(req);
   if (authResult) return authResult;
 
   const vendor = await getVendorForUser(req);
   if (!vendor) return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
 
-  const product = await getVendorProduct(vendor.id, params.id);
+  const { id } = await params;
+  const product = await getVendorProduct(vendor.id, id);
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
   const [images, variants] = await Promise.all([
@@ -30,14 +31,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json({ success: true, product: { ...product, images, variants } });
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await createVendorGuard()(req);
   if (authResult) return authResult;
 
   const vendor = await getVendorForUser(req);
   if (!vendor) return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
 
-  const product = await getVendorProduct(vendor.id, params.id);
+  const { id } = await params;
+  const product = await getVendorProduct(vendor.id, id);
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
   const body = await req.json();
@@ -52,17 +54,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ success: true, product: updated });
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const authResult = await createVendorGuard()(req);
   if (authResult) return authResult;
 
   const vendor = await getVendorForUser(req);
   if (!vendor) return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
 
-  const product = await getVendorProduct(vendor.id, params.id);
+  const { id } = await params;
+  const product = await getVendorProduct(vendor.id, id);
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
-  // Soft-delete: archive the product
   await db.update(products).set({ isActive: false, updatedAt: new Date() }).where(eq(products.id, product.id));
   return NextResponse.json({ success: true });
 }
