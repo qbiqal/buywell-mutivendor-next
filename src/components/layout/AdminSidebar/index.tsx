@@ -24,7 +24,7 @@ interface AdminSidebarProps {
   siteName?: string;
 }
 
-export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS, viewSiteHref = "/", logoUrl = "", siteName = "APRAS" }: AdminSidebarProps) {
+export function AdminSidebar({ pendingOrders = 0, navItems = FALLBACK_NAV_ITEMS, viewSiteHref = "/", logoUrl = "", siteName = "BuyWell" }: AdminSidebarProps) {
   const pathname  = usePathname();
   const router    = useRouter();
   const [collapsed, setCollapsed] = useState(false);

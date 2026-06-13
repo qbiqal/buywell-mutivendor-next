@@ -49,6 +49,7 @@ export const APP_MODULES: AppModule[] = [
     canDisable: true,
     defaultEnabled: true,
     adminNav: [
+      { label: "Homepage", href: "/admin/homepage", icon: "🏠" },
       { label: "CMS", href: "/admin/cms", icon: "🎨" },
       { label: "CMS Pages", href: "/admin/cms/pages", icon: "📄" },
       { label: "Menus", href: "/admin/cms/menus", icon: "🧭" },

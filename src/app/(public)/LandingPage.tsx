@@ -1,32 +1,63 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { cmsSections, products, testimonials, blogPosts, productImages } from "@/lib/db/schema";
-import { eq, and, asc, desc } from "drizzle-orm";
+import { homepageBanners, products, productCategories, testimonials, productImages } from "@/lib/db/schema";
+import { eq, and, asc, desc, gt, lt, or, isNull } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
-import { getAllSiteConfig } from "@/lib/config";
-import { getPublicMenus } from "@/lib/cms";
 import { isModuleEnabled } from "@/lib/modules";
-import LandingClient from "./LandingClient";
+import { HomepageClient } from "./HomepageClient";
 
 export default async function LandingPage() {
   if (!(await isModuleEnabled("cms"))) redirect("/login");
 
-  const [sections, siteConfig, menus, featuredProducts, featuredTestimonials, recentPosts, latestProductsRaw] = await Promise.all([
-    withCache("query:cms:sections:enabled", CACHE_TTL.CONFIG, async () =>
-      db.select().from(cmsSections).where(eq(cmsSections.isEnabled, true)).orderBy(asc(cmsSections.sortOrder))
+  const now = new Date();
+
+  const [heroBanners, promoBanners, categories, featuredProducts, latestProductsRaw, featuredTestimonials] = await Promise.all([
+    withCache("query:cms:banners:hero", CACHE_TTL.QUERY, async () =>
+      db.select().from(homepageBanners).where(
+        and(
+          eq(homepageBanners.isActive, true),
+          eq(homepageBanners.bannerType, "hero"),
+          or(isNull(homepageBanners.startsAt), lt(homepageBanners.startsAt, now)),
+          or(isNull(homepageBanners.endsAt), gt(homepageBanners.endsAt, now)),
+        )
+      ).orderBy(asc(homepageBanners.sortOrder)).limit(8)
     ),
-    getAllSiteConfig("general"),
-    getPublicMenus(),
+
+    withCache("query:cms:banners:promo", CACHE_TTL.QUERY, async () =>
+      db.select().from(homepageBanners).where(
+        and(
+          eq(homepageBanners.isActive, true),
+          eq(homepageBanners.bannerType, "promo"),
+          or(isNull(homepageBanners.startsAt), lt(homepageBanners.startsAt, now)),
+          or(isNull(homepageBanners.endsAt), gt(homepageBanners.endsAt, now)),
+        )
+      ).orderBy(asc(homepageBanners.sortOrder)).limit(2)
+    ),
+
+    withCache("query:categories:active", CACHE_TTL.QUERY, async () =>
+      db.select().from(productCategories)
+        .where(and(eq(productCategories.isActive, true), isNull(productCategories.parentId)))
+        .orderBy(asc(productCategories.sortOrder))
+        .limit(12)
+    ),
+
     withCache("query:products:featured", CACHE_TTL.QUERY, async () =>
-      db.select().from(products).where(and(eq(products.isActive, true), eq(products.isFeatured, true))).orderBy(asc(products.sortOrder)).limit(3)
+      db.select({
+        id:          products.id,
+        name:        products.name,
+        slug:        products.slug,
+        category:    products.category,
+        subCategory: products.subCategory,
+        description: products.description,
+        imageUrl:    productImages.url,
+      })
+      .from(products)
+      .leftJoin(productImages, and(eq(productImages.productId, products.id), eq(productImages.isPrimary, true)))
+      .where(and(eq(products.isActive, true), eq(products.isFeatured, true)))
+      .orderBy(asc(products.sortOrder))
+      .limit(6)
     ),
-    withCache("query:testimonials:featured", CACHE_TTL.QUERY, async () =>
-      db.select().from(testimonials).where(and(eq(testimonials.isFeatured, true), eq(testimonials.isApproved, true))).limit(3)
-    ),
-    withCache("query:blog:recent", CACHE_TTL.QUERY, async () =>
-      db.select({ id: blogPosts.id, title: blogPosts.title, slug: blogPosts.slug, excerpt: blogPosts.excerpt, coverImageUrl: blogPosts.coverImageUrl, publishedAt: blogPosts.publishedAt })
-        .from(blogPosts).where(eq(blogPosts.status, "published")).orderBy(desc(blogPosts.publishedAt)).limit(3)
-    ),
+
     withCache("query:products:latest:landing", CACHE_TTL.QUERY, async () => {
       const rows = await db.select({
         id:          products.id,
@@ -38,31 +69,29 @@ export default async function LandingPage() {
         imageUrl:    productImages.url,
       })
       .from(products)
-      .leftJoin(productImages, and(
-        eq(productImages.productId, products.id),
-        eq(productImages.isPrimary, true),
-      ))
+      .leftJoin(productImages, and(eq(productImages.productId, products.id), eq(productImages.isPrimary, true)))
       .where(eq(products.isActive, true))
-      .orderBy(desc(products.createdAt));
+      .orderBy(desc(products.createdAt))
+      .limit(16);
       const seen = new Set<string>();
       return rows.filter((r) => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
     }),
+
+    withCache("query:testimonials:featured", CACHE_TTL.QUERY, async () =>
+      db.select().from(testimonials)
+        .where(and(eq(testimonials.isFeatured, true), eq(testimonials.isApproved, true)))
+        .limit(3)
+    ),
   ]);
 
-  const sectionMap: Record<string, Record<string, unknown>> = {};
-  for (const s of sections) {
-    sectionMap[s.sectionKey] = (s.config ?? {}) as Record<string, unknown>;
-  }
-
   return (
-    <LandingClient
-      sections={sectionMap}
-      siteConfig={siteConfig}
-      navItems={menus.landing_header}
+    <HomepageClient
+      heroBanners={heroBanners}
+      promoBanners={promoBanners}
+      categories={categories}
       featuredProducts={featuredProducts}
-      testimonials={featuredTestimonials}
-      recentPosts={recentPosts}
       latestProducts={latestProductsRaw}
+      testimonials={featuredTestimonials}
     />
   );
 }

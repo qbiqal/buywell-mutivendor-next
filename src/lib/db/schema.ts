@@ -578,6 +578,26 @@ export const orderSequence = pgTable("order_sequence", {
   lastId: integer("last_id").default(0).notNull(),
 });
 
+// ── Homepage Banners ───────────────────────────────────────────────────────────
+// CMS-managed hero/promo banners for the multivendor homepage slider
+
+export const homepageBanners = pgTable("homepage_banners", {
+  id:            serial("id").primaryKey(),
+  title:         text("title"),
+  subtitle:      text("subtitle"),
+  imageUrl:      text("image_url").notNull(),
+  mobileImageUrl:text("mobile_image_url"),
+  linkUrl:       text("link_url"),
+  linkText:      text("link_text"),
+  bannerType:    text("banner_type").default("hero").notNull(), // hero | promo | category
+  sortOrder:     integer("sort_order").default(0).notNull(),
+  isActive:      boolean("is_active").default(true).notNull(),
+  startsAt:      timestamp("starts_at", { withTimezone: true }),
+  endsAt:        timestamp("ends_at", { withTimezone: true }),
+  createdAt:     timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt:     timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // ── Type Exports ───────────────────────────────────────────────────────────────
 
 export type User              = typeof users.$inferSelect;
@@ -620,3 +640,5 @@ export type NotificationWalletTransaction = typeof notificationWalletTransaction
 export type OtpCode           = typeof otpCodes.$inferSelect;
 export type PushSubscription  = typeof pushSubscriptions.$inferSelect;
 export type WhatsappLog       = typeof whatsappLogs.$inferSelect;
+export type HomepageBanner    = typeof homepageBanners.$inferSelect;
+export type NewHomepageBanner = typeof homepageBanners.$inferInsert;

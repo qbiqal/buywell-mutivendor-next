@@ -1,17 +1,15 @@
-import ComingSoon from "@/components/ComingSoon";
+import LandingPage from "./(public)/LandingPage";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "BuyWell — India's Multivendor Marketplace | Coming Soon",
+  title: "BuyWell — India's Multivendor Marketplace",
   description:
-    "BuyWell is India's trusted multivendor marketplace. Shop from thousands of verified sellers. Launching soon at buywell.in.",
+    "Shop from thousands of verified sellers across India. Best prices, fast delivery, and secure payments on BuyWell.",
   openGraph: {
-    title: "BuyWell — Coming Soon",
-    description: "India's next multivendor marketplace. Coming soon.",
+    title: "BuyWell — India's Multivendor Marketplace",
+    description: "Shop from thousands of verified sellers across India.",
     url: "https://buywell.in",
   },
 };
 
-export default function HomePage() {
-  return <ComingSoon />;
-}
+export default LandingPage;

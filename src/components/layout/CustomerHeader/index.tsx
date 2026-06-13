@@ -39,7 +39,7 @@ export function CustomerHeader({
   cartSlot = null,
   topOffset = 0,
   logoUrl = "",
-  siteName = "APRAS Naturals",
+  siteName = "BuyWell",
 }: CustomerHeaderProps) {
   const pathname = usePathname();
   const router   = useRouter();
@@ -88,7 +88,7 @@ export function CustomerHeader({
           ) : (
             <>
               <LogoIcon size={36} />
-              <span>APRAS <span className={styles.logoAccent}>Naturals</span></span>
+              <span>Buy<span className={styles.logoAccent}>Well</span></span>
             </>
           )}
         </Link>
