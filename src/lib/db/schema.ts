@@ -71,6 +71,7 @@ export const products = pgTable("products", {
   noIndex:      boolean("no_index").default(false).notNull(),
   noFollow:     boolean("no_follow").default(false).notNull(),
   tags:         text("tags").array(),
+  vendorId:     integer("vendor_id"),  // FK added after vendors table is defined
   createdAt:    timestamp("created_at").defaultNow().notNull(),
   updatedAt:    timestamp("updated_at").defaultNow().notNull(),
 });
@@ -578,6 +579,93 @@ export const orderSequence = pgTable("order_sequence", {
   lastId: integer("last_id").default(0).notNull(),
 });
 
+// ── Vendors ────────────────────────────────────────────────────────────────────
+
+export const vendors = pgTable("vendors", {
+  id:               serial("id").primaryKey(),
+  userId:           text("user_id").notNull().references(() => users.id),
+  storeName:        text("store_name").notNull(),
+  storeSlug:        text("store_slug").notNull().unique(),
+  storeDescription: text("store_description"),
+  logoUrl:          text("logo_url"),
+  bannerUrl:        text("banner_url"),
+  phone:            text("phone"),
+  email:            text("email"),
+  address:          text("address"),
+  city:             text("city"),
+  state:            text("state"),
+  pincode:          text("pincode"),
+  gstin:            text("gstin"),
+  pan:              text("pan"),
+  bankAccount:      text("bank_account"),
+  bankIfsc:         text("bank_ifsc"),
+  bankName:         text("bank_name"),
+  accountHolder:    text("account_holder"),
+  status:           text("status").default("pending").notNull(), // pending | approved | suspended | rejected
+  commissionOverride: integer("commission_override"),             // basis points; NULL = use global
+  totalSales:       integer("total_sales").default(0).notNull(), // paise, denormalised
+  totalOrders:      integer("total_orders").default(0).notNull(),
+  rating:           text("rating").default("0.00").notNull(),
+  isFeatured:       boolean("is_featured").default(false).notNull(),
+  metaTitle:        text("meta_title"),
+  metaDescription:  text("meta_description"),
+  approvedAt:       timestamp("approved_at", { withTimezone: true }),
+  approvedBy:       text("approved_by").references(() => users.id),
+  rejectedAt:       timestamp("rejected_at", { withTimezone: true }),
+  rejectedReason:   text("rejected_reason"),
+  createdAt:        timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt:        timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const orderVendorSplits = pgTable("order_vendor_splits", {
+  id:        serial("id").primaryKey(),
+  orderId:   text("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  vendorId:  integer("vendor_id").notNull().references(() => vendors.id),
+  subtotal:  integer("subtotal").notNull(),
+  tax:       integer("tax").default(0).notNull(),
+  shipping:  integer("shipping").default(0).notNull(),
+  status:    text("status").default("pending").notNull(), // pending | confirmed | shipped | delivered | cancelled
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const vendorPayouts = pgTable("vendor_payouts", {
+  id:               serial("id").primaryKey(),
+  vendorId:         integer("vendor_id").notNull().references(() => vendors.id),
+  amount:           integer("amount").notNull(),  // paise
+  status:           text("status").default("pending").notNull(), // pending | processing | paid | failed | cancelled
+  paymentMethod:    text("payment_method"),
+  paymentReference: text("payment_reference"),
+  notes:            text("notes"),
+  initiatedBy:      text("initiated_by").references(() => users.id),
+  initiatedAt:      timestamp("initiated_at", { withTimezone: true }).defaultNow().notNull(),
+  paidAt:           timestamp("paid_at", { withTimezone: true }),
+  createdAt:        timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt:        timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const vendorCommissions = pgTable("vendor_commissions", {
+  id:               serial("id").primaryKey(),
+  orderItemId:      text("order_item_id").notNull().references(() => orderItems.id),
+  vendorId:         integer("vendor_id").notNull().references(() => vendors.id),
+  orderId:          text("order_id").notNull().references(() => orders.id),
+  grossAmount:      integer("gross_amount").notNull(),
+  commissionRate:   integer("commission_rate").notNull(), // basis points
+  commissionAmount: integer("commission_amount").notNull(),
+  vendorPayout:     integer("vendor_payout").notNull(),
+  status:           text("status").default("pending").notNull(), // pending | cleared | on_hold | disputed
+  payoutId:         integer("payout_id").references(() => vendorPayouts.id),
+  createdAt:        timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt:        timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const vendorPayoutItems = pgTable("vendor_payout_items", {
+  id:           serial("id").primaryKey(),
+  payoutId:     integer("payout_id").notNull().references(() => vendorPayouts.id),
+  commissionId: integer("commission_id").notNull().references(() => vendorCommissions.id),
+  amount:       integer("amount").notNull(),
+});
+
 // ── Homepage Banners ───────────────────────────────────────────────────────────
 // CMS-managed hero/promo banners for the multivendor homepage slider
 
@@ -640,5 +728,11 @@ export type NotificationWalletTransaction = typeof notificationWalletTransaction
 export type OtpCode           = typeof otpCodes.$inferSelect;
 export type PushSubscription  = typeof pushSubscriptions.$inferSelect;
 export type WhatsappLog       = typeof whatsappLogs.$inferSelect;
-export type HomepageBanner    = typeof homepageBanners.$inferSelect;
-export type NewHomepageBanner = typeof homepageBanners.$inferInsert;
+export type HomepageBanner        = typeof homepageBanners.$inferSelect;
+export type NewHomepageBanner     = typeof homepageBanners.$inferInsert;
+export type Vendor                = typeof vendors.$inferSelect;
+export type NewVendor             = typeof vendors.$inferInsert;
+export type OrderVendorSplit      = typeof orderVendorSplits.$inferSelect;
+export type VendorCommission      = typeof vendorCommissions.$inferSelect;
+export type VendorPayout          = typeof vendorPayouts.$inferSelect;
+export type VendorPayoutItem      = typeof vendorPayoutItems.$inferSelect;

@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 export const COOKIE_NAME = "an_token";
 const JWT_ALG = "HS256";
 
-export type UserRole = "customer" | "admin" | "qbiqal";
+export type UserRole = "customer" | "admin" | "qbiqal" | "vendor";
 
 export interface JWTPayload {
   sub: string;      // userId
