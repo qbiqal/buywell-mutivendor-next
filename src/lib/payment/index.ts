@@ -8,6 +8,7 @@
 
 import type { PaymentGateway } from "./types";
 import { offlineQrGateway } from "./offline-qr";
+import { razorpayGateway } from "./razorpay";
 import { getSiteConfig } from "../config";
 import { AppError } from "../errors";
 
@@ -15,8 +16,8 @@ export type GatewayName = "offline_qr" | "razorpay" | "stripe";
 
 const GATEWAYS: Record<string, PaymentGateway> = {
   offline_qr: offlineQrGateway,
-  // razorpay: razorpayGateway,   ← add later
-  // stripe:   stripeGateway,     ← add later
+  razorpay:   razorpayGateway,
+  // stripe:  stripeGateway,   ← add later
 };
 
 export async function getPaymentGateway(name?: GatewayName): Promise<PaymentGateway> {

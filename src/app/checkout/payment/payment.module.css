@@ -108,3 +108,15 @@
   color: var(--text-secondary); margin-top: 12px;
 }
 .whatsappNote a { color: var(--amber); font-weight: 600; text-decoration: none; }
+
+/* Razorpay section */
+.rzpSection { padding: 28px 40px 0; }
+.rzpSub { text-align: center; font-size: 0.875rem; color: var(--text-secondary); margin: 0.75rem 0 1.5rem; }
+.orDivider {
+  display: flex; align-items: center; gap: 1rem;
+  color: var(--text-secondary); font-size: 0.8125rem; margin-bottom: 0.5rem;
+}
+.orDivider::before, .orDivider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+@media (max-width: 600px) {
+  .rzpSection { padding: 20px 20px 0; }
+}

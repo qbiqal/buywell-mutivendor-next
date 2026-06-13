@@ -65,6 +65,7 @@ const EXTERNAL_KEY_SETTINGS = [
   "payment_razorpay_enabled",
   "payment_razorpay_key_id",
   "payment_razorpay_key_secret",
+  "payment_razorpay_webhook_secret",
   "payment_stripe_enabled",
   "payment_stripe_publishable_key",
   "payment_stripe_secret_key",
@@ -377,9 +378,10 @@ export default function AdminSettingsClient() {
               </label>
             </div>
             <div className={styles.formRow}>
-              <Input label="Razorpay Key ID" type="password" value={config.payment_razorpay_key_id ?? ""} onChange={set("payment_razorpay_key_id")} placeholder="RAZORPAY_KEY_ID" autoComplete="off" />
-              <Input label="Razorpay Key Secret" type="password" value={config.payment_razorpay_key_secret ?? ""} onChange={set("payment_razorpay_key_secret")} placeholder="RAZORPAY_KEY_SECRET" autoComplete="off" />
+              <Input label="Razorpay Key ID" type="password" value={config.payment_razorpay_key_id ?? ""} onChange={set("payment_razorpay_key_id")} placeholder="rzp_live_..." autoComplete="off" />
+              <Input label="Razorpay Key Secret" type="password" value={config.payment_razorpay_key_secret ?? ""} onChange={set("payment_razorpay_key_secret")} placeholder="Razorpay key secret" autoComplete="off" />
             </div>
+            <Input label="Razorpay Webhook Secret" type="password" value={config.payment_razorpay_webhook_secret ?? ""} onChange={set("payment_razorpay_webhook_secret")} placeholder="Razorpay webhook secret" autoComplete="off" />
             <div className={styles.formRow}>
               <Input label="Stripe Publishable Key" value={config.payment_stripe_publishable_key ?? ""} onChange={set("payment_stripe_publishable_key")} placeholder="pk_..." />
               <Input label="Stripe Secret Key" type="password" value={config.payment_stripe_secret_key ?? ""} onChange={set("payment_stripe_secret_key")} placeholder="sk_..." autoComplete="off" />

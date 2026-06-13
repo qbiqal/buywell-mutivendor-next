@@ -24,9 +24,12 @@ export default async function PaymentPage() {
     }
   }
 
-  const qrUrl      = (await getSiteConfig("payment_qr_url")) ?? "";
-  const upiId      = (await getSiteConfig("payment_upi_id")) ?? "";
-  const companyName = (await getSiteConfig("payment_company_name")) ?? "APRAS Naturals";
+  const qrUrl       = (await getSiteConfig("payment_qr_url")) ?? "";
+  const upiId       = (await getSiteConfig("payment_upi_id")) ?? "";
+  const companyName = (await getSiteConfig("payment_company_name")) ?? "BuyWell";
+  const razorpayEnabled = (await getSiteConfig("payment_razorpay_enabled")) === "true"
+    && !!(await getSiteConfig("payment_razorpay_key_id"));
+  const razorpayKeyId = (await getSiteConfig("payment_razorpay_key_id")) ?? "";
   const modules = await getModuleState();
   const navLinks = getEnabledPublicNav(modules);
 
@@ -34,7 +37,13 @@ export default async function PaymentPage() {
     <>
       <CustomerHeader user={user} navLinks={navLinks} ecommerceEnabled={modules.ecommerce} />
       <main style={{ paddingTop: "var(--header-height)" }}>
-        <PaymentClient qrUrl={qrUrl} upiId={upiId} companyName={companyName} />
+        <PaymentClient
+          qrUrl={qrUrl}
+          upiId={upiId}
+          companyName={companyName}
+          razorpayEnabled={razorpayEnabled}
+          razorpayKeyId={razorpayKeyId}
+        />
       </main>
     </>
   );

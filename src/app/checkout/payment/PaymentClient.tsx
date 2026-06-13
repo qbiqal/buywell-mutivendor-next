@@ -7,12 +7,14 @@ import { useToast } from "@/components/ui/Toast";
 import styles from "./payment.module.css";
 
 interface PaymentClientProps {
-  qrUrl:       string;
-  upiId:       string;
-  companyName: string;
+  qrUrl:            string;
+  upiId:            string;
+  companyName:      string;
+  razorpayEnabled?: boolean;
+  razorpayKeyId?:   string;
 }
 
-export default function PaymentClient({ qrUrl, upiId, companyName }: PaymentClientProps) {
+export default function PaymentClient({ qrUrl, upiId, companyName, razorpayEnabled = false, razorpayKeyId = "" }: PaymentClientProps) {
   const router   = useRouter();
   const params   = useSearchParams();
   const { success: showSuccess, error: showError } = useToast();
@@ -23,10 +25,78 @@ export default function PaymentClient({ qrUrl, upiId, companyName }: PaymentClie
   const totalPaise  = parseInt(params.get("total") ?? "0");
   const totalFormatted = `₹${(totalPaise / 100).toLocaleString("en-IN")}`;
 
-  const [file,      setFile]      = useState<File | null>(null);
-  const [preview,   setPreview]   = useState<string>("");
-  const [uploading, setUploading] = useState(false);
+  const [file,          setFile]          = useState<File | null>(null);
+  const [preview,       setPreview]       = useState<string>("");
+  const [uploading,     setUploading]     = useState(false);
+  const [rzpLoading,    setRzpLoading]    = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleRazorpay() {
+    setRzpLoading(true);
+    try {
+      // 1. Create Razorpay order on server
+      const sessionRes = await fetch("/api/payment/razorpay/create-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+      const session = await sessionRes.json();
+      if (!sessionRes.ok || !session.razorpayOrderId) {
+        showError(session.error ?? "Could not create Razorpay session");
+        return;
+      }
+
+      // 2. Load Razorpay checkout.js dynamically
+      await new Promise<void>((resolve, reject) => {
+        if ((window as unknown as Record<string, unknown>).Razorpay) { resolve(); return; }
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("Failed to load Razorpay"));
+        document.head.appendChild(script);
+      });
+
+      // 3. Open Razorpay modal
+      await new Promise<void>((resolve, reject) => {
+        const RazorpayClass = (window as unknown as Record<string, unknown>).Razorpay as new (opts: unknown) => { open(): void };
+        const rzp = new RazorpayClass({
+          key: razorpayKeyId,
+          order_id: session.razorpayOrderId,
+          amount: session.amount,
+          currency: "INR",
+          name: companyName,
+          description: `Order ${orderNumber}`,
+          prefill: { name: session.customerName, contact: session.customerPhone },
+          theme: { color: "#0d7659" },
+          handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+            try {
+              const verifyRes = await fetch("/api/payment/razorpay/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  orderId,
+                  razorpayOrderId:  response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                }),
+              });
+              const verifyData = await verifyRes.json();
+              if (!verifyData.success) { showError("Payment verification failed. Contact support."); reject(); return; }
+              showSuccess("Payment successful!", "Your order is confirmed.");
+              router.push(`/checkout/confirmation?orderNumber=${orderNumber}`);
+              resolve();
+            } catch { showError("Verification error. Contact support."); reject(); }
+          },
+        });
+        rzp.open();
+      });
+    } catch (err) {
+      showError("Razorpay error. Please try another method.");
+      console.error(err);
+    } finally {
+      setRzpLoading(false);
+    }
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -61,6 +131,23 @@ export default function PaymentClient({ qrUrl, upiId, companyName }: PaymentClie
             <h1 className={styles.title}>Complete Your Payment</h1>
             <p className={styles.sub}>Order <strong>{orderNumber}</strong> · Total: <strong>{totalFormatted}</strong></p>
           </div>
+
+          {/* Razorpay option */}
+          {razorpayEnabled && (
+            <div className={styles.rzpSection}>
+              <Button
+                variant="primary"
+                fullWidth
+                size="lg"
+                loading={rzpLoading}
+                onClick={handleRazorpay}
+              >
+                💳 Pay Now with Razorpay
+              </Button>
+              <p className={styles.rzpSub}>UPI · Card · Net Banking · Wallets — Instant confirmation</p>
+              <div className={styles.orDivider}><span>or pay via QR / bank transfer below</span></div>
+            </div>
+          )}
 
           <div className={styles.layout}>
             {/* Left — QR */}
