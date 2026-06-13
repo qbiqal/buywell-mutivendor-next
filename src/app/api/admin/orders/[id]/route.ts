@@ -6,6 +6,7 @@ import { createAdminGuard, getAuthPayload } from "@/lib/middleware";
 import { handleApiError, NotFoundError, ValidationError } from "@/lib/errors";
 import { notifyCustomerOrderConfirmed, notifyCustomerOrderShipped } from "@/lib/whatsapp";
 import { requireModuleApi } from "@/lib/modules";
+import { createVendorSplitsForOrder } from "@/lib/vendor-commission";
 
 export async function GET(
   req: NextRequest,
@@ -85,6 +86,7 @@ export async function PATCH(
 
     if (status === "confirmed" || (verifyPayment && !status)) {
       notifyCustomerOrderConfirmed({ phone, orderNumber: order.orderNumber, customerName: name }).catch(() => {});
+      createVendorSplitsForOrder(id).catch(() => {});
     }
     if (status === "shipped" && phone) {
       notifyCustomerOrderShipped({ phone, orderNumber: order.orderNumber, customerName: name, trackingNumber, courier }).catch(() => {});
