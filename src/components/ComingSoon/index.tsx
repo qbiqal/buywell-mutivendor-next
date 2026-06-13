@@ -25,13 +25,13 @@ function ShoppingBagLogo({ size = 72 }: { size?: number }) {
           fontSize="16"
           fontWeight="800"
           fontFamily="system-ui, sans-serif"
-          fill="#F97316"
+          fill="#4ade80"
         >
           BW
         </text>
         {/* Small sparkle */}
-        <circle cx="60" cy="20" r="3" fill="#FED7AA" opacity="0.8" />
-        <circle cx="66" cy="14" r="2" fill="#FED7AA" opacity="0.5" />
+        <circle cx="60" cy="20" r="3" fill="#a7f3d0" opacity="0.8" />
+        <circle cx="66" cy="14" r="2" fill="#a7f3d0" opacity="0.5" />
       </svg>
     </div>
   );

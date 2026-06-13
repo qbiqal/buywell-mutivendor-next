@@ -6,72 +6,72 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 img, video { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
 
-/* ─── Nature Green Design System ────────────────────────────────────────────── */
+/* ─── BuyWell Green Design System ───────────────────────────────────────────── */
 :root {
-  /* Brand — Nature Green */
-  --green:          #2D7D46;   /* main forest green */
-  --green-lt:       #52B788;   /* lighter green */
-  --green-dk:       #1B4332;   /* deep dark green */
-  --green-pale:     #D8F3DC;   /* very light green tint */
-  --green-mid:      #40916C;   /* mid green */
+  /* Brand — Forest Green */
+  --green:          #0d7659;   /* primary BuyWell green */
+  --green-lt:       #107d5d;   /* secondary green */
+  --green-dk:       #0a5e47;   /* deep hover green */
+  --green-pale:     #e6f5f0;   /* subtle green tint */
+  --green-mid:      #0c6e52;   /* mid step */
 
-  /* Legacy aliases (used throughout components) */
+  /* Legacy aliases — keep existing component references working */
   --amber:          var(--green);
   --amber-lt:       var(--green-lt);
   --amber-dk:       var(--green-dk);
   --honey:          var(--green-pale);
 
   /* Neutral */
-  --ink:            #0f1f14;   /* near-black with green tint */
-  --muted:          #4a6358;   /* muted green-grey */
+  --ink:            #0a1a14;
+  --muted:          #4a6358;
 
   /* Layout */
   --header-height:  64px;
   --sidebar-width:  240px;
 
   /* Surfaces */
-  --bg-primary:     #f4f9f5;   /* very light green-white */
-  --bg-secondary:   #e8f5ea;   /* light green wash */
+  --bg-primary:     #f5faf8;
+  --bg-secondary:   #eaf5f0;
   --bg-card:        #ffffff;
   --bg-elevated:    #ffffff;
 
   /* Text */
-  --text-primary:   #0f1f14;
+  --text-primary:   #0a1a14;
   --text-secondary: #4a6358;
   --text-inverse:   #ffffff;
 
   /* Borders */
-  --border-color:   #d0e8d4;
-  --border-subtle:  rgba(45,125,70,0.12);
+  --border-color:   #c5e3d8;
+  --border-subtle:  rgba(13,118,89,0.12);
 
   /* Accent */
-  --accent:         #2D7D46;
-  --accent-hover:   #1B4332;
+  --accent:         #0d7659;
+  --accent-hover:   #0a5e47;
 
-  /* Admin sidebar */
-  --sidebar-bg:     #0a1f0e;
+  /* Admin sidebar — dark forest green */
+  --sidebar-bg:     #062e24;
   --sidebar-text:   rgba(255,255,255,0.65);
-  --sidebar-active: #74c69d;
+  --sidebar-active: #4ade80;
   --sidebar-hover:  rgba(255,255,255,0.08);
   --sidebar-border: rgba(255,255,255,0.08);
 
   /* Customer header */
   --header-bg:      #ffffff;
-  --header-border:  rgba(45,125,70,0.1);
+  --header-border:  rgba(13,118,89,0.1);
 
-  /* Status colors */
+  /* Status colors — multi-color as appropriate */
   --status-pending:    #d97706;
-  --status-confirmed:  #2D7D46;
+  --status-confirmed:  #0d7659;
   --status-shipped:    #2563eb;
   --status-delivered:  #059669;
   --status-cancelled:  #ef4444;
   --status-processing: #7c3aed;
 
   /* Shadows */
-  --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:   0 4px 16px rgba(0,0,0,0.08);
-  --shadow-lg:   0 20px 60px rgba(0,0,0,0.1);
-  --shadow-green: 0 8px 24px rgba(45,125,70,0.25);
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:    0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:    0 20px 60px rgba(0,0,0,0.1);
+  --shadow-green: 0 8px 24px rgba(13,118,89,0.25);
 
   /* Radius */
   --radius-sm:   8px;
@@ -91,20 +91,20 @@ a { color: inherit; text-decoration: none; }
 
 /* ─── Dark Mode ──────────────────────────────────────────────────────────────── */
 .dark {
-  --ink:            #f0f7f2;
-  --muted:          #99b7a2;
-  --honey:          rgba(82,183,136,0.14);
-  --bg-primary:     #07100b;
-  --bg-secondary:   #0d1b12;
-  --bg-card:        #101f16;
-  --bg-elevated:    #14271b;
-  --text-primary:   #edf7ef;
-  --text-secondary: #a6bfae;
-  --text-inverse:   #07100b;
-  --border-color:   rgba(143,188,155,0.18);
-  --border-subtle:  rgba(143,188,155,0.1);
-  --header-bg:      #101f16;
-  --header-border:  rgba(143,188,155,0.14);
+  --ink:            #e8f4f0;
+  --muted:          #88b0a2;
+  --honey:          rgba(13,118,89,0.16);
+  --bg-primary:     #060f0a;
+  --bg-secondary:   #0c1a12;
+  --bg-card:        #0f1f17;
+  --bg-elevated:    #132619;
+  --text-primary:   #eaf5f0;
+  --text-secondary: #90b8a6;
+  --text-inverse:   #060f0a;
+  --border-color:   rgba(107,183,155,0.18);
+  --border-subtle:  rgba(107,183,155,0.1);
+  --header-bg:      #0f1f17;
+  --header-border:  rgba(107,183,155,0.14);
   --shadow-sm:      0 1px 2px rgba(0,0,0,0.35);
   --shadow-md:      0 10px 28px rgba(0,0,0,0.32);
   --shadow-lg:      0 24px 70px rgba(0,0,0,0.42);
@@ -203,8 +203,8 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); letter-spacing: 0; }
 /* ─── Status badges ──────────────────────────────────────────────────────────── */
 .status-pending          { background: rgba(217,119,6,0.12);  color: #92400e; }
 .status-payment_uploaded { background: rgba(37,99,235,0.12);  color: #1d4ed8; }
-.status-payment_verified { background: rgba(45,125,70,0.12);  color: #1b4332; }
-.status-confirmed        { background: rgba(45,125,70,0.12);  color: #1b4332; }
+.status-payment_verified { background: rgba(13,118,89,0.12);  color: #0a5e47; }
+.status-confirmed        { background: rgba(13,118,89,0.12);  color: #0a5e47; }
 .status-processing       { background: rgba(124,58,237,0.12); color: #5b21b6; }
 .status-shipped          { background: rgba(37,99,235,0.12);  color: #1d4ed8; }
 .status-delivered        { background: rgba(5,150,105,0.12);  color: #065f46; }
@@ -212,8 +212,8 @@ h1, h2, h3, h4, .serif { font-family: var(--font-serif); letter-spacing: 0; }
 .status-refunded         { background: rgba(107,114,128,0.12);color: #374151; }
 .dark .status-pending          { color: #fbbf24; }
 .dark .status-payment_uploaded { color: #93c5fd; }
-.dark .status-payment_verified { color: #86efac; }
-.dark .status-confirmed        { color: #86efac; }
+.dark .status-payment_verified { color: #6ee7b7; }
+.dark .status-confirmed        { color: #6ee7b7; }
 .dark .status-processing       { color: #c4b5fd; }
 .dark .status-shipped          { color: #93c5fd; }
 .dark .status-delivered        { color: #6ee7b7; }

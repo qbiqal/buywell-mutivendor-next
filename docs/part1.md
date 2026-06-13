@@ -60,61 +60,29 @@
 
 ### 2.1 New Color Palette
 
-Reference site: phpstack-1109345-6038102.cloudwaysapps.com  
-Design style: Clean marketplace, white-dominant, orange/amber accent, dark navy for text.
+Design style: Clean marketplace, white-dominant, forest-green primary, light-green accent.
 
 ```css
-/* CSS variable replacements in src/app/globals.css */
+/* Implemented in src/app/globals.css */
 
 :root {
-  /* Primary brand — orange/amber marketplace accent */
-  --color-primary:        #F97316;   /* orange-500 */
-  --color-primary-hover:  #EA6A0A;   /* orange-600 */
-  --color-primary-light:  #FFF7ED;   /* orange-50 */
-  --color-primary-dark:   #C2550B;   /* orange-700 */
+  /* Primary brand — BuyWell forest green */
+  --green:          #0d7659;   /* primary */
+  --green-lt:       #107d5d;   /* secondary / accent */
+  --green-dk:       #0a5e47;   /* hover / pressed */
+  --green-pale:     #e6f5f0;   /* subtle tint backgrounds */
 
-  /* Secondary — deep navy for headings/nav */
-  --color-secondary:      #1E3A5F;   /* custom navy */
-  --color-secondary-hover:#16304F;
+  /* Admin / vendor sidebar */
+  --sidebar-bg:     #062e24;   /* dark forest green */
+  --sidebar-active: #4ade80;   /* bright green active indicator */
 
-  /* Accent — teal for trust badges, success states */
-  --color-accent:         #0D9488;   /* teal-600 */
-  --color-accent-light:   #F0FDFA;
-
-  /* Neutrals */
-  --color-bg:             #FFFFFF;
-  --color-bg-muted:       #F9FAFB;   /* gray-50 */
-  --color-bg-card:        #FFFFFF;
-  --color-border:         #E5E7EB;   /* gray-200 */
-  --color-border-strong:  #D1D5DB;   /* gray-300 */
-
-  /* Text */
-  --color-text:           #111827;   /* gray-900 */
-  --color-text-muted:     #6B7280;   /* gray-500 */
-  --color-text-light:     #9CA3AF;   /* gray-400 */
-  --color-text-inverse:   #FFFFFF;
-
-  /* Status */
-  --color-success:        #16A34A;
-  --color-warning:        #D97706;
-  --color-error:          #DC2626;
-  --color-info:           #2563EB;
-
-  /* Admin sidebar (vendor panel uses different scheme — see §5) */
-  --admin-sidebar-bg:     #1E3A5F;
-  --admin-sidebar-text:   #CBD5E1;
-  --admin-sidebar-active: #F97316;
-}
-
-/* Dark mode */
-[data-theme="dark"] {
-  --color-bg:             #0F172A;
-  --color-bg-muted:       #1E293B;
-  --color-bg-card:        #1E293B;
-  --color-border:         #334155;
-  --color-text:           #F1F5F9;
-  --color-text-muted:     #94A3B8;
-  --admin-sidebar-bg:     #0F172A;
+  /* Status colors (multi-color — keep as-is for legibility) */
+  --status-pending:    #d97706;   /* amber */
+  --status-confirmed:  #0d7659;   /* green */
+  --status-shipped:    #2563eb;   /* blue */
+  --status-delivered:  #059669;   /* emerald */
+  --status-cancelled:  #ef4444;   /* red */
+  --status-processing: #7c3aed;   /* purple */
 }
 ```
 
