@@ -1,7 +1,10 @@
 import ComingSoon from "@/components/ComingSoon";
+import type { Metadata } from "next";
 
-export const metadata = {
-  title: "Coming Soon — APRAS Naturals",
+export const metadata: Metadata = {
+  title: "Coming Soon — BuyWell Multivendor Marketplace",
+  description:
+    "BuyWell is India's trusted multivendor marketplace. Launching soon.",
 };
 
 export default function ComingSoonPage() {

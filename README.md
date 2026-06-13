@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BuyWell Multivendor Marketplace
 
-## Getting Started
+India's multivendor marketplace built on Next.js 16.2.2.
 
-First, run the development server:
+- **Live**: [buywell.in](https://buywell.in)
+- **Framework**: Next.js 16.2.2 (App Router, TypeScript)
+- **DB**: PostgreSQL 17 (Drizzle ORM)
+- **Cache**: Redis 7 (`bw:` key prefix)
+- **Hosting**: Hetzner + Coolify (qbiqal-app-server)
+
+## Local Development
 
 ```bash
+cp .env.example .env.local
+# fill in DATABASE_URL, REDIS_URL, JWT_SECRET, APP_URL
+
+npm install
+npm run db:migrate
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev          # Next.js dev server (Turbopack)
+npm run build        # Production build
+npm run typecheck    # TypeScript check
+npm run db:migrate   # Run Drizzle migrations
+npm run db:seed      # Seed local database
+npm run smoke        # Smoke tests
+npm run e2e          # End-to-end tests
+npm run verify       # build + smoke + e2e
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Documentation
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `docs/part1.md` — Multivendor conversion blueprint (Phase 0–7)
+- `docs/part2.md` — BuyWell Global wallet integration blueprint
+- `docs/roadmap.md` — Development tracker
+- `docs/mind-map.md` — Platform architecture map
+- `CLAUDE.md` — AI agent reference (project rules, file index, architecture)

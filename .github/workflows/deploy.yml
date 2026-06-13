@@ -1,4 +1,4 @@
-name: CI/CD — APRAS Naturals
+name: CI/CD — BuyWell Multivendor
 
 on:
   push:
@@ -9,12 +9,12 @@ on:
 # ─── Secret Reference ──────────────────────────────────────────────────────────
 #
 # UNIVERSAL secrets (set once in GitHub org/account — same value for ALL repos):
-#   COOLIFY_TOKEN    → 25|pM6PTqSOYIxGUJXvO0MTB7GbPLgsWHk9fMQ3ItMe4fb8b6ec
+#   COOLIFY_TOKEN    → 27|KTKUcuqSodOoYKWHMEGzfhSW3H3ijezTVW0m59Zq0679f632
 #   COOLIFY_BASE_URL → http://178.104.149.128:8000
 #
-# PER-APP secrets (set per repo — different value for each app):
-#   COOLIFY_APP_UUID → gs856v98p5925c8nzcey68f3   (this app's Coolify UUID)
-#   DEPLOY_SECRET    → NXcD4I2XDac0p7Io6775DfmqmQ9Nz3hI  (matches env var in Coolify)
+# PER-APP secrets (set per repo — get COOLIFY_APP_UUID after creating resource):
+#   COOLIFY_APP_UUID → <set after creating Coolify resource for buywell-multivendor>
+#   DEPLOY_SECRET    → <set matching value in Coolify env vars>
 #
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -52,7 +52,7 @@ jobs:
     steps:
       - name: Trigger Coolify Deploy
         run: |
-          echo "🚀 Triggering Coolify deployment..."
+          echo "Triggering Coolify deployment for BuyWell Multivendor..."
           HTTP_STATUS=$(curl -s -o /tmp/coolify_response.txt -w "%{http_code}" -X POST \
             "${{ secrets.COOLIFY_BASE_URL }}/api/v1/deploy?uuid=${{ secrets.COOLIFY_APP_UUID }}&force=false" \
             -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
@@ -60,32 +60,32 @@ jobs:
           echo "HTTP Status: $HTTP_STATUS"
           cat /tmp/coolify_response.txt || true
           if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -gt 299 ]; then
-            echo "❌ Deploy webhook returned HTTP $HTTP_STATUS"
+            echo "Deploy webhook returned HTTP $HTTP_STATUS"
             exit 1
           fi
-          echo "✅ Deploy triggered"
+          echo "Deploy triggered successfully"
 
       - name: Wait for App to be Healthy
         run: |
-          echo "⏳ Waiting for app to come up (up to 6 min)..."
+          echo "Waiting for app to come up (up to 6 min)..."
           for i in $(seq 1 24); do
             echo "  Attempt $i/24 ($(date -u '+%H:%M:%S'))..."
             if curl -sf --max-time 10 \
-              "https://aprasnaturals.com/api/health" \
+              "https://buywell.in/api/health" \
               | grep -q '"success":true'; then
-              echo "✅ App is healthy!"
+              echo "App is healthy!"
               exit 0
             fi
             sleep 15
           done
-          echo "❌ App did not become healthy after 6 minutes"
+          echo "App did not become healthy after 6 minutes"
           exit 1
 
       - name: Flush Redis Cache
         run: |
-          echo "🔄 Flushing query cache..."
+          echo "Flushing query cache..."
           curl -sf --max-time 30 -X POST \
-            "https://aprasnaturals.com/api/deploy-hook" \
+            "https://buywell.in/api/deploy-hook" \
             -H "x-deploy-secret: ${{ secrets.DEPLOY_SECRET }}" \
-            -H "Content-Type: application/json" || echo "⚠️ Cache flush failed (non-fatal)"
-          echo "✅ Done"
+            -H "Content-Type: application/json" || echo "Cache flush failed (non-fatal)"
+          echo "Done"

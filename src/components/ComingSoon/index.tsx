@@ -1,76 +1,48 @@
 "use client";
 import React, { useState } from "react";
-import Link from "next/link";
 import styles from "./ComingSoon.module.css";
 
-/** Animated 3-leaf logo — inline SVG for maximum control */
-function AnimatedLeafLogo({ size = 80 }: { size?: number }) {
+function ShoppingBagLogo({ size = 72 }: { size?: number }) {
   return (
     <div className={styles.logoWrap} style={{ width: size, height: size }}>
       <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width={size} height={size}>
-        {/* Left leaf — light green, animated */}
-        <g className={styles.leafLeft}>
-          <path
-            d="M36 68 C36 68 6 58 6 36 C6 22 16 14 24 16 C24 16 30 28 34 42 C32 52 34 60 36 68Z"
-            fill="#52B788"
-            opacity="0.85"
-          />
-          <path
-            d="M36 68 C32 56 28 44 30 34 C28 26 24 18 24 16"
-            stroke="rgba(255,255,255,0.25)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            fill="none"
-          />
-        </g>
-        {/* Right leaf — medium green */}
-        <g className={styles.leafRight}>
-          <path
-            d="M44 68 C44 68 74 58 74 36 C74 22 64 14 56 16 C56 16 50 28 46 42 C48 52 46 60 44 68Z"
-            fill="#74C69D"
-            opacity="0.85"
-          />
-          <path
-            d="M44 68 C48 56 52 44 50 34 C52 26 56 18 56 16"
-            stroke="rgba(255,255,255,0.25)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            fill="none"
-          />
-        </g>
-        {/* Center leaf — dark green, on top */}
-        <g className={styles.leafCenter}>
-          <path
-            d="M40 70 C40 70 18 54 18 32 C18 16 28 6 40 6 C52 6 62 16 62 32 C62 54 40 70 40 70Z"
-            fill="#1B4332"
-          />
-          <path
-            d="M40 8 L40 64"
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            fill="none"
-          />
-          {/* Side veins */}
-          <path d="M40 20 C36 24 30 28 26 34" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeLinecap="round" fill="none"/>
-          <path d="M40 20 C44 24 50 28 54 34" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeLinecap="round" fill="none"/>
-          <path d="M40 36 C37 39 33 42 30 46" stroke="rgba(255,255,255,0.12)" strokeWidth="1" strokeLinecap="round" fill="none"/>
-          <path d="M40 36 C43 39 47 42 50 46" stroke="rgba(255,255,255,0.12)" strokeWidth="1" strokeLinecap="round" fill="none"/>
-        </g>
-        {/* Stem */}
-        <line x1="40" y1="70" x2="40" y2="76" stroke="#1B4332" strokeWidth="3" strokeLinecap="round"/>
+        {/* Bag body */}
+        <rect x="14" y="28" width="52" height="40" rx="6" fill="white" opacity="0.95" />
+        {/* Bag handle */}
+        <path
+          d="M28 28 C28 18 52 18 52 28"
+          stroke="white"
+          strokeWidth="4"
+          strokeLinecap="round"
+          fill="none"
+          opacity="0.9"
+        />
+        {/* BW initials */}
+        <text
+          x="40"
+          y="55"
+          textAnchor="middle"
+          fontSize="16"
+          fontWeight="800"
+          fontFamily="system-ui, sans-serif"
+          fill="#F97316"
+        >
+          BW
+        </text>
+        {/* Small sparkle */}
+        <circle cx="60" cy="20" r="3" fill="#FED7AA" opacity="0.8" />
+        <circle cx="66" cy="14" r="2" fill="#FED7AA" opacity="0.5" />
       </svg>
     </div>
   );
 }
 
-/** Floating particle */
 function Particle({ style }: { style: React.CSSProperties }) {
   return <div className={styles.particle} style={style} />;
 }
 
-const PARTICLES = Array.from({ length: 18 }, (_, i) => {
-  const seed = (i + 1) * 37;
+const PARTICLES = Array.from({ length: 16 }, (_, i) => {
+  const seed = (i + 1) * 41;
   return {
     id: i,
     left: `${(seed * 17) % 100}%`,
@@ -78,12 +50,12 @@ const PARTICLES = Array.from({ length: 18 }, (_, i) => {
     size: ((seed * 7) % 8) + 4,
     delay: ((seed * 11) % 40) / 10,
     duration: 4 + ((seed * 13) % 60) / 10,
-    opacity: 0.15 + (((seed * 19) % 25) / 100),
+    opacity: 0.12 + (((seed * 19) % 20) / 100),
   };
 });
 
 export default function ComingSoon() {
-  const [email, setEmail]   = useState("");
+  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   function handleNotify(e: React.FormEvent) {
@@ -93,12 +65,10 @@ export default function ComingSoon() {
 
   return (
     <div className={styles.page}>
-      {/* Animated background blobs */}
       <div className={styles.blob1} />
       <div className={styles.blob2} />
       <div className={styles.blob3} />
 
-      {/* Floating leaf particles */}
       <div className={styles.particles} aria-hidden>
         {PARTICLES.map((p) => (
           <Particle
@@ -120,41 +90,38 @@ export default function ComingSoon() {
         {/* Logo */}
         <div className={styles.logoContainer}>
           <div className={styles.logoBg}>
-            <AnimatedLeafLogo size={72} />
+            <ShoppingBagLogo size={60} />
           </div>
           <div className={styles.logoRing} />
         </div>
 
-        {/* Brand name */}
+        {/* Brand */}
         <div className={styles.brand}>
           <h1 className={styles.brandName}>
-            APRAS <span className={styles.brandAccent}>Naturals</span>
+            Buy<span className={styles.brandAccent}>Well</span>
           </h1>
-          <p className={styles.brandTagline}>Authorized Partner of Prakvedaa</p>
+          <p className={styles.brandTagline}>India&apos;s Multivendor Marketplace</p>
         </div>
 
-        {/* Divider */}
         <div className={styles.divider}>
-          <span className={styles.dividerLeaf}>🌿</span>
+          <span className={styles.dividerDot}>✦</span>
         </div>
 
-        {/* Headline */}
         <h2 className={styles.headline}>
-          Something Pure Is<br/>
-          <span className={styles.headlineAccent}>Coming Soon</span>
+          A New Way to<br />
+          <span className={styles.headlineAccent}>Shop &amp; Sell</span>
         </h2>
 
         <p className={styles.subheadline}>
-          We&apos;re crafting a beautiful experience for our pure mono-floral honey
-          and authentic A2 Bilona Ghee. Nature&apos;s finest — delivered to your door.
+          Thousands of verified sellers. Millions of products. Fast delivery across India.
+          We&apos;re building something big — and it&apos;s almost ready.
         </p>
 
-        {/* Features teaser */}
         <div className={styles.features}>
           {[
-            { icon: "🍯", label: "Tulsi · Karanj · Moringa Honey" },
-            { icon: "🥛", label: "A2 Bilona Cow Ghee" },
-            { icon: "🌿", label: "100% Natural & Lab Tested" },
+            { icon: "🏪", label: "Verified Sellers" },
+            { icon: "🚚", label: "Pan-India Delivery" },
+            { icon: "💳", label: "Secure Payments" },
           ].map((f) => (
             <div key={f.label} className={styles.feature}>
               <span className={styles.featureIcon}>{f.icon}</span>
@@ -163,10 +130,9 @@ export default function ComingSoon() {
           ))}
         </div>
 
-        {/* Email notify */}
         {!submitted ? (
           <form onSubmit={handleNotify} className={styles.notifyForm}>
-            <p className={styles.notifyLabel}>Get notified when we launch</p>
+            <p className={styles.notifyLabel}>Be the first to know when we launch</p>
             <div className={styles.notifyRow}>
               <input
                 type="email"
@@ -177,39 +143,19 @@ export default function ComingSoon() {
                 className={styles.notifyInput}
               />
               <button type="submit" className={styles.notifyBtn}>
-                Notify Me →
+                Notify Me
               </button>
             </div>
           </form>
         ) : (
           <div className={styles.notifySuccess}>
             <span>✅</span>
-            <span>You&apos;re on the list! We&apos;ll reach out soon.</span>
+            <span>You&apos;re on the list! We&apos;ll notify you at launch.</span>
           </div>
         )}
 
-        {/* WhatsApp CTA */}
-        <p className={styles.whatsappLine}>
-          For immediate orders:{" "}
-          <a href="https://wa.me/919470309006" target="_blank" rel="noopener noreferrer" className={styles.whatsappLink}>
-            💬 WhatsApp +91 9470309006
-          </a>
-        </p>
-
-        {/* Preview site link */}
-        <div className={styles.previewLinks}>
-          <Link href="/" className={styles.previewLink}>
-            Preview the full site →
-          </Link>
-          <span className={styles.previewDot}>·</span>
-          <Link href="/shop" className={styles.previewLink}>
-            Browse products →
-          </Link>
-        </div>
-
-        {/* Footer note */}
         <p className={styles.footerNote}>
-          Ranchi, Jharkhand, India &nbsp;·&nbsp; aprasnaturals@gmail.com
+          buywell.in &nbsp;·&nbsp; © 2026 BuyWell. All rights reserved.
         </p>
       </div>
     </div>
