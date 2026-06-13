@@ -28,7 +28,7 @@ function createRedisClient(): Redis {
   }
 
   const client = new Redis(url, {
-    keyPrefix: "an:", // apras-naturals namespace — isolates from ss: (stocksense) and blog:
+    keyPrefix: "bw:", // buywell-multivendor namespace
     maxRetriesPerRequest: 3,
     enableReadyCheck: false,
     lazyConnect: true,
