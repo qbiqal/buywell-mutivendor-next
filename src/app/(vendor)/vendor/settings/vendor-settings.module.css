@@ -1,0 +1,41 @@
+.page { padding: 2rem; max-width: 900px; }
+.loading { padding: 3rem; text-align: center; color: var(--text-secondary); }
+.title { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0 0 2rem; }
+
+.form { display: flex; flex-direction: column; gap: 1.5rem; }
+.card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 1rem; padding: 1.5rem; }
+.cardTitle { font-size: 1.0625rem; font-weight: 700; color: var(--text-primary); margin: 0 0 1.25rem; }
+
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+.field { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 1.25rem; }
+.field:last-child { margin-bottom: 0; }
+.label { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
+.hint { font-size: 0.8125rem; color: var(--text-secondary); margin: 0.25rem 0 0; }
+.input {
+  background: var(--bg-primary); border: 1px solid var(--border); border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem; font-size: 0.9375rem; color: var(--text-primary); width: 100%; box-sizing: border-box;
+}
+.input:focus { outline: none; border-color: var(--green); }
+.inputDisabled { background: var(--bg-secondary); opacity: 0.6; cursor: not-allowed; }
+.textarea {
+  background: var(--bg-primary); border: 1px solid var(--border); border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem; font-size: 0.9375rem; color: var(--text-primary); width: 100%;
+  box-sizing: border-box; resize: vertical; font-family: inherit;
+}
+.textarea:focus { outline: none; border-color: var(--green); }
+
+.logoPreview { width: 5rem; height: 5rem; object-fit: cover; border-radius: 0.5rem; border: 1px solid var(--border); margin-bottom: 0.5rem; display: block; }
+.bannerPreview { width: 100%; max-height: 120px; object-fit: cover; border-radius: 0.5rem; border: 1px solid var(--border); margin-bottom: 0.5rem; display: block; }
+
+.saveRow { display: flex; justify-content: flex-end; }
+.saveBtn {
+  background: var(--green); color: #fff; border: none; border-radius: 0.5rem;
+  padding: 0.75rem 2rem; font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: background 0.15s;
+}
+.saveBtn:hover { background: var(--green-dk); }
+.saveBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 600px) {
+  .page { padding: 1rem; }
+  .row { grid-template-columns: 1fr; }
+}

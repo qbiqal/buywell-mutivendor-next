@@ -1,0 +1,23 @@
+.page { padding: 2rem; max-width: 900px; }
+.title { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0 0 1.5rem; }
+.sectionTitle { font-size: 1.125rem; font-weight: 700; color: var(--text-primary); margin: 0 0 1rem; }
+
+.balanceCard {
+  background: linear-gradient(135deg, var(--green-dk), var(--green));
+  border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; color: #fff;
+}
+.balanceLabel { display: block; font-size: 0.9rem; opacity: 0.85; margin-bottom: 0.5rem; }
+.balanceAmt { display: block; font-size: 2.5rem; font-weight: 800; line-height: 1; }
+.balanceNote { font-size: 0.875rem; opacity: 0.8; margin: 0.75rem 0 0; }
+
+.tableWrap { overflow-x: auto; border-radius: 0.75rem; border: 1px solid var(--border); }
+.table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.table thead tr { background: var(--bg-secondary); }
+.table th { padding: 0.875rem 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+.table tbody tr { border-top: 1px solid var(--border); }
+.table tbody tr:hover { background: var(--bg-secondary); }
+.table td { padding: 0.875rem 1rem; color: var(--text-primary); }
+.amt { font-weight: 700; color: var(--green); }
+.ref { font-family: monospace; font-size: 0.8125rem; }
+.badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; }
+.empty { padding: 3rem; text-align: center; color: var(--text-secondary); }
