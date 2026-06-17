@@ -157,11 +157,20 @@ module.exports = async function seedConfig() {
     { key: 'seo_submission_bing_endpoint', value: '', category: 'seo' },
   ];
 
+  // Identity keys are always overwritten so stale branding never survives a redeploy
+  const ALWAYS_OVERWRITE = new Set([
+    'site_name', 'site_tagline', 'site_email', 'site_phone', 'site_address',
+    'blog_title', 'blog_subtitle',
+  ]);
+
   for (const row of defaults) {
+    const conflict = ALWAYS_OVERWRITE.has(row.key)
+      ? 'ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()'
+      : 'ON CONFLICT (key) DO NOTHING';
     await pool.query(
       `INSERT INTO site_config (key, value, category, updated_at)
        VALUES ($1, $2, $3, NOW())
-       ON CONFLICT (key) DO NOTHING`,
+       ${conflict}`,
       [row.key, row.value, row.category]
     ).catch(() => {}); // table may not exist yet on very first boot — startup handles migrations first
   }

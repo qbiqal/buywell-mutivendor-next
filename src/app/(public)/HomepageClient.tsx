@@ -165,6 +165,7 @@ export function HomepageClient({
 
       {/* ── 2-Column Hero: Category Sidebar + Slider ── */}
       <section className={styles.heroWrapper}>
+        <div className={styles.heroInner}>
         <div className={styles.heroGrid}>
 
           {/* Left: Category Quick Links */}
@@ -211,6 +212,7 @@ export function HomepageClient({
           <div className={styles.heroSliderPanel}>
             <HomeHeroSlider banners={heroBanners} autoPlayMs={5000} className={styles.heroSlider} />
           </div>
+        </div>
         </div>
       </section>
 

@@ -47,17 +47,38 @@ export default function ShopClient() {
   const [inStock,    setInStock]    = useState(false);
   const [page,       setPage]       = useState(1);
 
+  // Pending slug from URL — resolved to ID once categories load
+  const [pendingSlug, setPendingSlug] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return new URLSearchParams(window.location.search).get("category") ?? "";
+  });
+
   // Price slider refs for dual-handle logic
   const minRef = useRef<HTMLInputElement>(null);
   const maxRef = useRef<HTMLInputElement>(null);
 
-  // Fetch categories once
+  // Read ?search= from URL on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search).get("search") ?? "";
+    if (q) { setSearch(q); setSearchInput(q); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch categories once, then resolve pending slug → ID
   useEffect(() => {
     fetch("/api/products/categories")
       .then((r) => r.json())
       .then((d) => { if (d.success) setCategories(d.data); })
       .catch(() => {});
   }, []);
+
+  // Once categories load, resolve ?category=slug → categoryId
+  useEffect(() => {
+    if (!pendingSlug || categories.length === 0) return;
+    const match = categories.find((c) => c.slug === pendingSlug);
+    if (match) { setCategoryId(match.id); setPage(1); }
+    setPendingSlug("");
+  }, [pendingSlug, categories]);
 
   const fetchProducts = useCallback(() => {
     setLoading(true);
