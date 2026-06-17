@@ -41,6 +41,11 @@ RUN addgroup --system --gid 1001 nodejs \
 
 COPY --from=builder /app/public ./public
 
+# Give the uploads dir to nextjs so local-storage fallback can write files.
+# The volume mount (nn399lysa851mtmlqy2xz8t7_uploads) is initialised from
+# this directory on first deploy, so the ownership carries into the volume.
+RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
+
 # Next.js standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

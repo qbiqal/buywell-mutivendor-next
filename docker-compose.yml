@@ -23,9 +23,14 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://buywell.in}
       DEPLOY_SECRET: ${DEPLOY_SECRET}
+    volumes:
+      - uploads:/app/public/uploads
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
       interval: 20s
       timeout: 8s
       start_period: 90s
       retries: 5
+
+volumes:
+  uploads:
