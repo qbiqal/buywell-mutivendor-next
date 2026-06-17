@@ -48,7 +48,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   beverages: "🍵", grains: "🌾", pulses: "🫘", dairy: "🥛", fruits: "🍎",
   vegetables: "🥦", beauty: "✨", health: "💊", clothing: "👕", electronics: "📱",
   home: "🏠", sports: "⚽", books: "📚", toys: "🧸", other: "📦",
-  mens: "👔", womens: "👗", kids: "🧒", baby: "🍼", toddlers: "🍼",
+  womens: "👗", mens: "👔", kids: "🧒", baby: "🍼", toddlers: "🍼",
   pet: "🐾", phone: "📱", gadgets: "🔌", kitchen: "🍳", fashion: "👗",
 };
 

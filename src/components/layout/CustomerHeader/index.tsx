@@ -13,9 +13,9 @@ export interface PublicNavItem {
 }
 
 const NAV_LINKS: PublicNavItem[] = [
-  { label: "Shop",   href: "/shop" },
-  { label: "Blog",   href: "/blog" },
-  { label: "About",  href: "/#promise" },
+  { label: "Shop",    href: "/shop" },
+  { label: "Blog",    href: "/blog" },
+  { label: "Contact", href: "/contact" },
 ];
 
 interface CustomerHeaderProps {

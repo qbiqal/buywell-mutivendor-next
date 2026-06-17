@@ -8,6 +8,7 @@
 .heroWrapper {
   background: var(--bg-secondary);
   border-bottom: 2px solid var(--border-color);
+  padding: 0 20px;
 }
 
 .heroGrid {
@@ -40,7 +41,7 @@
 
 .heroCategoryHeader {
   padding: 14px 16px;
-  background: linear-gradient(135deg, var(--green) 0%, #0a5c43 100%);
+  background: linear-gradient(135deg, #0d7659 0%, #0a5c43 100%);
   flex-shrink: 0;
 }
 
