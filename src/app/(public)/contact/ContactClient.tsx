@@ -79,14 +79,6 @@ export default function ContactClient() {
               </div>
 
               <div className={styles.infoItem}>
-                <span className={styles.infoIcon}>📱</span>
-                <div>
-                  <p className={styles.infoLabel}>WhatsApp / Phone</p>
-                  <a href="https://wa.me/919999999999" className={styles.infoLink}>+91 99999 99999</a>
-                </div>
-              </div>
-
-              <div className={styles.infoItem}>
                 <span className={styles.infoIcon}>🕐</span>
                 <div>
                   <p className={styles.infoLabel}>Support Hours</p>

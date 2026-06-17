@@ -18,7 +18,7 @@ module.exports = async function seedConfig() {
     { key: 'site_name',            value: 'BuyWell Marketplace',       category: 'general' },
     { key: 'site_tagline',         value: 'Shop Smart. Shop BuyWell.', category: 'general' },
     { key: 'site_email',           value: 'support@buywell.in', category: 'general' },
-    { key: 'site_phone',           value: '+919999999999',         category: 'general' },
+    { key: 'site_phone',           value: '',                      category: 'general' },
     { key: 'site_address',         value: 'Bheemanpadi, Kottayam West, Kottayam, Kerala – 686003, India', category: 'general' },
     { key: 'admin_logo_url',       value: '',                      category: 'general' },
     { key: 'site_logo_url',        value: '',                      category: 'general' },

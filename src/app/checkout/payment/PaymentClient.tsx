@@ -331,7 +331,7 @@ export default function PaymentClient({ qrUrl, upiId, companyName, razorpayEnabl
               </Button>
 
               <p className={styles.whatsappNote}>
-                Questions? WhatsApp: <a href="https://wa.me/919999999999">+91 9999999999</a>
+                Questions? Email: <a href="mailto:support@buywell.in">support@buywell.in</a>
               </p>
             </div>
           </div>}

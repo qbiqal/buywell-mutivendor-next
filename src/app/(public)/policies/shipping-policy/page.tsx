@@ -91,7 +91,7 @@ export default function ShippingPolicyPage() {
 
       <div className={styles.contactBox}>
         <h3>Shipping Support</h3>
-        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a> | WhatsApp: <a href="tel:+919999999999">+91 99999 99999</a><br />For tracking issues, please have your Order ID ready.</p>
+        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a><br />For tracking issues, please have your Order ID ready.</p>
       </div>
     </div>
   );

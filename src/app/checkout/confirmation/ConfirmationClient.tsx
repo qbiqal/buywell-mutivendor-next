@@ -63,7 +63,7 @@ function ConfirmationContent() {
           <Link href="/shop"><Button variant="ghost">Continue Shopping</Button></Link>
         </div>
         <p className={styles.contact}>
-          Questions? WhatsApp us at <a href="https://wa.me/919999999999">+91 9999999999</a>
+          Questions? Email us at <a href="mailto:support@buywell.in">support@buywell.in</a>
         </p>
       </div>
     </div>

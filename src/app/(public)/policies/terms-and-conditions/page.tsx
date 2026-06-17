@@ -137,12 +137,12 @@ export default function TermsPage() {
         <p>We may update these Terms at any time. Material changes will be notified via email 30 days before taking effect. Continued use after the effective date constitutes acceptance of the updated Terms.</p>
 
         <h2>15. Contact</h2>
-        <p>For any questions about these Terms, contact us at <a href="mailto:support@buywell.in">support@buywell.in</a> or call <a href="tel:+919999999999">+91 99999 99999</a>.</p>
+        <p>For any questions about these Terms, contact us at <a href="mailto:support@buywell.in">support@buywell.in</a>.</p>
       </div>
 
       <div className={styles.contactBox}>
         <h3>Legal Queries</h3>
-        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a> | Phone: <a href="tel:+919999999999">+91 99999 99999</a><br />Bheemanpadi, Kottayam West, Kottayam, Kerala – 686003, India</p>
+        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a><br />Bheemanpadi, Kottayam West, Kottayam, Kerala – 686003, India</p>
       </div>
     </div>
   );

@@ -103,7 +103,7 @@ export default async function LandingPage() {
         "contactPoint": [
           {
             "@type": "ContactPoint",
-            "telephone": "+91-9999999999",
+            "email": "support@buywell.in",
             "contactType": "customer service",
             "availableLanguage": ["English", "Hindi"],
             "areaServed": "IN",

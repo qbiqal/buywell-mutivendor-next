@@ -50,7 +50,7 @@ export function Footer({
   siteName = "BuyWell Marketplace",
   tagline = "India's trusted multivendor marketplace — curated products from verified sellers, delivered pan-India.",
   email = "support@buywell.in",
-  phone = "+91 9999999999",
+  phone = "",
   address = "Bheemanpadi, Kottayam, Kerala – 686003",
 }: FooterProps) {
   const year = new Date().getFullYear();
@@ -82,7 +82,7 @@ export function Footer({
           <p className={styles.desc}>{tagline}</p>
           <div className={styles.contact}>
             <a href={`mailto:${email}`} className={styles.contactLink}>📧 {email}</a>
-            <a href={`tel:${phone.replace(/\s+/g, "")}`} className={styles.contactLink}>📞 {phone}</a>
+            {phone && <a href={`tel:${phone.replace(/\s+/g, "")}`} className={styles.contactLink}>📞 {phone}</a>}
             <span className={styles.contactText}>📍 {address}</span>
           </div>
           <div className={styles.trustRow}>

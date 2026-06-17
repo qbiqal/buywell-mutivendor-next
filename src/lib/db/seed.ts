@@ -478,7 +478,7 @@ async function seed() {
         "<h2>Limitation of Liability</h2>",
         "<p>To the maximum extent permitted by law, BuyWell Marketplace is not liable for indirect, incidental, consequential, punitive, or special losses arising from website use, delayed delivery, unavailable products, third-party services, network issues, or customer misuse. Nothing in these terms excludes liability that cannot legally be excluded.</p>",
         "<h2>Changes and Contact</h2>",
-        "<p>We may update these terms to reflect operational, legal, security, or service changes. The current version will be published on this page. For questions, contact BuyWell Marketplace at support@buywell.in or +91 9999999999.</p>",
+        "<p>We may update these terms to reflect operational, legal, security, or service changes. The current version will be published on this page. For questions, contact BuyWell Marketplace at support@buywell.in.</p>",
       ].join(""),
     },
     {
@@ -491,7 +491,7 @@ async function seed() {
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
         "<p>This Privacy Policy explains how BuyWell Marketplace collects and processes personal data when you browse the website, create an account, place orders, request samples, submit reviews or comments, contact support, receive notifications, or interact with our marketing and analytics features.</p>",
         "<h2>Who We Are</h2>",
-        "<p>BuyWell Marketplace operates from Bheemanpadi, Kottayam, Kerala – 686003 and offers natural honey, A2 Bilona Ghee, and related wellness products as an Buywell Online Shopping India Pvt Ltd. For privacy, consent, grievance, and data-rights requests, contact support@buywell.in or +91 9999999999.</p>",
+        "<p>BuyWell Marketplace operates from Bheemanpadi, Kottayam, Kerala – 686003 and offers natural honey, A2 Bilona Ghee, and related wellness products as an Buywell Online Shopping India Pvt Ltd. For privacy, consent, grievance, and data-rights requests, contact support@buywell.in.</p>",
         "<h2>Personal Data We Collect</h2>",
         "<p>Depending on how you use the platform, we may collect identity details, contact details, account credentials, addresses, order history, payment reference details, refund requests, customer support messages, review or comment content, notification preferences, device/browser data, cookie identifiers, analytics events, and fraud-prevention or security logs.</p>",
         "<h2>Why We Process Data</h2>",

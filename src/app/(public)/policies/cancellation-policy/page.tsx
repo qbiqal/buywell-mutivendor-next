@@ -80,7 +80,7 @@ export default function CancellationPolicyPage() {
 
       <div className={styles.contactBox}>
         <h3>Cancellation Support</h3>
-        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a> | WhatsApp: <a href="tel:+919999999999">+91 99999 99999</a><br />For urgent cancellations, contact us as soon as possible.</p>
+        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a><br />For urgent cancellations, contact us as soon as possible.</p>
       </div>
     </div>
   );
