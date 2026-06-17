@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/components/shop/Cart/CartContext";
 import { useToast } from "@/components/ui/Toast";
@@ -12,15 +11,10 @@ import styles from "./ProductCard.module.css";
 
 interface ProductCardProps {
   product: ProductWithVariants;
+  listMode?: boolean;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  honey: "warning",
-  ghee:  "success",
-  other: "info",
-};
-
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, listMode = false }: ProductCardProps) {
   const { addItem }            = useCart();
   const { success: showToast } = useToast();
   const router                 = useRouter();
@@ -64,14 +58,16 @@ export function ProductCard({ product }: ProductCardProps) {
     ? Math.round(((variant.mrpInr - variant.priceInr) / variant.mrpInr) * 100)
     : 0;
 
+  const categoryLabel = product.category || "product";
+
   return (
-    <div className={styles.card}>
+    <div className={[styles.card, listMode ? styles.listCard : ""].join(" ")}>
       {/* Image */}
-      <Link href={`/shop/${product.slug}`} className={styles.imageWrap}>
+      <Link href={`/shop/${product.slug}`} className={[styles.imageWrap, listMode ? styles.listImageWrap : ""].join(" ")}>
         {primaryImage ? (
-          <Image src={primaryImage} alt={product.name} fill className={styles.img} sizes="(max-width: 640px) 100vw, 33vw" />
+          <Image src={primaryImage} alt={product.name} fill className={styles.img} sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" />
         ) : (
-          <div className={styles.imagePlaceholder}>🍯</div>
+          <div className={styles.imagePlaceholder}>🛍️</div>
         )}
         {discount > 0 && <span className={styles.discountBadge}>-{discount}%</span>}
         {product.isFeatured && <span className={styles.featuredBadge}>Featured</span>}
@@ -79,9 +75,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
       {/* Body */}
       <div className={styles.body}>
-        <Badge variant={CATEGORY_COLORS[product.category] as never} className={styles.catBadge}>
-          {product.subCategory ?? product.category}
-        </Badge>
+        <span className={styles.catBadge}>{categoryLabel}</span>
 
         <Link href={`/shop/${product.slug}`} className={styles.nameLink}>
           <h3 className={styles.name}>{product.name}</h3>
@@ -114,6 +108,9 @@ export function ProductCard({ product }: ProductCardProps) {
                   <span className={styles.priceMrp}>₹{(variant.mrpInr / 100).toLocaleString("en-IN")}</span>
                 )}
               </div>
+              {variant.stock <= 5 && variant.stock > 0 && (
+                <span className={styles.lowStock}>Only {variant.stock} left</span>
+              )}
             </div>
             <div className={styles.cardActions}>
               <Button variant="secondary" size="sm" onClick={handleAddToCart} disabled={variant.stock <= 0} fullWidth>

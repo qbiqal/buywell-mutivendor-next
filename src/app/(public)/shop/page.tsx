@@ -4,8 +4,8 @@ import ShopClient from "./ShopClient";
 import { requireModulePage } from "@/lib/modules";
 
 export const metadata: Metadata = {
-  title: "Shop — Pure Honey & A2 Ghee",
-  description: "Browse our collection of pure mono-floral honey (Tulsi, Karanj, Moringa) and A2 Bilona Ghee from Prakvedaa.",
+  title: "Shop — BuyWell Online Shopping India",
+  description: "Explore thousands of products across Fashion, Electronics, Health & Beauty, Home & Kitchen and more. Best prices. Fast delivery. Shop at BuyWell.",
 };
 
 export default async function ShopPage() {
