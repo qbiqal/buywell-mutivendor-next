@@ -43,9 +43,10 @@ export function CustomerHeader({
 }: CustomerHeaderProps) {
   const pathname = usePathname();
   const router   = useRouter();
-  const [scrolled,      setScrolled]      = useState(false);
-  const [menuOpen,      setMenuOpen]      = useState(false);
-  const [dropdownOpen,  setDropdownOpen]  = useState(false);
+  const [scrolled,       setScrolled]       = useState(false);
+  const [menuOpen,       setMenuOpen]       = useState(false);
+  const [dropdownOpen,   setDropdownOpen]   = useState(false);
+  const [openSubMenus,   setOpenSubMenus]   = useState<Set<string>>(new Set());
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -219,31 +220,53 @@ export function CustomerHeader({
       {/* Mobile drawer */}
       {menuOpen && (
         <div className={styles.mobileDrawer}>
-          {resolvedNavLinks.map((l) => (
-            <div key={`${l.href}-${l.label}`} className={styles.mobileGroup}>
-              <Link
-                href={l.href}
-                target={l.opensNewTab ? "_blank" : undefined}
-                rel={l.opensNewTab ? "noopener noreferrer" : undefined}
-                className={styles.mobileLink}
-                onClick={() => setMenuOpen(false)}
-              >
-                {l.label}
-              </Link>
-              {!!l.children?.length && l.children.map((child) => (
-                <Link
-                  key={`${child.href}-${child.label}`}
-                  href={child.href}
-                  target={child.opensNewTab ? "_blank" : undefined}
-                  rel={child.opensNewTab ? "noopener noreferrer" : undefined}
-                  className={styles.mobileSubLink}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {child.label}
-                </Link>
-              ))}
-            </div>
-          ))}
+          {resolvedNavLinks.map((l) => {
+            const hasChildren = !!l.children?.length;
+            const isSubOpen = openSubMenus.has(l.label);
+            return (
+              <div key={`${l.href}-${l.label}`} className={styles.mobileGroup}>
+                {hasChildren ? (
+                  <button
+                    className={[styles.mobileLink, styles.mobileParentBtn].join(" ")}
+                    onClick={() => setOpenSubMenus((prev) => {
+                      const next = new Set(prev);
+                      next.has(l.label) ? next.delete(l.label) : next.add(l.label);
+                      return next;
+                    })}
+                  >
+                    {l.label}
+                    <span className={[styles.mobileChevron, isSubOpen ? styles.mobileChevronOpen : ""].join(" ")} aria-hidden>›</span>
+                  </button>
+                ) : (
+                  <Link
+                    href={l.href}
+                    target={l.opensNewTab ? "_blank" : undefined}
+                    rel={l.opensNewTab ? "noopener noreferrer" : undefined}
+                    className={styles.mobileLink}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {l.label}
+                  </Link>
+                )}
+                {hasChildren && (
+                  <div className={[styles.mobileSubList, isSubOpen ? styles.mobileSubListOpen : ""].join(" ")}>
+                    {l.children!.map((child) => (
+                      <Link
+                        key={`${child.href}-${child.label}`}
+                        href={child.href}
+                        target={child.opensNewTab ? "_blank" : undefined}
+                        rel={child.opensNewTab ? "noopener noreferrer" : undefined}
+                        className={styles.mobileSubLink}
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {!isAdminUser && (
             <Link href="/become-vendor" className={[styles.mobileLink, styles.mobileSellLink].join(" ")} onClick={() => setMenuOpen(false)}>🏪 Sell on BuyWell</Link>
           )}

@@ -24,7 +24,7 @@
   padding: 0 24px;
 }
 
-/* Logo */
+/* Logo — 240px wide so it centers above the hero category column */
 .logo {
   display: flex; align-items: center; gap: 10px;
   font-family: var(--font-serif);
@@ -33,7 +33,9 @@
   color: var(--ink);
   text-decoration: none;
   letter-spacing: 0;
-  min-width: 0;
+  width: 240px;
+  flex-shrink: 0;
+  justify-content: center;
 }
 .logoImage {
   width: auto;
@@ -294,6 +296,37 @@
   .nav, .authBtns { display: none; }
   .mobileMenu { display: block; }
   .logoImage { max-width: 150px; height: 40px; }
+}
+
+/* Mobile submenu accordion */
+.mobileParentBtn {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobileChevron {
+  font-size: 18px;
+  color: var(--text-secondary);
+  font-weight: 300;
+  transform: rotate(90deg);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.mobileChevronOpen { transform: rotate(-90deg); }
+
+.mobileSubList {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.mobileSubListOpen {
+  max-height: 500px;
 }
 
 .walletChip {

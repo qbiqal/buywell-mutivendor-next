@@ -48,6 +48,17 @@
   padding: 14px 16px;
   background: linear-gradient(135deg, #0d7659 0%, #0a5c43 100%);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: none;
+  cursor: default;
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .heroCategoryHeader { cursor: pointer; }
 }
 
 .heroCategoryTitle {
@@ -56,6 +67,43 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: #fff;
+}
+
+/* Arrow toggle — only visible on mobile */
+.heroCatToggle {
+  display: none;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 300;
+  line-height: 1;
+  transform: rotate(90deg);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.heroCatToggleOpen { transform: rotate(-90deg); }
+
+@media (max-width: 900px) {
+  .heroCatToggle { display: block; }
+}
+
+/* Category body wrapper — accordion on mobile */
+.heroCategoryBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .heroCategoryBody {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    flex: unset;
+  }
+  .heroCategoryBodyOpen {
+    max-height: 800px;
+  }
 }
 
 .heroCategoryList {
@@ -327,17 +375,12 @@
   backdrop-filter: blur(4px);
 }
 
-/* ── Marquee ── */
+/* ── Marquee — lives inside heroInner, same width as heroGrid ── */
 .marqueeWrap {
-  /* neutral wrapper — no background, just vertical rhythm */
-}
-
-.marqueeInner {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 11px 24px;
-  overflow: hidden;
   background: #0d7659;
+  overflow: hidden;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255,255,255,0.15);
 }
 
 .marqueeTrack {
@@ -358,17 +401,8 @@
   100% { transform: translateX(-50%); }
 }
 
-/* ── Mobile search (hidden on desktop — search is in category panel) ── */
-.mobileSearch {
-  display: none;
-  background: var(--bg-card);
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-@media (max-width: 900px) {
-  .mobileSearch { display: block; }
-}
+/* ── Mobile search — hidden everywhere (search lives in category panel / shop page) ── */
+.mobileSearch { display: none; }
 .searchForm {
   display: flex; align-items: center;
   background: var(--bg-secondary);

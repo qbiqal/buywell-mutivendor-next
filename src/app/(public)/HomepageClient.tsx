@@ -145,6 +145,7 @@ export function HomepageClient({
   testimonials,
 }: HomepageClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [catOpen, setCatOpen] = useState(false);
   const latestScrollRef = useRef<HTMLDivElement>(null);
 
   function handleSearch(e: React.FormEvent) {
@@ -170,41 +171,49 @@ export function HomepageClient({
 
           {/* Left: Category Quick Links */}
           <div className={styles.heroCategoryPanel}>
-            <div className={styles.heroCategoryHeader}>
+            <button
+              className={styles.heroCategoryHeader}
+              onClick={() => setCatOpen((o) => !o)}
+              aria-expanded={catOpen}
+            >
               <span className={styles.heroCategoryTitle}>Shop by Category</span>
-            </div>
-            <nav className={styles.heroCategoryList}>
-              {categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/shop?category=${cat.slug}`}
-                  className={styles.heroCategoryItem}
-                  style={{ "--cat-color": cat.color ?? "#0d7659" } as React.CSSProperties}
-                >
-                  <span className={styles.heroCatIcon}>{getCategoryIcon(cat.name, cat.icon ?? null)}</span>
-                  <span className={styles.heroCatName}>{cat.name}</span>
+              <span className={[styles.heroCatToggle, catOpen ? styles.heroCatToggleOpen : ""].join(" ")} aria-hidden>›</span>
+            </button>
+
+            <div className={[styles.heroCategoryBody, catOpen ? styles.heroCategoryBodyOpen : ""].join(" ")}>
+              <nav className={styles.heroCategoryList}>
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/shop?category=${cat.slug}`}
+                    className={styles.heroCategoryItem}
+                    style={{ "--cat-color": cat.color ?? "#0d7659" } as React.CSSProperties}
+                  >
+                    <span className={styles.heroCatIcon}>{getCategoryIcon(cat.name, cat.icon ?? null)}</span>
+                    <span className={styles.heroCatName}>{cat.name}</span>
+                    <span className={styles.heroCatArrow}>›</span>
+                  </Link>
+                ))}
+                <Link href="/shop" className={[styles.heroCategoryItem, styles.heroCatAll].join(" ")}>
+                  <span className={styles.heroCatIcon}>🛒</span>
+                  <span className={styles.heroCatName}>All Categories</span>
                   <span className={styles.heroCatArrow}>›</span>
                 </Link>
-              ))}
-              <Link href="/shop" className={[styles.heroCategoryItem, styles.heroCatAll].join(" ")}>
-                <span className={styles.heroCatIcon}>🛒</span>
-                <span className={styles.heroCatName}>All Categories</span>
-                <span className={styles.heroCatArrow}>›</span>
-              </Link>
-            </nav>
+              </nav>
 
-            {/* Search bar inside category panel (desktop) */}
-            <div className={styles.heroCatSearch}>
-              <form onSubmit={handleSearch} className={styles.heroCatSearchForm}>
-                <span className={styles.heroCatSearchIcon} aria-hidden>🔍</span>
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products…"
-                  className={styles.heroCatSearchInput}
-                />
-              </form>
+              {/* Search bar inside category panel (desktop only) */}
+              <div className={styles.heroCatSearch}>
+                <form onSubmit={handleSearch} className={styles.heroCatSearchForm}>
+                  <span className={styles.heroCatSearchIcon} aria-hidden>🔍</span>
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search products…"
+                    className={styles.heroCatSearchInput}
+                  />
+                </form>
+              </div>
             </div>
           </div>
 
@@ -213,36 +222,17 @@ export function HomepageClient({
             <HomeHeroSlider banners={heroBanners} autoPlayMs={5000} className={styles.heroSlider} />
           </div>
         </div>
-        </div>
-      </section>
 
-      {/* ── Mobile search bar ── */}
-      <section className={styles.mobileSearch}>
-        <div className={styles.container}>
-          <form onSubmit={handleSearch} className={styles.searchForm}>
-            <span className={styles.searchIcon} aria-hidden>🔍</span>
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products, categories, brands…"
-              className={styles.searchInput}
-            />
-            <button type="submit" className={styles.searchBtn}>Search</button>
-          </form>
-        </div>
-      </section>
-
-      {/* ── Marquee ticker ── */}
-      <div className={styles.marqueeWrap} aria-hidden>
-        <div className={styles.marqueeInner}>
+        {/* ── Marquee ticker — inside heroInner so it's exactly the same width ── */}
+        <div className={styles.marqueeWrap} aria-hidden>
           <div className={styles.marqueeTrack}>
             {[...TRUST_BADGES, ...TRUST_BADGES].map((b, i) => (
               <span key={i} className={styles.marqueeItem}>{b.icon} {b.label}</span>
             ))}
           </div>
         </div>
-      </div>
+        </div>
+      </section>
 
       {/* ── Category Grid ── */}
       {categories.length > 0 && (
