@@ -12,10 +12,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const seo = await getSeoConfig();
   const baseUrl = seo.baseUrl;
   const now = new Date();
+  const policyDate = new Date("2026-06-17");
   const routes: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${baseUrl}/home`, lastModified: now, changeFrequency: "weekly", priority: 0.5 },
     { url: `${baseUrl}/coming-soon`, lastModified: now, changeFrequency: "monthly", priority: 0.2 },
+    { url: `${baseUrl}/become-vendor`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    // Compliance pages
+    { url: `${baseUrl}/policies/privacy-policy`, lastModified: policyDate, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${baseUrl}/policies/terms-and-conditions`, lastModified: policyDate, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${baseUrl}/policies/refund-policy`, lastModified: policyDate, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${baseUrl}/policies/shipping-policy`, lastModified: policyDate, changeFrequency: "yearly", priority: 0.4 },
+    { url: `${baseUrl}/policies/cancellation-policy`, lastModified: policyDate, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${baseUrl}/policies/cookie-policy`, lastModified: policyDate, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${baseUrl}/policies/data-retention-policy`, lastModified: policyDate, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   try {

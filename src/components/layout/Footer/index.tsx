@@ -6,11 +6,9 @@ export interface FooterLink {
   label: string;
   href: string;
   opensNewTab?: boolean;
-  children?: FooterLink[];
 }
 
 interface FooterProps {
-  links?: FooterLink[];
   logoUrl?: string;
   siteName?: string;
   tagline?: string;
@@ -19,103 +17,127 @@ interface FooterProps {
   address?: string;
 }
 
-const FALLBACK_LINKS: FooterLink[] = [
-  { label: "Blog", href: "/blog" },
-  { label: "Our Promise", href: "/#promise" },
-  { label: "Community", href: "/#gallery" },
-  { label: "Free Sample", href: "/#contact" },
+const QUICK_LINKS: FooterLink[] = [
+  { label: "Shop All Products", href: "/shop" },
+  { label: "Blog & Articles", href: "/blog" },
+  { label: "Become a Seller", href: "/become-vendor" },
+  { label: "New Arrivals", href: "/shop?sort=newest" },
+  { label: "Featured Products", href: "/shop?featured=true" },
+  { label: "Vendor Stores", href: "/vendors" },
+];
+
+const CUSTOMER_LINKS: FooterLink[] = [
+  { label: "My Account", href: "/profile" },
+  { label: "My Orders", href: "/orders" },
+  { label: "Track Order", href: "/orders" },
+  { label: "Notifications", href: "/notifications" },
+  { label: "BuyWell Wallet", href: "/profile/link-bwallet" },
+  { label: "Contact Support", href: "mailto:hello@buywell.in" },
+];
+
+const POLICY_LINKS: FooterLink[] = [
+  { label: "Privacy Policy", href: "/policies/privacy-policy" },
+  { label: "Terms & Conditions", href: "/policies/terms-and-conditions" },
+  { label: "Refund Policy", href: "/policies/refund-policy" },
+  { label: "Shipping Policy", href: "/policies/shipping-policy" },
+  { label: "Cancellation Policy", href: "/policies/cancellation-policy" },
+  { label: "Cookie Policy", href: "/policies/cookie-policy" },
+  { label: "Data Retention Policy", href: "/policies/data-retention-policy" },
 ];
 
 export function Footer({
-  links = FALLBACK_LINKS,
   logoUrl = "",
   siteName = "BuyWell Marketplace",
-  tagline = "Authorized partner and CNF of Prakvedaa. Pure mono-floral honey and A2 Bilona Ghee from India's heartland.",
+  tagline = "India's trusted multivendor marketplace — curated products from verified sellers, delivered pan-India.",
   email = "hello@buywell.in",
   phone = "+91 9470309006",
-  address = "Ranchi - 834005, Jharkhand",
+  address = "Ranchi – 834005, Jharkhand, India",
 }: FooterProps) {
+  const year = new Date().getFullYear();
+
   return (
     <footer className={styles.footer}>
       <div className={styles.ctaBand}>
         <div>
-          <span className={styles.badge}>Pure naturals, direct from BuyWell</span>
-          <h2>Need help choosing honey or A2 ghee?</h2>
-          <p>Talk to the BuyWell team for samples, wholesale enquiries, or product guidance.</p>
+          <span className={styles.badge}>Ready to grow?</span>
+          <h2>Start selling on BuyWell today</h2>
+          <p>Join thousands of sellers. Zero setup fees. Reach customers across India with your own verified store.</p>
         </div>
-        <Link href="/#contact" className={styles.ctaLink}>Contact Us</Link>
+        <Link href="/become-vendor" className={styles.ctaLink}>Apply as Seller</Link>
       </div>
 
       <div className={styles.inner}>
+        {/* Brand column */}
         <div className={styles.brandCol}>
           <div className={styles.logo}>
             {logoUrl ? (
               <img src={logoUrl} alt={siteName} className={styles.logoImage} />
             ) : (
               <>
-                <div className={styles.logoIcon}>🍯</div>
+                <div className={styles.logoIcon}>🛍️</div>
                 <span className={styles.logoName}>{siteName}</span>
               </>
             )}
           </div>
           <p className={styles.desc}>{tagline}</p>
+          <div className={styles.contact}>
+            <a href={`mailto:${email}`} className={styles.contactLink}>📧 {email}</a>
+            <a href={`tel:${phone.replace(/\s+/g, "")}`} className={styles.contactLink}>📞 {phone}</a>
+            <span className={styles.contactText}>📍 {address}</span>
+          </div>
           <div className={styles.trustRow}>
-            <span>Lab tested</span>
-            <span>Raw honey</span>
-            <span>Bilona ghee</span>
+            <span>✓ Verified Sellers</span>
+            <span>✓ Secure Checkout</span>
+            <span>✓ Easy Returns</span>
           </div>
         </div>
+
+        {/* Quick Links */}
         <div className={styles.col}>
-          <p className={styles.colTitle}>Products</p>
+          <p className={styles.colTitle}>Quick Links</p>
           <div className={styles.links}>
-            <Link href="/shop?category=honey">Tulsi Honey</Link>
-            <Link href="/shop?category=honey">Karanj Honey</Link>
-            <Link href="/shop?category=honey">Moringa Honey</Link>
-            <Link href="/shop?category=ghee">A2 Bilona Ghee</Link>
-          </div>
-        </div>
-        <div className={styles.col}>
-          <p className={styles.colTitle}>Company</p>
-          <div className={styles.links}>
-            {links.map((link) => (
-              <div key={`${link.href}-${link.label}`} className={styles.footerLinkGroup}>
-                <Link
-                  href={link.href}
-                  target={link.opensNewTab ? "_blank" : undefined}
-                  rel={link.opensNewTab ? "noopener noreferrer" : undefined}
-                >
-                  {link.label}
-                </Link>
-                {!!link.children?.length && (
-                  <div className={styles.footerSubLinks}>
-                    {link.children.map((child) => (
-                      <Link
-                        key={`${child.href}-${child.label}`}
-                        href={child.href}
-                        target={child.opensNewTab ? "_blank" : undefined}
-                        rel={child.opensNewTab ? "noopener noreferrer" : undefined}
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {QUICK_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className={styles.footerLink}>{l.label}</Link>
             ))}
           </div>
         </div>
+
+        {/* Customer */}
         <div className={styles.col}>
-          <p className={styles.colTitle}>Contact</p>
-          <div className={styles.contact}>
-            <p><a href={`mailto:${email}`}>{email}</a></p>
-            <p><a href={`tel:${phone.replace(/\s+/g, "")}`}>{phone}</a></p>
-            <p>{address}</p>
+          <p className={styles.colTitle}>Customer</p>
+          <div className={styles.links}>
+            {CUSTOMER_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className={styles.footerLink}>{l.label}</Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Policies */}
+        <div className={styles.col}>
+          <p className={styles.colTitle}>Legal & Policies</p>
+          <div className={styles.links}>
+            {POLICY_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className={styles.footerLink}>{l.label}</Link>
+            ))}
           </div>
         </div>
       </div>
+
       <div className={styles.bottom}>
-        <p>© {new Date().getFullYear()} BuyWell Marketplace. All rights reserved.</p>
-        <span className={styles.partnerBadge}>✓ Authorized Prakvedaa Partner</span>
+        <p className={styles.copyright}>
+          © {year} BuyWell Marketplace. All rights reserved.
+        </p>
+        <a
+          href="https://qbiqal.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.poweredBy}
+          title="Built by Qbiqal — Digital Solutions"
+        >
+          <span className={styles.poweredByLabel}>Powered by</span>
+          <span className={styles.poweredByBrand}>Qbiqal</span>
+          <span className={styles.poweredByDot}></span>
+        </a>
       </div>
     </footer>
   );

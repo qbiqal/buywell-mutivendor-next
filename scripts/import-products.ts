@@ -52,16 +52,6 @@ const PRODUCTS: Array<{
     images: ['2025-11-19-691d4d396db76.webp','2025-11-19-691d4b4e4f6d8.webp','2025-11-19-691d4b4e60f10.webp','2025-11-19-691d4d3956db5.webp','2025-11-19-691d4d395e0d4.webp','2025-11-19-691d4d3965c4b.webp'],
   },
   {
-    oldId: '2', name: 'New HP Smart Watch', slug: 'new-hp-smart-watch', catOldId: '7',
-    priceInr: 7000, stock: 100, details: 'HP Smart Watch',
-    images: ['2025-11-19-691d4da193628.webp','2025-11-19-691d4c6c5683b.webp','2025-11-19-691d4c6c5dc46.webp','2025-11-19-691d4c6c65701.webp','2025-11-19-691d4b4e4f6d8.webp','2025-11-19-691d4b4e60f10.webp'],
-  },
-  {
-    oldId: '3', name: 'Test Product 1', slug: 'test-product-1', catOldId: '2',
-    priceInr: 3000, stock: 1, details: 'Test Product Description',
-    images: ['2026-01-01-695645e43c0fb.webp','2026-01-01-695645e3d8e3c.webp','2026-01-01-695645e40cde2.webp'],
-  },
-  {
     oldId: '4', name: 'Tharunyamrutha', slug: 'tharunyamrutha', catOldId: '5',
     priceInr: 500, stock: 10, details: 'Healthy Products',
     images: ['2026-01-09-6960ab8d89394.webp','2026-01-09-6960ab8d3206a.webp'],

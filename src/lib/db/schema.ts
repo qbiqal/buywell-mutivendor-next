@@ -29,10 +29,12 @@ export const users = pgTable("users", {
   isActive:       boolean("is_active").default(true).notNull(),
   emailVerified:  boolean("email_verified").default(false).notNull(),
   avatarUrl:      text("avatar_url"),
-  bwUserId:       integer("bw_user_id").unique(), // BuyWell Global User ID
-  bwLinkedAt:     timestamp("bw_linked_at"),
-  createdAt:      timestamp("created_at").defaultNow().notNull(),
-  updatedAt:      timestamp("updated_at").defaultNow().notNull(),
+  bwUserId:              integer("bw_user_id").unique(), // BuyWell Global User ID
+  bwLinkedAt:            timestamp("bw_linked_at"),
+  deletionRequestedAt:   timestamp("deletion_requested_at"), // DPDP 2023: 60-day soft-delete
+  deletedAt:             timestamp("deleted_at"),             // set after 60-day window expires
+  createdAt:             timestamp("created_at").defaultNow().notNull(),
+  updatedAt:             timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const addresses = pgTable("addresses", {

@@ -84,14 +84,73 @@ export default async function LandingPage() {
     ),
   ]);
 
+  const baseUrl = "https://buywell.in";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${baseUrl}/#organization`,
+        "name": "BuyWell Marketplace",
+        "url": baseUrl,
+        "logo": {
+          "@type": "ImageObject",
+          "url": `${baseUrl}/images/logo.png`,
+          "width": 200,
+          "height": 60,
+        },
+        "contactPoint": [
+          {
+            "@type": "ContactPoint",
+            "telephone": "+91-9470309006",
+            "contactType": "customer service",
+            "availableLanguage": ["English", "Hindi"],
+            "areaServed": "IN",
+          }
+        ],
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Ranchi",
+          "addressRegion": "Jharkhand",
+          "postalCode": "834005",
+          "addressCountry": "IN",
+        },
+        "sameAs": ["https://qbiqal.com"],
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${baseUrl}/#website`,
+        "url": baseUrl,
+        "name": "BuyWell Marketplace",
+        "description": "India's trusted multivendor marketplace — curated products from verified sellers, delivered pan-India.",
+        "publisher": { "@id": `${baseUrl}/#organization` },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": `${baseUrl}/shop?search={search_term_string}`,
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  };
+
   return (
-    <HomepageClient
-      heroBanners={heroBanners}
-      promoBanners={promoBanners}
-      categories={categories}
-      featuredProducts={featuredProducts}
-      latestProducts={latestProductsRaw}
-      testimonials={featuredTestimonials}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <HomepageClient
+        heroBanners={heroBanners}
+        promoBanners={promoBanners}
+        categories={categories}
+        featuredProducts={featuredProducts}
+        latestProducts={latestProductsRaw}
+        testimonials={featuredTestimonials}
+      />
+    </>
   );
 }

@@ -71,6 +71,13 @@
       "when": 1781363302490,
       "tag": "0009_add_wallet_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1750166400000,
+      "tag": "0010_add_user_soft_delete",
+      "breakpoints": true
     }
   ]
 }

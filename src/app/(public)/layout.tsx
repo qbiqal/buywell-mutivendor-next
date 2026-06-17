@@ -73,7 +73,6 @@ export default async function PublicLayout({ children }: { children: React.React
         {children}
       </main>
       <Footer
-        links={footerLinks}
         logoUrl={generalConfig.site_logo_url || ""}
         siteName={generalConfig.site_name || "BuyWell Marketplace"}
         tagline={generalConfig.site_tagline || undefined}

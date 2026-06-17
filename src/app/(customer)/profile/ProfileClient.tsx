@@ -16,6 +16,7 @@ interface Address {
 interface Profile {
   id: string; email: string; firstName: string; lastName?: string;
   phone?: string; avatarUrl?: string; createdAt: string;
+  deletionRequestedAt?: string | null;
   addresses: Address[];
 }
 
@@ -31,8 +32,11 @@ export default function ProfileClient() {
   const [addrForm,   setAddrForm]   = useState({ ...EMPTY_ADDRESS });
   const [pw,          setPw]          = useState({ current: "", newPw: "", confirm: "" });
   const [showPwFields, setShowPwFields] = useState({ current: false, newPw: false, confirm: false });
-  const [savingAddr,  setSavingAddr]  = useState(false);
-  const [savingPw,    setSavingPw]    = useState(false);
+  const [savingAddr,    setSavingAddr]    = useState(false);
+  const [savingPw,      setSavingPw]      = useState(false);
+  const [deleteModal,   setDeleteModal]   = useState(false);
+  const [deletingAcct,  setDeletingAcct]  = useState(false);
+  const [cancellingDel, setCancellingDel] = useState(false);
 
   useEffect(() => {
     fetch("/api/customer/profile")
@@ -114,6 +118,39 @@ export default function ProfileClient() {
       else showError(data.error ?? "Failed to change password");
     } finally {
       setSavingPw(false);
+    }
+  }
+
+  async function requestAccountDeletion() {
+    setDeletingAcct(true);
+    try {
+      const res = await fetch("/api/customer/delete-account", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        success("Account deletion scheduled. You have 60 days to change your mind.");
+        setProfile((p) => p ? { ...p, deletionRequestedAt: new Date().toISOString() } : p);
+        setDeleteModal(false);
+      } else {
+        showError(data.error ?? "Failed to schedule deletion");
+      }
+    } finally {
+      setDeletingAcct(false);
+    }
+  }
+
+  async function cancelAccountDeletion() {
+    setCancellingDel(true);
+    try {
+      const res = await fetch("/api/customer/delete-account", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        success("Account restored! Glad to have you back.");
+        setProfile((p) => p ? { ...p, deletionRequestedAt: null } : p);
+      } else {
+        showError(data.error ?? "Failed to cancel deletion");
+      }
+    } finally {
+      setCancellingDel(false);
     }
   }
 
@@ -200,6 +237,41 @@ export default function ProfileClient() {
             </CardBody>
           </Card>
         </div>
+
+        {/* Account Deletion Zone */}
+        <div className={styles.dangerZone}>
+          <h2 className={styles.dangerTitle}>Danger Zone</h2>
+          {profile.deletionRequestedAt ? (
+            <div className={styles.deletionPending}>
+              <p className={styles.deletionPendingText}>
+                ⚠️ Your account is scheduled for deletion on{" "}
+                <strong>
+                  {new Date(new Date(profile.deletionRequestedAt).getTime() + 60 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                </strong>
+                . Until then, your data is preserved.
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={cancelAccountDeletion}
+                disabled={cancellingDel}
+              >
+                {cancellingDel ? "Restoring…" : "Cancel Deletion & Restore Account"}
+              </Button>
+            </div>
+          ) : (
+            <div className={styles.deleteAccountRow}>
+              <div>
+                <p className={styles.deleteAccountDesc}>
+                  Permanently delete your account and all associated data. You will have a <strong>60-day window</strong> to restore it before all personal data is anonymised. Pending orders will still be fulfilled.
+                </p>
+              </div>
+              <Button type="button" variant="ghost" className={styles.deleteAccountBtn} onClick={() => setDeleteModal(true)}>
+                Delete My Account
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add Address Modal */}
@@ -262,6 +334,30 @@ export default function ProfileClient() {
             <Button type="submit" variant="primary" disabled={savingPw}>{savingPw ? "Saving…" : "Change Password"}</Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Account Deletion Confirm Modal */}
+      <Modal isOpen={deleteModal} onClose={() => setDeleteModal(false)} title="Delete Account">
+        <div className={styles.modalForm}>
+          <p style={{ marginBottom: 16, color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.7 }}>
+            Are you sure you want to delete your account? Your account will be <strong>deactivated immediately</strong> and permanently deleted after <strong>60 days</strong>.
+          </p>
+          <p style={{ marginBottom: 20, color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.7 }}>
+            You can restore it anytime within 60 days by logging back in. After 60 days, all your personal data will be anonymised and cannot be recovered.
+          </p>
+          <div className={styles.modalFooter}>
+            <Button type="button" variant="ghost" onClick={() => setDeleteModal(false)}>Keep My Account</Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className={styles.deleteAccountBtn}
+              disabled={deletingAcct}
+              onClick={requestAccountDeletion}
+            >
+              {deletingAcct ? "Scheduling…" : "Yes, Delete My Account"}
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

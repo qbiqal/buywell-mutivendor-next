@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
         id: users.id, email: users.email, firstName: users.firstName,
         lastName: users.lastName, phone: users.phone, avatarUrl: users.avatarUrl,
         createdAt: users.createdAt,
+        deletionRequestedAt: users.deletionRequestedAt,
       }).from(users).where(eq(users.id, payload.sub)),
       db.select().from(addresses).where(eq(addresses.userId, payload.sub)),
     ]);

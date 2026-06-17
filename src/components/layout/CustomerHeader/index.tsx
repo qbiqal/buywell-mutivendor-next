@@ -139,6 +139,11 @@ export function CustomerHeader({
         <div className={styles.actions}>
           {ecommerceEnabled && cartSlot}
 
+          {/* Sell CTA — hidden on mobile (shown in drawer) */}
+          {!isAdminUser && (
+            <Link href="/become-vendor" className={styles.sellBtn}>Sell on BuyWell</Link>
+          )}
+
           {user ? (
             <>
               {/* Admin shortcut — always visible in topbar for admins */}
@@ -239,6 +244,9 @@ export function CustomerHeader({
               ))}
             </div>
           ))}
+          {!isAdminUser && (
+            <Link href="/become-vendor" className={[styles.mobileLink, styles.mobileSellLink].join(" ")} onClick={() => setMenuOpen(false)}>🏪 Sell on BuyWell</Link>
+          )}
           {user ? (
             <>
               {ecommerceEnabled && (

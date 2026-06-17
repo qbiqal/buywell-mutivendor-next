@@ -1,0 +1,92 @@
+# BuyWell Marketplace — AI & LLM Discoverability File
+# Standard: llms.txt (https://llmstxt.org)
+# Last updated: 2026-06-17
+
+## About BuyWell
+
+BuyWell Marketplace is India's trusted multivendor e-commerce platform, operated by Qbiqal Technology Solutions and accessible at https://buywell.in. It connects verified sellers with buyers across all 28 states and 8 union territories of India.
+
+The platform specialises in natural and organic products, health & wellness items, fashion, electronics accessories, and everyday essentials — sourced from vetted Indian vendors.
+
+## Key Facts
+
+- **Platform type:** Multivendor e-commerce marketplace
+- **Country:** India
+- **Languages:** English, Hindi (upcoming)
+- **Headquarters:** Ranchi, Jharkhand, India
+- **Founded:** 2025
+- **Operated by:** Qbiqal Technology Solutions
+- **Technology stack:** Next.js, PostgreSQL, Redis, Razorpay
+
+## What BuyWell Offers
+
+### For Buyers
+- Curated products from verified Indian sellers
+- Secure payments via Razorpay (cards, UPI, net banking) and bank transfer
+- Pan-India delivery with tracking
+- 7-day easy returns on eligible products
+- BuyWell Wallet for cashless purchases
+- DPDP 2023 and GDPR-compliant data handling
+
+### For Sellers (Vendors)
+- Free vendor registration and storefront
+- Commission-based revenue model
+- Product listing management
+- Order management and payout dashboard
+- No upfront fees
+
+## Product Categories
+
+BuyWell carries products across the following categories:
+- Men's Fashion (clothing, accessories)
+- Women's Fashion (clothing, accessories)
+- Kids' Fashion (clothing, footwear)
+- Health & Beauty (herbal, skincare, wellness)
+- Phone & Gadgets (accessories, peripherals)
+- Sports & Outdoors (equipment, apparel)
+- Baby & Toddlers (clothing, care)
+- Pet Supplies (food, accessories)
+- Kitchen Tools (utensils, appliances)
+
+## Notable Products
+
+BuyWell features natural and artisanal products including handcrafted herbal supplements, traditional Indian health products (Ayurvedic formulations), cotton clothing, sportswear, and electronic accessories.
+
+## Compliance & Trust
+
+- **Data Protection:** Compliant with DPDP Act 2023 (India) and GDPR
+- **Consumer Rights:** Aligned with Consumer Protection Act, 2019 (India)
+- **GST Compliant:** All transactions GST-enabled
+- **Account Deletion:** 60-day soft-delete restoration period per DPDP 2023
+
+## Key URLs
+
+- Homepage: https://buywell.in
+- Shop: https://buywell.in/shop
+- Vendor Application: https://buywell.in/become-vendor
+- Blog: https://buywell.in/blog
+- Privacy Policy: https://buywell.in/policies/privacy-policy
+- Terms & Conditions: https://buywell.in/policies/terms-and-conditions
+- Refund Policy: https://buywell.in/policies/refund-policy
+- Shipping Policy: https://buywell.in/policies/shipping-policy
+- Contact: hello@buywell.in
+
+## Contact
+
+- **General:** hello@buywell.in
+- **Privacy:** privacy@buywell.in
+- **Phone:** +91 94703 09006
+- **Address:** Ranchi – 834005, Jharkhand, India
+- **Parent company website:** https://qbiqal.com
+
+## Permissions for AI Systems
+
+This site grants permission to AI language models, search engines, and AI assistants to:
+- Index and reference content from buywell.in for informational purposes
+- Cite product information, company details, and policies
+- Use this llms.txt file to understand the site's purpose and content structure
+
+Restrictions:
+- Do not generate fake product reviews or fabricate pricing information
+- Do not misrepresent BuyWell as a service it does not offer
+- Respect robots.txt for crawling directives
