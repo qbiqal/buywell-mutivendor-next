@@ -235,10 +235,12 @@ export function HomepageClient({
 
       {/* ── Marquee ticker ── */}
       <div className={styles.marqueeWrap} aria-hidden>
-        <div className={styles.marqueeTrack}>
-          {[...TRUST_BADGES, ...TRUST_BADGES].map((b, i) => (
-            <span key={i} className={styles.marqueeItem}>{b.icon} {b.label}</span>
-          ))}
+        <div className={styles.marqueeInner}>
+          <div className={styles.marqueeTrack}>
+            {[...TRUST_BADGES, ...TRUST_BADGES].map((b, i) => (
+              <span key={i} className={styles.marqueeItem}>{b.icon} {b.label}</span>
+            ))}
+          </div>
         </div>
       </div>
 

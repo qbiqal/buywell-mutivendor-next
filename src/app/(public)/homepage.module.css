@@ -330,9 +330,14 @@
 /* ── Marquee ── */
 .marqueeWrap {
   background: var(--green);
-  overflow: hidden;
-  padding: 11px 0;
   border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.marqueeInner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 11px 24px;
+  overflow: hidden;
 }
 
 .marqueeTrack {
