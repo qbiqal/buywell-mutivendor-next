@@ -15,8 +15,11 @@ export async function POST(req: NextRequest) {
     if (!payload) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
     const now = new Date();
+    // Do NOT set isActive=false here — user must remain able to log back in
+    // and cancel the deletion within the 60-day DPDP 2023 restoration window.
+    // Permanent deactivation only happens after the 60-day period has elapsed.
     await db.update(users)
-      .set({ deletionRequestedAt: now, isActive: false, updatedAt: now })
+      .set({ deletionRequestedAt: now, updatedAt: now })
       .where(eq(users.id, payload.sub));
 
     return NextResponse.json({
@@ -40,7 +43,7 @@ export async function DELETE(req: NextRequest) {
 
     const now = new Date();
     await db.update(users)
-      .set({ deletionRequestedAt: null, isActive: true, updatedAt: now })
+      .set({ deletionRequestedAt: null, updatedAt: now })
       .where(eq(users.id, payload.sub));
 
     return NextResponse.json({
