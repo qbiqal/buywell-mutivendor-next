@@ -177,7 +177,7 @@ export async function GET(req: NextRequest) {
       return new NextResponse(toCsv(data.revenueByDay), {
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": `attachment; filename=\"apras-analytics-${days}d.csv\"`,
+          "Content-Disposition": `attachment; filename=\"buywell-analytics-${days}d.csv\"`,
         },
       });
     }

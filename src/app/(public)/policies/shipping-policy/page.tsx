@@ -76,14 +76,14 @@ export default function ShippingPolicyPage() {
         <h2>7. Damaged or Lost Packages</h2>
         <ul>
           <li><strong>Damaged on delivery:</strong> Do not accept visibly damaged parcels. Note the refusal with the courier. If opened and damaged, report within 48 hours. See our <Link href="/policies/refund-policy">Refund Policy</Link>.</li>
-          <li><strong>Lost in transit:</strong> If your order shows as delivered but you did not receive it, report immediately (within 48 hours of the delivery notification) at <a href="mailto:hello@buywell.in">hello@buywell.in</a>. We will investigate with the courier and resolve within 5–7 business days.</li>
+          <li><strong>Lost in transit:</strong> If your order shows as delivered but you did not receive it, report immediately (within 48 hours of the delivery notification) at <a href="mailto:support@buywell.in">support@buywell.in</a>. We will investigate with the courier and resolve within 5–7 business days.</li>
         </ul>
 
         <h2>8. Multiple Vendor Orders</h2>
         <p>If your order contains products from multiple vendors, they may be shipped separately and arrive at different times. You will receive separate tracking information for each shipment. Shipping charges may vary per vendor.</p>
 
         <h2>9. Address Changes</h2>
-        <p>Address changes are only possible before the vendor dispatches the order. Contact us immediately at <a href="mailto:hello@buywell.in">hello@buywell.in</a> or via WhatsApp if you need to change your delivery address.</p>
+        <p>Address changes are only possible before the vendor dispatches the order. Contact us immediately at <a href="mailto:support@buywell.in">support@buywell.in</a> or via WhatsApp if you need to change your delivery address.</p>
 
         <h2>10. Packaging</h2>
         <p>Vendors are required to use packaging that adequately protects products during transit. BuyWell encourages eco-friendly packaging. Premium gift packaging may be available for select products at an additional cost.</p>
@@ -91,7 +91,7 @@ export default function ShippingPolicyPage() {
 
       <div className={styles.contactBox}>
         <h3>Shipping Support</h3>
-        <p>Email: <a href="mailto:hello@buywell.in">hello@buywell.in</a> | WhatsApp: <a href="tel:+919470309006">+91 94703 09006</a><br />For tracking issues, please have your Order ID ready.</p>
+        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a> | WhatsApp: <a href="tel:+919999999999">+91 99999 99999</a><br />For tracking issues, please have your Order ID ready.</p>
       </div>
     </div>
   );

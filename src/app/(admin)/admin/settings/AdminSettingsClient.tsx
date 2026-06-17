@@ -430,9 +430,9 @@ export default function AdminSettingsClient() {
         <CardBody className={styles.cardFields}>
           <Input label="Site Name"    value={config.site_name    ?? ""} onChange={set("site_name")}    placeholder="BuyWell Marketplace" />
           <Input label="Site Tagline" value={config.site_tagline ?? ""} onChange={set("site_tagline")} placeholder="Pure Honey & Ghee" />
-          <Input label="Email"        value={config.site_email   ?? ""} onChange={set("site_email")}   placeholder="hello@buywell.in" type="email" />
-          <Input label="Phone / WhatsApp" value={config.site_phone ?? ""} onChange={set("site_phone")} placeholder="+91 9470309006" />
-          <Textarea label="Address" value={config.site_address ?? ""} onChange={set("site_address")} placeholder="Ranchi – 834005, Jharkhand" />
+          <Input label="Email"        value={config.site_email   ?? ""} onChange={set("site_email")}   placeholder="support@buywell.in" type="email" />
+          <Input label="Phone / WhatsApp" value={config.site_phone ?? ""} onChange={set("site_phone")} placeholder="+91 9999999999" />
+          <Textarea label="Address" value={config.site_address ?? ""} onChange={set("site_address")} placeholder="Bheemanpadi, Kottayam, Kerala – 686003" />
           <div className={styles.logoGrid}>
             <div className={styles.logoPanel}>
               <div>
@@ -551,7 +551,7 @@ export default function AdminSettingsClient() {
               onUpload={(files: UploadedFile[]) => { if (files[0]) setConfig((p) => ({ ...p, payment_qr_url: files[0].url })); }}
             />
           </div>
-          <Input label="UPI ID" value={config.payment_upi_id ?? ""} onChange={set("payment_upi_id")} placeholder="aprasnaturals@upi" />
+          <Input label="UPI ID" value={config.payment_upi_id ?? ""} onChange={set("payment_upi_id")} placeholder="buywell@upi" />
           <Input label="Company Name (shown on payment page)" value={config.payment_company_name ?? ""} onChange={set("payment_company_name")} placeholder="BuyWell Marketplace" />
         </CardBody>
         <CardFooter>

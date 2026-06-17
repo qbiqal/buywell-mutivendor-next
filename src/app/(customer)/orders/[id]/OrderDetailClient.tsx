@@ -225,7 +225,7 @@ export default function OrderDetailClient() {
             <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 12 }}>
               Have questions about your order?
             </p>
-            <a href={`https://wa.me/919470309006?text=Hi, I have a question about my order ${order.orderNumber}`} target="_blank" rel="noopener noreferrer">
+            <a href={`https://wa.me/919999999999?text=Hi, I have a question about my order ${order.orderNumber}`} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" fullWidth>💬 WhatsApp Support</Button>
             </a>
           </div>

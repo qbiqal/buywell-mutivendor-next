@@ -242,7 +242,7 @@ export default function AdminWhatsAppClient() {
               label="Admin WhatsApp Number"
               value={configForm.adminNumber}
               onChange={(e) => setConfigForm((current) => ({ ...current, adminNumber: e.target.value }))}
-              placeholder="+919470309006"
+              placeholder="+919999999999"
             />
             <Select
               label="Provider"

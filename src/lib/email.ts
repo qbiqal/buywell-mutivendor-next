@@ -37,23 +37,23 @@ export async function sendOrderConfirmationEmail(params: {
     subject: `Order Confirmed — ${params.orderNumber} | BuyWell Marketplace`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #D97706; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-          <h1 style="color: #fff; margin: 0; font-size: 24px;">🍯 BuyWell Marketplace</h1>
+        <div style="background: #0d7659; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: #fff; margin: 0; font-size: 24px;">🛒 BuyWell Online Shopping India</h1>
         </div>
         <div style="padding: 32px; background: #fff; border: 1px solid #eee;">
           <h2 style="color: #18110a;">Order Confirmed ✅</h2>
           <p>Hi ${params.customerName},</p>
           <p>Your order <strong>${params.orderNumber}</strong> has been confirmed. We'll ship within 24–48 hours.</p>
-          <div style="background: #FEF3C7; padding: 16px; border-radius: 8px; margin: 16px 0;">
+          <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin: 16px 0;">
             <strong>Items:</strong> ${params.items}<br/>
             <strong>Total:</strong> ${params.total}
           </div>
-          <a href="${params.appUrl}/orders" style="display:inline-block; background:#D97706; color:#fff; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">
+          <a href="${params.appUrl}/orders" style="display:inline-block; background:#0d7659; color:#fff; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold;">
             Track Your Order
           </a>
         </div>
         <p style="text-align:center; color:#999; font-size:12px; padding:16px;">
-          © BuyWell Marketplace · Authorized Prakvedaa Partner · Ranchi, Jharkhand
+          © BuyWell Online Shopping India Pvt Ltd · Bheemanpadi, Kottayam, Kerala – 686003
         </p>
       </div>
     `,

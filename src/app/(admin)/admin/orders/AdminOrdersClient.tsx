@@ -106,7 +106,7 @@ export default function AdminOrdersClient() {
         fields={filterFields}
         onReset={resetFilters}
         resultLabel={`${total} result${total !== 1 ? "s" : ""}`}
-        exportFileName="apras-orders"
+        exportFileName="buywell-orders"
         exportRows={orders.map((order) => ({
           orderNumber: order.orderNumber,
           customer: order.guestName ?? "",

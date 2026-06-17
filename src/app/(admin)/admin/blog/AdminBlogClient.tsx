@@ -183,7 +183,7 @@ export default function AdminBlogClient() {
         fields={filterFields}
         onReset={resetFilters}
         resultLabel={`${posts.length} ${posts.length === 1 ? "post" : "posts"}`}
-        exportFileName="apras-blog-posts"
+        exportFileName="buywell-blog-posts"
         exportRows={posts.map((post) => ({
           title: post.title,
           slug: post.slug,

@@ -32,7 +32,7 @@ export default function CancellationPolicyPage() {
         <ul>
           <li><strong>Before dispatch:</strong> You can cancel any order free of charge before the vendor dispatches it. Log in, go to <strong>My Orders</strong>, and click "Cancel Order".</li>
           <li><strong>After dispatch / in transit:</strong> Cancellation is not possible once the order is dispatched. You may request a return after delivery under our <Link href="/policies/refund-policy">Refund Policy</Link>.</li>
-          <li><strong>Offline QR orders awaiting verification:</strong> If payment proof has been uploaded but not yet verified, you can cancel within 2 hours. Contact us immediately at <a href="mailto:hello@buywell.in">hello@buywell.in</a>.</li>
+          <li><strong>Offline QR orders awaiting verification:</strong> If payment proof has been uploaded but not yet verified, you can cancel within 2 hours. Contact us immediately at <a href="mailto:support@buywell.in">support@buywell.in</a>.</li>
         </ul>
 
         <h2>2. Partial Cancellations</h2>
@@ -80,7 +80,7 @@ export default function CancellationPolicyPage() {
 
       <div className={styles.contactBox}>
         <h3>Cancellation Support</h3>
-        <p>Email: <a href="mailto:hello@buywell.in">hello@buywell.in</a> | WhatsApp: <a href="tel:+919470309006">+91 94703 09006</a><br />For urgent cancellations, contact us as soon as possible.</p>
+        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a> | WhatsApp: <a href="tel:+919999999999">+91 99999 99999</a><br />For urgent cancellations, contact us as soon as possible.</p>
       </div>
     </div>
   );

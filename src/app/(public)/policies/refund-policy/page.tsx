@@ -101,7 +101,7 @@ export default function RefundPolicyPage() {
 
       <div className={styles.contactBox}>
         <h3>Refund Support</h3>
-        <p>Email: <a href="mailto:hello@buywell.in">hello@buywell.in</a> | WhatsApp: <a href="tel:+919470309006">+91 94703 09006</a><br />Support hours: Monday–Saturday, 9 AM – 9 PM IST</p>
+        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a> | WhatsApp: <a href="tel:+919999999999">+91 99999 99999</a><br />Support hours: Monday–Saturday, 9 AM – 9 PM IST</p>
       </div>
     </div>
   );

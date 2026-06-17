@@ -140,7 +140,7 @@ export default function AdminProductsClient() {
         fields={filterFields}
         onReset={resetFilters}
         resultLabel={`${total} result${total !== 1 ? "s" : ""}`}
-        exportFileName="apras-products"
+        exportFileName="buywell-products"
         exportRows={products.map((product) => ({
           name: product.name,
           slug: product.slug,

@@ -49,9 +49,9 @@ export function Footer({
   logoUrl = "",
   siteName = "BuyWell Marketplace",
   tagline = "India's trusted multivendor marketplace — curated products from verified sellers, delivered pan-India.",
-  email = "hello@buywell.in",
-  phone = "+91 9470309006",
-  address = "Ranchi – 834005, Jharkhand, India",
+  email = "support@buywell.in",
+  phone = "+91 9999999999",
+  address = "Bheemanpadi, Kottayam, Kerala – 686003",
 }: FooterProps) {
   const year = new Date().getFullYear();
 

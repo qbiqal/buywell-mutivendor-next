@@ -594,7 +594,12 @@ function shouldRefreshSeededPolicy(content) {
   return value.length < 700
     || value.includes('Administrators should review')
     || value.includes('baseline language')
-    || value.includes('contact pathway placeholder');
+    || value.includes('contact pathway placeholder')
+    || value.includes('Prakvedaa')
+    || value.includes('APRAS')
+    || value.includes('Ranchi, Jharkhand')
+    || value.includes('9470309006')
+    || value.includes('hello@buywell.in');
 }
 
 async function invalidateRedisPrefixes(prefixes) {

@@ -344,7 +344,7 @@ async function seed() {
       accent: "Liquid Gold",
       subheading: "Uncompromised. Unprocessed. Unadulterated.",
       meta: "Mono-Floral Honey · A2 Bilona Ghee · Free Samples",
-      badgeText: "Authorized Partner of Prakvedaa",
+      badgeText: "Buywell Online Shopping India Pvt Ltd",
       videoUrl: "/landing-assets/videos/APRUS.mp4",
       primaryCtaLabel: "Explore Collection",
       secondaryCtaLabel: "Contact Us",
@@ -353,7 +353,7 @@ async function seed() {
     { sectionKey: "promise",       sortOrder: 3,  config: {
       eyebrow: "The BuyWell Promise",
       heading: "Authorized Partner of",
-      accent: "Prakvedaa",
+      accent: "BuyWell",
       lead: "At BuyWell Marketplace, every jar is sourced ethically, prepared traditionally, and delivered with zero compromise.",
       cards: [
         { icon: "verified_user", title: "100% Authentic", body: "Directly sourced from trusted traditional beekeepers in untouched natural habitats. No intermediaries, no adulteration." },
@@ -372,7 +372,7 @@ async function seed() {
     } },
     { sectionKey: "purity",        sortOrder: 5,  config: {
       eyebrow: "Not All Honey is Real",
-      heading: "Prakvedaa is the",
+      heading: "BuyWell is the",
       accent: "real one.",
       lead: "Mono Floral · Raw · Completely Uncompromised",
       imageUrl: "/landing-assets/images/highres/honey-honey.jpeg",
@@ -390,7 +390,7 @@ async function seed() {
     } },
     { sectionKey: "ghee",          sortOrder: 7,  config: {
       eyebrow: "Crafted the Old Way",
-      heading: "Prakvedaa A2",
+      heading: "BuyWell A2",
       headingLine2: "Bilona Ghee",
       subtitle: "This is Ghee — Not Factory Fat.",
       description: "Made from the milk of indigenous Kankrej cows using the ancient Bilona method. Curd → Hand Churned → Slow Heated. No shortcuts.",
@@ -403,12 +403,12 @@ async function seed() {
       heading: "BuyWell in the Field",
       lead: "Connecting directly with customers at exhibitions, fairs, and community events across India.",
       items: [
-        { img: "/landing-assets/images/fair.jpeg", title: "Connecting with customers at local fairs across Jharkhand." },
+        { img: "/landing-assets/images/fair.jpeg", title: "Connecting with customers at local fairs and exhibitions across India." },
         { img: "/landing-assets/images/exhibition.jpeg", title: "Showcasing our full range at regional exhibitions." },
         { img: "/landing-assets/images/recognition.jpeg", title: "Honoured by VIP recognition at a state-level exhibition." },
       ],
     } },
-    { sectionKey: "leadership",    sortOrder: 9,  config: { eyebrow: "Government Recognition", heading: "Honoured by", accent: "Leadership", body: "We were privileged to welcome the Health Minister of Jharkhand to our stall. His appreciation strengthens our resolve to bring pure natural products to every Indian home." } },
+    { sectionKey: "leadership",    sortOrder: 9,  config: { eyebrow: "Government Recognition", heading: "Honoured by", accent: "Leadership", body: "We were privileged to welcome government officials and dignitaries to our stall. Their appreciation strengthens our resolve to serve every Indian home." } },
     { sectionKey: "testimonials",  sortOrder: 10, config: {
       eyebrow: "Testimonials",
       heading: "Customer Stories",
@@ -460,7 +460,7 @@ async function seed() {
       excerpt: "Terms governing use of BuyWell Marketplace, orders, accounts, product information, and customer responsibilities.",
       content: [
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
-        "<p>Welcome to BuyWell Marketplace. These Terms and Conditions govern your access to our website, account features, product catalogue, CMS pages, blog content, ecommerce checkout, order support, reviews, refunds, and related services. BuyWell Marketplace offers pure mono-floral honey, A2 Bilona Ghee, and natural wellness products as an authorized partner and CNF of Prakvedaa.</p>",
+        "<p>Welcome to BuyWell Marketplace. These Terms and Conditions govern your access to our website, account features, product catalogue, CMS pages, blog content, ecommerce checkout, order support, reviews, refunds, and related services. BuyWell Marketplace offers pure mono-floral honey, A2 Bilona Ghee, and natural wellness products as an Buywell Online Shopping India Pvt Ltd.</p>",
         "<h2>Using Our Website</h2>",
         "<p>You agree to use the website only for lawful personal, household, or permitted business purchase purposes. You must not misuse the platform, interfere with security, scrape data, impersonate another person, upload harmful content, or attempt unauthorized access to admin, customer, payment, notification, or media systems.</p>",
         "<h2>Accounts and Accuracy</h2>",
@@ -478,7 +478,7 @@ async function seed() {
         "<h2>Limitation of Liability</h2>",
         "<p>To the maximum extent permitted by law, BuyWell Marketplace is not liable for indirect, incidental, consequential, punitive, or special losses arising from website use, delayed delivery, unavailable products, third-party services, network issues, or customer misuse. Nothing in these terms excludes liability that cannot legally be excluded.</p>",
         "<h2>Changes and Contact</h2>",
-        "<p>We may update these terms to reflect operational, legal, security, or service changes. The current version will be published on this page. For questions, contact BuyWell Marketplace at hello@buywell.in or +91 9470309006.</p>",
+        "<p>We may update these terms to reflect operational, legal, security, or service changes. The current version will be published on this page. For questions, contact BuyWell Marketplace at support@buywell.in or +91 9999999999.</p>",
       ].join(""),
     },
     {
@@ -491,7 +491,7 @@ async function seed() {
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
         "<p>This Privacy Policy explains how BuyWell Marketplace collects and processes personal data when you browse the website, create an account, place orders, request samples, submit reviews or comments, contact support, receive notifications, or interact with our marketing and analytics features.</p>",
         "<h2>Who We Are</h2>",
-        "<p>BuyWell Marketplace operates from Ranchi, Jharkhand and offers natural honey, A2 Bilona Ghee, and related wellness products as an authorized partner and CNF of Prakvedaa. For privacy, consent, grievance, and data-rights requests, contact hello@buywell.in or +91 9470309006.</p>",
+        "<p>BuyWell Marketplace operates from Bheemanpadi, Kottayam, Kerala – 686003 and offers natural honey, A2 Bilona Ghee, and related wellness products as an Buywell Online Shopping India Pvt Ltd. For privacy, consent, grievance, and data-rights requests, contact support@buywell.in or +91 9999999999.</p>",
         "<h2>Personal Data We Collect</h2>",
         "<p>Depending on how you use the platform, we may collect identity details, contact details, account credentials, addresses, order history, payment reference details, refund requests, customer support messages, review or comment content, notification preferences, device/browser data, cookie identifiers, analytics events, and fraud-prevention or security logs.</p>",
         "<h2>Why We Process Data</h2>",
@@ -524,7 +524,7 @@ async function seed() {
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
         "<p>This policy supplements the Privacy Policy and describes how BuyWell Marketplace manages consent, data-rights requests, grievance intake, security evidence, and breach-response readiness for DPDP and GDPR compliance operations.</p>",
         "<h2>Consent Management</h2>",
-        "<p>Consent requests should describe the personal data involved, the purpose of processing, and the way a user can withdraw consent. Withdrawal requests can be sent to hello@buywell.in. Withdrawal does not affect processing already completed before withdrawal and may affect our ability to provide requested services that require the data.</p>",
+        "<p>Consent requests should describe the personal data involved, the purpose of processing, and the way a user can withdraw consent. Withdrawal requests can be sent to support@buywell.in. Withdrawal does not affect processing already completed before withdrawal and may affect our ability to provide requested services that require the data.</p>",
         "<h2>Data-Rights Request Workflow</h2>",
         "<p>Users may request access, correction, completion, update, deletion, withdrawal, grievance support, and, where GDPR applies, portability, restriction, objection, or review of automated decisions. BuyWell Marketplace should verify identity, record the request, assign an owner, assess legal exceptions, respond within the applicable timeline, and keep evidence in the admin compliance panel.</p>",
         "<h2>Grievance Redressal</h2>",

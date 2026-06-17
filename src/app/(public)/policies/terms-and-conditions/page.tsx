@@ -50,7 +50,7 @@ export default function TermsPage() {
         <ul>
           <li>You must provide accurate, complete, and current information when registering.</li>
           <li>You are responsible for maintaining the confidentiality of your password and all account activity.</li>
-          <li>Notify us immediately at <a href="mailto:hello@buywell.in">hello@buywell.in</a> if you suspect unauthorised access.</li>
+          <li>Notify us immediately at <a href="mailto:support@buywell.in">support@buywell.in</a> if you suspect unauthorised access.</li>
           <li>We reserve the right to suspend or terminate accounts that violate these Terms.</li>
           <li>You may delete your account at any time from the Profile settings. A 60-day restoration window applies before permanent deletion. See our <Link href="/policies/data-retention-policy">Data Retention Policy</Link>.</li>
         </ul>
@@ -129,7 +129,7 @@ export default function TermsPage() {
         <ul>
           <li>These Terms are governed by the laws of India.</li>
           <li>Disputes shall first be attempted to resolve through mediation within 30 days.</li>
-          <li>Unresolved disputes shall be subject to the exclusive jurisdiction of courts in Ranchi, Jharkhand, India.</li>
+          <li>Unresolved disputes shall be subject to the exclusive jurisdiction of courts in Kottayam, Kerala, India.</li>
           <li>Consumer disputes may also be filed with the appropriate Consumer Forum under the Consumer Protection Act, 2019.</li>
         </ul>
 
@@ -137,12 +137,12 @@ export default function TermsPage() {
         <p>We may update these Terms at any time. Material changes will be notified via email 30 days before taking effect. Continued use after the effective date constitutes acceptance of the updated Terms.</p>
 
         <h2>15. Contact</h2>
-        <p>For any questions about these Terms, contact us at <a href="mailto:hello@buywell.in">hello@buywell.in</a> or call <a href="tel:+919470309006">+91 94703 09006</a>.</p>
+        <p>For any questions about these Terms, contact us at <a href="mailto:support@buywell.in">support@buywell.in</a> or call <a href="tel:+919999999999">+91 99999 99999</a>.</p>
       </div>
 
       <div className={styles.contactBox}>
         <h3>Legal Queries</h3>
-        <p>Email: <a href="mailto:hello@buywell.in">hello@buywell.in</a> | Phone: <a href="tel:+919470309006">+91 94703 09006</a><br />Ranchi – 834005, Jharkhand, India</p>
+        <p>Email: <a href="mailto:support@buywell.in">support@buywell.in</a> | Phone: <a href="tel:+919999999999">+91 99999 99999</a><br />Bheemanpadi, Kottayam West, Kottayam, Kerala – 686003, India</p>
       </div>
     </div>
   );

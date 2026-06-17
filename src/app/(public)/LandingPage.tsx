@@ -103,7 +103,7 @@ export default async function LandingPage() {
         "contactPoint": [
           {
             "@type": "ContactPoint",
-            "telephone": "+91-9470309006",
+            "telephone": "+91-9999999999",
             "contactType": "customer service",
             "availableLanguage": ["English", "Hindi"],
             "areaServed": "IN",
@@ -111,8 +111,8 @@ export default async function LandingPage() {
         ],
         "address": {
           "@type": "PostalAddress",
-          "addressLocality": "Ranchi",
-          "addressRegion": "Jharkhand",
+          "addressLocality": "Kottayam",
+          "addressRegion": "Kerala",
           "postalCode": "834005",
           "addressCountry": "IN",
         },

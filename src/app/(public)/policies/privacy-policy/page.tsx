@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
         <p>
           <strong>Data Fiduciary / Controller:</strong> Qbiqal Technology Solutions<br />
           <strong>Platform:</strong> BuyWell Marketplace (buywell.in)<br />
-          <strong>Registered Address:</strong> Ranchi – 834005, Jharkhand, India<br />
+          <strong>Registered Address:</strong> Bheemanpadi, Kottayam West, Kottayam, Kerala – 686003, India<br />
           <strong>Contact Email:</strong> <a href="mailto:privacy@buywell.in">privacy@buywell.in</a><br />
           <strong>Grievance Officer:</strong> Reachable via the contact email above.
         </p>

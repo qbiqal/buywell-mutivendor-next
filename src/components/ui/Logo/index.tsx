@@ -75,7 +75,7 @@ export function LogoFull({ size = 40, textSize = 20, darkText = false }: { size?
         letterSpacing: "-0.02em",
         color: darkText ? "var(--ink)" : "#fff",
       }}>
-        BuyWell <span style={{ color: "#52B788" }}>Naturals</span>
+        BuyWell <span style={{ color: "#52B788" }}>Marketplace</span>
       </span>
     </span>
   );

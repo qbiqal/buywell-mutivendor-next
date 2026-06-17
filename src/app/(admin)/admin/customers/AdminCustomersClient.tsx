@@ -136,7 +136,7 @@ export default function AdminCustomersClient() {
         fields={filterFields}
         onReset={resetFilters}
         resultLabel={`${total} result${total !== 1 ? "s" : ""}`}
-        exportFileName="apras-customers"
+        exportFileName="buywell-customers"
         exportRows={customers.map((customer) => ({
           name: `${customer.firstName} ${customer.lastName ?? ""}`.trim(),
           email: customer.email,

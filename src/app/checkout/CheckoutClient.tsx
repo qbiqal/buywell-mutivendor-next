@@ -344,8 +344,8 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
                 <Input label="Address Line 1 *" value={address.line1}  onChange={setAddr("line1")}   placeholder="House/Flat number, street" required />
                 <Input label="Address Line 2"   value={address.line2}  onChange={setAddr("line2")}   placeholder="Area, landmark" />
                 <div className={styles.formGrid}>
-                  <Input label="City *"    value={address.city}    onChange={setAddr("city")}    placeholder="Ranchi"    required />
-                  <Input label="State *"   value={address.state}   onChange={setAddr("state")}   placeholder="Jharkhand" required />
+                  <Input label="City *"    value={address.city}    onChange={setAddr("city")}    placeholder="Kottayam"    required />
+                  <Input label="State *"   value={address.state}   onChange={setAddr("state")}   placeholder="Kerala" required />
                   <Input label="Pincode *" value={address.pincode} onChange={setAddr("pincode")} placeholder="834005"    required />
                 </div>
               </div>
@@ -372,8 +372,8 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
                   <Input label="Address Line 1 *" value={billing.line1}  onChange={setBill("line1")}   placeholder="House/Flat number, street" required />
                   <Input label="Address Line 2"   value={billing.line2}  onChange={setBill("line2")}   placeholder="Area, landmark" />
                   <div className={styles.formGrid}>
-                    <Input label="City *"    value={billing.city}    onChange={setBill("city")}    placeholder="Ranchi"    required />
-                    <Input label="State *"   value={billing.state}   onChange={setBill("state")}   placeholder="Jharkhand" required />
+                    <Input label="City *"    value={billing.city}    onChange={setBill("city")}    placeholder="Kottayam"    required />
+                    <Input label="State *"   value={billing.state}   onChange={setBill("state")}   placeholder="Kerala" required />
                     <Input label="Pincode *" value={billing.pincode} onChange={setBill("pincode")} placeholder="834005"    required />
                   </div>
                 </div>
