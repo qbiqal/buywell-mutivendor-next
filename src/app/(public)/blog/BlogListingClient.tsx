@@ -17,8 +17,8 @@ interface BlogListingClientProps {
 }
 
 export default function BlogListingClient({ posts, config }: BlogListingClientProps) {
-  const title    = config.blog_title    ?? "BuyWell Marketplace Journal";
-  const subtitle = config.blog_subtitle ?? "Stories of purity, tradition & wellness";
+  const title    = config.blog_title    ?? "BuyWell Shopping Blog";
+  const subtitle = config.blog_subtitle ?? "Tips, trends, deals and stories from BuyWell Online Shopping India";
   const layout   = config.blog_layout   ?? "grid";
 
   return (

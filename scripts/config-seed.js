@@ -16,10 +16,10 @@ module.exports = async function seedConfig() {
   const defaults = [
     // Site identity
     { key: 'site_name',            value: 'BuyWell Marketplace',       category: 'general' },
-    { key: 'site_tagline',         value: 'Pure Prakvedaa Honey & A2 Bilona Ghee', category: 'general' },
-    { key: 'site_email',           value: 'hello@buywell.in', category: 'general' },
-    { key: 'site_phone',           value: '+919470309006',         category: 'general' },
-    { key: 'site_address',         value: 'Ranchi – 834005, Jharkhand, India', category: 'general' },
+    { key: 'site_tagline',         value: 'Shop Smart. Shop BuyWell.', category: 'general' },
+    { key: 'site_email',           value: 'support@buywell.in', category: 'general' },
+    { key: 'site_phone',           value: '+919999999999',         category: 'general' },
+    { key: 'site_address',         value: 'Bheemanpadi, Kottayam West, Kottayam, Kerala – 686003, India', category: 'general' },
     { key: 'admin_logo_url',       value: '',                      category: 'general' },
     { key: 'site_logo_url',        value: '',                      category: 'general' },
     { key: 'maintenance_mode',     value: 'false',                 category: 'general' },
@@ -96,7 +96,7 @@ module.exports = async function seedConfig() {
     // Blog
     { key: 'blog_enabled',         value: 'true',                 category: 'blog' },
     { key: 'blog_title',           value: 'BuyWell Marketplace Journal', category: 'blog' },
-    { key: 'blog_subtitle',        value: 'Stories of purity, tradition & wellness', category: 'blog' },
+    { key: 'blog_subtitle',        value: 'Tips, trends, deals and stories from BuyWell Online Shopping India', category: 'blog' },
     { key: 'blog_layout',          value: 'grid',                 category: 'blog' },
     { key: 'blog_posts_per_page',  value: '9',                    category: 'blog' },
     { key: 'blog_show_author',     value: 'true',                 category: 'blog' },
@@ -136,10 +136,10 @@ module.exports = async function seedConfig() {
     { key: 'sentry_environment',   value: 'production',           category: 'observability' },
 
     // SEO and analytics
-    { key: 'seo_default_title', value: 'BuyWell Marketplace — Pure Prakvedaa Honey & A2 Bilona Ghee', category: 'seo' },
+    { key: 'seo_default_title', value: 'BuyWell Online Shopping India — Fashion, Electronics, Health & More', category: 'seo' },
     { key: 'seo_title_template', value: '%s | BuyWell Marketplace', category: 'seo' },
-    { key: 'seo_default_description', value: 'BuyWell Marketplace is the authorized partner of Prakvedaa. Discover pure mono-floral raw honey and authentic A2 Bilona Ghee sourced ethically from India.', category: 'seo' },
-    { key: 'seo_default_keywords', value: 'honey,A2 ghee,Prakvedaa,organic honey,Jharkhand,raw honey,bilona ghee', category: 'seo' },
+    { key: 'seo_default_description', value: 'BuyWell Online Shopping India Pvt Ltd — Shop fashion, electronics, health & beauty, home & kitchen and more at the best prices. Fast delivery across India.', category: 'seo' },
+    { key: 'seo_default_keywords', value: 'online shopping india,buywell,fashion,electronics,health beauty,home kitchen,best price,fast delivery', category: 'seo' },
     { key: 'seo_canonical_base_url', value: process.env.NEXT_PUBLIC_APP_URL || 'https://buywell.in', category: 'seo' },
     { key: 'seo_default_og_image_url', value: '', category: 'seo' },
     { key: 'seo_indexing_enabled', value: 'true', category: 'seo' },

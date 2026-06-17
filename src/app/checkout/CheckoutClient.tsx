@@ -71,6 +71,10 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
   const [pendingOrderNum,  setPendingOrderNum]  = useState("");
   const [pendingTotal,     setPendingTotal]     = useState(0);
 
+  // Insufficient balance error modal (shown BEFORE order is created)
+  const [showBalanceError, setShowBalanceError] = useState(false);
+  const [shortfallAmount,  setShortfallAmount]  = useState(0);
+
   const SHIPPING   = totalInr >= 99900 ? 0 : 6000;
   const grandTotal = totalInr + SHIPPING;
 
@@ -153,6 +157,25 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
       showError("Please fill all required delivery address fields"); return;
     }
 
+    // Pre-validate wallet BEFORE creating the order — prevents stuck pending orders
+    if (paymentMethod === "wallet" && !isSample) {
+      if (!walletLinked) {
+        showError("Your BuyWell wallet is not linked. Please link it from your profile first.");
+        return;
+      }
+      if (walletBalance <= 0) {
+        showError("Your wallet balance is ₹0. Please top up your BuyWell wallet.");
+        return;
+      }
+      const shortfall = grandTotal - walletBalance;
+      if (shortfall > 0 && !razorpayEnabled) {
+        // Show error modal — do NOT create the order
+        setShortfallAmount(shortfall);
+        setShowBalanceError(true);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const billingAddr = sameBilling ? address : billing;
@@ -196,17 +219,11 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
       }
 
       if (paymentMethod === "wallet") {
-        if (!walletLinked) { showError("Your BuyWell wallet is not linked. Please link it first."); return; }
-        if (walletBalance <= 0) { showError("Insufficient wallet balance."); return; }
-
         const amountFromWallet = Math.min(walletBalance, orderTotal);
         const remaining = orderTotal - amountFromWallet;
 
         if (remaining > 0) {
-          if (!razorpayEnabled) {
-            showError(`Your wallet balance (${formatInr(walletBalance)}) is less than the order total (${formatInr(orderTotal)}). Please top up your wallet.`);
-            return;
-          }
+          // razorpayEnabled is guaranteed true here (pre-validated above blocks otherwise)
           setPendingOrderId(orderId);
           setPendingOrderNum(orderNumber);
           setPendingTotal(orderTotal);
@@ -471,6 +488,29 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
           </div>
         </div>
       </div>
+
+      {/* Insufficient wallet balance error modal — shown BEFORE order creation */}
+      {showBalanceError && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div style={{ fontSize: 48, textAlign: "center", marginBottom: 12 }}>⚠️</div>
+            <h3 className={styles.modalTitle} style={{ color: "#dc2626", textAlign: "center" }}>Insufficient Wallet Balance</h3>
+            <p className={styles.modalBody}>
+              Your wallet balance is <strong>{formatInr(walletBalance)}</strong>, but the order total is <strong>{formatInr(grandTotal)}</strong>.
+            </p>
+            <p className={styles.modalBody}>
+              You are short by <strong style={{ color: "#dc2626", fontSize: 18 }}>{formatInr(shortfallAmount)}</strong>.
+            </p>
+            <p className={styles.modalNote}>
+              Please top up your BuyWell Global wallet to cover the full amount, or contact support.
+              <br /><strong>No order has been placed and no amount has been deducted.</strong>
+            </p>
+            <div className={styles.modalActions}>
+              <Button variant="primary" onClick={() => setShowBalanceError(false)}>OK, Got It</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Partial payment confirmation modal */}
       {showPartialModal && (
