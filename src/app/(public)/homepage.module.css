@@ -329,8 +329,7 @@
 
 /* ── Marquee ── */
 .marqueeWrap {
-  background: var(--green);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  /* neutral wrapper — no background, just vertical rhythm */
 }
 
 .marqueeInner {
@@ -338,6 +337,7 @@
   margin: 0 auto;
   padding: 11px 24px;
   overflow: hidden;
+  background: #0d7659;
 }
 
 .marqueeTrack {
