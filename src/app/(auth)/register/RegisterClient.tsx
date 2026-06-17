@@ -11,8 +11,9 @@ export default function RegisterClient() {
   const router   = useRouter();
   const { error: showError, success } = useToast();
 
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
-  const [loading, setLoading] = useState(false);
+  const [form,         setForm]         = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading,      setLoading]      = useState(false);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [k]: e.target.value }));
@@ -42,10 +43,10 @@ export default function RegisterClient() {
       <div className={styles.card}>
         <div className={styles.logoWrap}>
           <div className={styles.logoIcon}>🍯</div>
-          <h1 className={styles.logoName}>APRAS Naturals</h1>
+          <h1 className={styles.logoName}>BuyWell Marketplace</h1>
         </div>
         <h2 className={styles.title}>Create your account</h2>
-        <p className={styles.subtitle}>Join thousands who've made the switch to real</p>
+        <p className={styles.subtitle}>Join thousands who&apos;ve made the switch to real</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.row}>
@@ -54,7 +55,31 @@ export default function RegisterClient() {
           </div>
           <Input label="Email"    type="email" value={form.email}    onChange={set("email")}    placeholder="you@example.com" required />
           <Input label="Phone"    type="tel"   value={form.phone}    onChange={set("phone")}    placeholder="+91 XXXXX XXXXX" />
-          <Input label="Password" type="password" value={form.password} onChange={set("password")} placeholder="Min 6 characters" required />
+          {/* Password with show/hide toggle */}
+          <div style={{ position: "relative" }}>
+            <Input
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              value={form.password}
+              onChange={set("password")}
+              placeholder="Min 6 characters"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(p => !p)}
+              style={{
+                position: "absolute", right: 12, bottom: 13,
+                background: "none", border: "none", cursor: "pointer",
+                color: "var(--text-secondary, #888)", padding: 4, display: "flex", alignItems: "center",
+              }}
+              tabIndex={-1}
+            >
+              <span className="material-icons" style={{ fontSize: 20 }}>
+                {showPassword ? "visibility_off" : "visibility"}
+              </span>
+            </button>
+          </div>
           <Button type="submit" variant="primary" fullWidth loading={loading} size="lg">
             Create Account
           </Button>

@@ -1,4 +1,4 @@
-# APRAS Naturals — Development Blueprint Part 3
+# BuyWell Marketplace — Development Blueprint Part 3
 ## Deployment, Operations, Roadmap Process, and Production Checklist
 
 > Last updated: 2026-05-30
@@ -51,8 +51,8 @@ Local verification completed:
 
 - ✅ PostgreSQL running.
 - ✅ Redis running.
-- ✅ `apras_user` role exists.
-- ✅ `apras_naturals_db` exists.
+- ✅ `bw_user` role exists.
+- ✅ `buywell_multivendor_new` exists.
 - ✅ Migrations applied.
 - ✅ Seed data loaded.
 - ✅ Config defaults loaded.
@@ -66,17 +66,17 @@ Note: the local `node_modules/.bin/next` shim was repaired to point at `next/dis
 ## 3. Production Environment Variables
 
 ```bash
-DATABASE_URL=postgresql://apras_user:YOUR_PASSWORD@178.104.158.232:5432/apras_naturals_db
+DATABASE_URL=postgresql://bw_user:YOUR_PASSWORD@178.104.158.232:5432/buywell_multivendor_new
 REDIS_URL=redis://:YOUR_REDIS_PASSWORD@178.104.158.112:6379
 JWT_SECRET=GENERATE_64_CHAR_HEX
-NEXT_PUBLIC_APP_URL=https://aprasnaturals.com
+NEXT_PUBLIC_APP_URL=https://buywell.in
 NODE_ENV=production
 
 CLOUDFLARE_R2_ACCOUNT_ID=
 CLOUDFLARE_R2_ACCESS_KEY_ID=
 CLOUDFLARE_R2_SECRET_ACCESS_KEY=
 CLOUDFLARE_R2_BUCKET_NAME=apras-naturals-media
-CLOUDFLARE_R2_PUBLIC_URL=https://media.aprasnaturals.com
+CLOUDFLARE_R2_PUBLIC_URL=https://media.buywell.in
 
 WHATSAPP_PHONE_NUMBER_ID=
 WHATSAPP_ACCESS_TOKEN=

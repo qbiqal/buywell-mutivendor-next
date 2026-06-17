@@ -32,7 +32,7 @@ export default async function PublicCMSPage({ params }: { params: Promise<{ slug
   return (
     <article className={styles.page}>
       <header className={styles.header}>
-        <p className={styles.eyebrow}>APRAS Naturals</p>
+        <p className={styles.eyebrow}>BuyWell Marketplace</p>
         <h1>{page.title}</h1>
         {page.excerpt && <p>{page.excerpt}</p>}
       </header>

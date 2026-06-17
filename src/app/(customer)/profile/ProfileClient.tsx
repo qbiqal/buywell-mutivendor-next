@@ -29,9 +29,10 @@ export default function ProfileClient() {
   const [addrModal,  setAddrModal]  = useState(false);
   const [pwModal,    setPwModal]    = useState(false);
   const [addrForm,   setAddrForm]   = useState({ ...EMPTY_ADDRESS });
-  const [pw,         setPw]         = useState({ current: "", newPw: "", confirm: "" });
-  const [savingAddr, setSavingAddr] = useState(false);
-  const [savingPw,   setSavingPw]   = useState(false);
+  const [pw,          setPw]          = useState({ current: "", newPw: "", confirm: "" });
+  const [showPwFields, setShowPwFields] = useState({ current: false, newPw: false, confirm: false });
+  const [savingAddr,  setSavingAddr]  = useState(false);
+  const [savingPw,    setSavingPw]    = useState(false);
 
   useEffect(() => {
     fetch("/api/customer/profile")
@@ -230,9 +231,32 @@ export default function ProfileClient() {
       {/* Change Password Modal */}
       <Modal isOpen={pwModal} onClose={() => setPwModal(false)} title="Change Password">
         <form onSubmit={changePassword} className={styles.modalForm}>
-          <Input label="Current Password *" type="password" value={pw.current} onChange={(e) => setPw((p) => ({ ...p, current: e.target.value }))} required />
-          <Input label="New Password *" type="password" value={pw.newPw} onChange={(e) => setPw((p) => ({ ...p, newPw: e.target.value }))} placeholder="Min 8 characters" required />
-          <Input label="Confirm Password *" type="password" value={pw.confirm} onChange={(e) => setPw((p) => ({ ...p, confirm: e.target.value }))} required />
+          {(["current", "newPw", "confirm"] as const).map((field) => (
+            <div key={field} style={{ position: "relative" }}>
+              <Input
+                label={field === "current" ? "Current Password *" : field === "newPw" ? "New Password *" : "Confirm Password *"}
+                type={showPwFields[field] ? "text" : "password"}
+                value={pw[field]}
+                onChange={(e) => setPw((p) => ({ ...p, [field]: e.target.value }))}
+                placeholder={field === "newPw" ? "Min 8 characters" : ""}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPwFields(p => ({ ...p, [field]: !p[field] }))}
+                style={{
+                  position: "absolute", right: 12, bottom: 13,
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "var(--text-secondary, #888)", padding: 4, display: "flex", alignItems: "center",
+                }}
+                tabIndex={-1}
+              >
+                <span className="material-icons" style={{ fontSize: 20 }}>
+                  {showPwFields[field] ? "visibility_off" : "visibility"}
+                </span>
+              </button>
+            </div>
+          ))}
           <div className={styles.modalFooter}>
             <Button type="button" variant="ghost" onClick={() => setPwModal(false)}>Cancel</Button>
             <Button type="submit" variant="primary" disabled={savingPw}>{savingPw ? "Saving…" : "Change Password"}</Button>

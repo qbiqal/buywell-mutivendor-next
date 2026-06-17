@@ -43,9 +43,10 @@ export function CustomerHeader({
 }: CustomerHeaderProps) {
   const pathname = usePathname();
   const router   = useRouter();
-  const [scrolled,     setScrolled]     = useState(false);
-  const [menuOpen,     setMenuOpen]     = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [scrolled,      setScrolled]      = useState(false);
+  const [menuOpen,      setMenuOpen]      = useState(false);
+  const [dropdownOpen,  setDropdownOpen]  = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,6 +54,15 @@ export function CustomerHeader({
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Fetch ecommerce wallet balance for logged-in customers
+  useEffect(() => {
+    if (!user || user.role === "admin" || user.role === "qbiqal") return;
+    fetch("/api/customer/bwallet/balance")
+      .then(r => r.json())
+      .then(d => { if (d.success && d.linked) setWalletBalance(d.balance); })
+      .catch(() => {});
+  }, [user]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -161,6 +171,15 @@ export function CustomerHeader({
                     ) : (
                       /* Customer dropdown */
                       <>
+                        {walletBalance !== null && (
+                          <>
+                            <div className={styles.walletChip}>
+                              <span>👛</span>
+                              <span>₹{(walletBalance / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className={styles.dropdownDivider} />
+                          </>
+                        )}
                         {ecommerceEnabled && (
                           <>
                             <Link href="/orders" className={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>📦 My Orders</Link>

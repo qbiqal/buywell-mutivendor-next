@@ -16,6 +16,7 @@ export default function ResetPasswordClient() {
     code: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -47,8 +48,8 @@ export default function ResetPasswordClient() {
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.logoWrap}>
-          <div className={styles.logoIcon}>AN</div>
-          <h1 className={styles.logoName}>APRAS Naturals</h1>
+          <div className={styles.logoIcon}>🍯</div>
+          <h1 className={styles.logoName}>BuyWell Marketplace</h1>
         </div>
         <h2 className={styles.title}>Enter reset code</h2>
         <p className={styles.subtitle}>Use the code sent to your email and choose a new password.</p>
@@ -56,7 +57,30 @@ export default function ResetPasswordClient() {
         <form onSubmit={handleSubmit} className={styles.form}>
           <Input label="Email" type="email" value={form.email} onChange={set("email")} placeholder="you@example.com" required autoFocus />
           <Input label="Reset Code" inputMode="numeric" value={form.code} onChange={set("code")} placeholder="6-digit code" required />
-          <Input label="New Password" type="password" value={form.password} onChange={set("password")} placeholder="Min 6 characters" required />
+          <div style={{ position: "relative" }}>
+            <Input
+              label="New Password"
+              type={showPassword ? "text" : "password"}
+              value={form.password}
+              onChange={set("password")}
+              placeholder="Min 6 characters"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(p => !p)}
+              style={{
+                position: "absolute", right: 12, bottom: 13,
+                background: "none", border: "none", cursor: "pointer",
+                color: "var(--text-secondary, #888)", padding: 4, display: "flex", alignItems: "center",
+              }}
+              tabIndex={-1}
+            >
+              <span className="material-icons" style={{ fontSize: 20 }}>
+                {showPassword ? "visibility_off" : "visibility"}
+              </span>
+            </button>
+          </div>
           <Button type="submit" variant="primary" fullWidth loading={loading} size="lg">
             Update Password
           </Button>

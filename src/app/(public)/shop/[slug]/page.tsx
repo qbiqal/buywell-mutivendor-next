@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { products, productVariants, productImages } from "@/lib/db/schema";
+import { products, productVariants, productImages, vendors } from "@/lib/db/schema";
 import { eq, and, asc, ne } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
 import { requireModulePage } from "@/lib/modules";
@@ -59,21 +59,32 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const product = await withCache(`query:product:${slug}`, CACHE_TTL.QUERY, async () => {
     const rows = await db
-      .select()
+      .select({
+        product: products,
+        vendor: {
+          storeName: vendors.storeName,
+          storeSlug: vendors.storeSlug,
+        }
+      })
       .from(products)
+      .leftJoin(vendors, eq(products.vendorId, vendors.id))
       .where(and(eq(products.slug, slug), eq(products.isActive, true)));
+      
     if (!rows[0]) return null;
+
+    const p = rows[0].product;
+    const v = rows[0].vendor;
 
     const [variants, images] = await Promise.all([
       db.select().from(productVariants)
-        .where(and(eq(productVariants.productId, rows[0].id), eq(productVariants.isActive, true)))
+        .where(and(eq(productVariants.productId, p.id), eq(productVariants.isActive, true)))
         .orderBy(asc(productVariants.sortOrder)),
       db.select().from(productImages)
-        .where(eq(productImages.productId, rows[0].id))
+        .where(eq(productImages.productId, p.id))
         .orderBy(asc(productImages.sortOrder)),
     ]);
 
-    return { ...rows[0], variants, images };
+    return { ...p, vendor: v, variants, images };
   });
 
   if (!product) notFound();
@@ -100,5 +111,5 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     return withVariants;
   });
 
-  return <ProductDetailClient product={product} related={related} canEdit={canEdit} />;
+  return <ProductDetailClient product={product as any} related={related as any} canEdit={canEdit} />;
 }

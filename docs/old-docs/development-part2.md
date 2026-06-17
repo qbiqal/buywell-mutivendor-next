@@ -1,4 +1,4 @@
-# APRAS Naturals — Development Blueprint Part 2
+# BuyWell Marketplace — Development Blueprint Part 2
 ## Database, Cache, API, Modules, and Feature Specifications
 
 > Last updated: 2026-05-30
@@ -40,8 +40,8 @@ Local setup has been completed.
 
 | Item | Status |
 |---|---|
-| Local role `apras_user` | ✅ |
-| Local DB `apras_naturals_db` | ✅ |
+| Local role `bw_user` | ✅ |
+| Local DB `buywell_multivendor_new` | ✅ |
 | Migrations applied | ✅ |
 | Seed data loaded | ✅ |
 | Config defaults loaded | ✅ |

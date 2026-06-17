@@ -279,3 +279,10 @@
   .mobileMenu { display: block; }
   .logoImage { max-width: 150px; height: 40px; }
 }
+
+.walletChip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600;
+  color: var(--color-primary, #0d7659);
+  background: #f0faf6; cursor: default;
+}

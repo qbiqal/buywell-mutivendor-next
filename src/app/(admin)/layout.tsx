@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AdminSidebar
         navItems={navItems}
         logoUrl={generalConfig.admin_logo_url || generalConfig.site_logo_url || ""}
-        siteName={generalConfig.site_name || "APRAS"}
+        siteName={generalConfig.site_name || "BuyWell"}
       />
       <main className={styles.main}>
         <AdminTopbar />

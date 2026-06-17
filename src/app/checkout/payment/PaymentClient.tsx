@@ -1,9 +1,10 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import Link from "next/link";
 import styles from "./payment.module.css";
 
 interface PaymentClientProps {
@@ -12,9 +13,10 @@ interface PaymentClientProps {
   companyName:      string;
   razorpayEnabled?: boolean;
   razorpayKeyId?:   string;
+  offlineEnabled?:  boolean;
 }
 
-export default function PaymentClient({ qrUrl, upiId, companyName, razorpayEnabled = false, razorpayKeyId = "" }: PaymentClientProps) {
+export default function PaymentClient({ qrUrl, upiId, companyName, razorpayEnabled = false, razorpayKeyId = "", offlineEnabled = true }: PaymentClientProps) {
   const router   = useRouter();
   const params   = useSearchParams();
   const { success: showSuccess, error: showError } = useToast();
@@ -22,8 +24,16 @@ export default function PaymentClient({ qrUrl, upiId, companyName, razorpayEnabl
   const orderId     = params.get("orderId") ?? "";
   const orderNumber = params.get("orderNumber") ?? "";
   const uploadToken = params.get("token") ?? "";
-  const totalPaise  = parseInt(params.get("total") ?? "0");
-  const totalFormatted = `₹${(totalPaise / 100).toLocaleString("en-IN")}`;
+  const initialTotal = parseInt(params.get("total") ?? "0");
+  
+  const [walletLoading, setWalletLoading] = useState(true);
+  const [walletLinked,  setWalletLinked]  = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [useWallet,     setUseWallet]     = useState(false);
+  const [walletPaid,    setWalletPaid]    = useState(0);
+
+  const remainingTotal = initialTotal - walletPaid;
+  const totalFormatted = `₹${(remainingTotal / 100).toLocaleString("en-IN")}`;
 
   const [file,          setFile]          = useState<File | null>(null);
   const [preview,       setPreview]       = useState<string>("");
@@ -31,14 +41,61 @@ export default function PaymentClient({ qrUrl, upiId, companyName, razorpayEnabl
   const [rzpLoading,    setRzpLoading]    = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    fetch("/api/customer/bwallet/balance")
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          setWalletLinked(data.linked);
+          setWalletBalance(data.balance || 0);
+        }
+      })
+      .finally(() => setWalletLoading(false));
+  }, []);
+
+  async function handleWalletPayment() {
+    if (!walletLinked || walletBalance <= 0) return;
+    
+    setRzpLoading(true);
+    try {
+      const amountToUse = Math.min(walletBalance, remainingTotal);
+      const res = await fetch(`/api/orders/${orderId}/pay-wallet`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: amountToUse }),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setWalletPaid(prev => prev + amountToUse);
+        setWalletBalance(prev => prev - amountToUse);
+        setUseWallet(false);
+        
+        if (data.isFullPayment) {
+          showSuccess("Payment Successful!", "Your order is confirmed using wallet balance.");
+          router.push(`/checkout/confirmation?orderNumber=${orderNumber}`);
+        } else {
+          showSuccess("Wallet Applied", `₹${(amountToUse / 100).toFixed(2)} paid from wallet. Please pay the remaining balance.`);
+        }
+      } else {
+        showError(data.error || "Wallet payment failed");
+      }
+    } catch (err) {
+      showError("An error occurred during wallet payment");
+    } finally {
+      setRzpLoading(false);
+    }
+  }
+
   async function handleRazorpay() {
+    if (remainingTotal <= 0) return;
     setRzpLoading(true);
     try {
       // 1. Create Razorpay order on server
       const sessionRes = await fetch("/api/payment/razorpay/create-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId }),
+        body: JSON.stringify({ orderId, amount: remainingTotal }),
       });
       const session = await sessionRes.json();
       if (!sessionRes.ok || !session.razorpayOrderId) {
@@ -129,11 +186,57 @@ export default function PaymentClient({ qrUrl, upiId, companyName, razorpayEnabl
           {/* Header */}
           <div className={styles.header}>
             <h1 className={styles.title}>Complete Your Payment</h1>
-            <p className={styles.sub}>Order <strong>{orderNumber}</strong> · Total: <strong>{totalFormatted}</strong></p>
+            <p className={styles.sub}>Order <strong>{orderNumber}</strong> · Total: <strong>₹{(initialTotal / 100).toLocaleString("en-IN")}</strong></p>
+            {walletPaid > 0 && (
+              <p className={styles.walletPaidNote}>
+                ✅ Wallet Applied: <strong>-₹{(walletPaid / 100).toLocaleString("en-IN")}</strong> · Remaining: <strong>{totalFormatted}</strong>
+              </p>
+            )}
+          </div>
+
+          {/* BuyWell Wallet Option */}
+          <div className={styles.walletSection}>
+            {walletLoading ? (
+              <p className={styles.walletLoading}>Loading wallet balance...</p>
+            ) : !walletLinked ? (
+              <div className={styles.walletLinkBox}>
+                <div className={styles.walletIcon}>👛</div>
+                <div className={styles.walletInfo}>
+                  <p className={styles.walletTitle}>Pay with BuyWell Global Wallet</p>
+                  <p className={styles.walletSub}>Link your account to spend your e-commerce credits.</p>
+                </div>
+                <Link href="/profile/link-bwallet" className={styles.linkBtn}>Link Account →</Link>
+              </div>
+            ) : walletBalance > 0 ? (
+              <div className={styles.walletApplyBox}>
+                <div className={styles.walletIcon}>👛</div>
+                <div className={styles.walletInfo}>
+                  <p className={styles.walletTitle}>Wallet Balance: <strong>₹{(walletBalance / 100).toLocaleString("en-IN")}</strong></p>
+                  <p className={styles.walletSub}>Use your balance to pay for this order.</p>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={handleWalletPayment}
+                  loading={rzpLoading}
+                  disabled={remainingTotal <= 0}
+                >
+                  Apply Balance
+                </Button>
+              </div>
+            ) : (
+              <div className={styles.walletEmptyBox}>
+                <div className={styles.walletIcon}>👛</div>
+                <div className={styles.walletInfo}>
+                  <p className={styles.walletTitle}>Insufficient Wallet Balance</p>
+                  <p className={styles.walletSub}>Your balance is ₹0.00. Please use another method.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Razorpay option */}
-          {razorpayEnabled && (
+          {razorpayEnabled && remainingTotal > 0 && (
             <div className={styles.rzpSection}>
               <Button
                 variant="primary"
@@ -149,7 +252,7 @@ export default function PaymentClient({ qrUrl, upiId, companyName, razorpayEnabl
             </div>
           )}
 
-          <div className={styles.layout}>
+          {offlineEnabled && <div className={styles.layout}>
             {/* Left — QR */}
             <div className={styles.qrCol}>
               <p className={styles.stepLabel}>Step 1 — Scan & Pay</p>
@@ -231,7 +334,7 @@ export default function PaymentClient({ qrUrl, upiId, companyName, razorpayEnabl
                 Questions? WhatsApp: <a href="https://wa.me/919470309006">+91 9470309006</a>
               </p>
             </div>
-          </div>
+          </div>}
         </div>
       </div>
     </div>

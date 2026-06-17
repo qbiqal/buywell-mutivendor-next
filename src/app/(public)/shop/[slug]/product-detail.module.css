@@ -220,7 +220,8 @@
 .qtyBtn:hover:not(:disabled) { background: var(--bg-secondary); }
 .qtyBtn:disabled { color: var(--border-color); cursor: not-allowed; }
 .qty { min-width: 40px; text-align: center; font-size: 16px; font-weight: 600; }
-.addBtn { flex: 1; min-width: 200px; }
+.addBtn { flex: 1; min-width: 160px; }
+.buyNowBtn { flex: 1; min-width: 160px; }
 
 /* Trust badges */
 .trustBadges {

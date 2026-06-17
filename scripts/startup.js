@@ -19,7 +19,7 @@
 const path = require('path');
 
 async function main() {
-  console.log('[startup] APRAS Naturals starting...');
+  console.log('[startup] BuyWell Marketplace starting...');
 
   if (!process.env.DATABASE_URL) {
     console.error('[startup] ERROR: DATABASE_URL is not set. Exiting.');
@@ -41,7 +41,7 @@ async function main() {
 
     const db = drizzle(pool);
     await migrate(db, {
-      migrationsFolder: path.join(__dirname, 'src/lib/db/migrations'),
+      migrationsFolder: path.join(__dirname, '../src/lib/db/migrations'),
     });
     await pool.end();
     console.log('[startup] Migrations complete.');

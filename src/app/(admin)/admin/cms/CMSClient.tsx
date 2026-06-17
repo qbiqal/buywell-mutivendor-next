@@ -9,7 +9,7 @@ import styles from "./cms.module.css";
 const SECTION_LABELS: Record<string, string> = {
   hero:         "🎥 Hero Section",
   marquee:      "📜 Marquee Strip",
-  promise:      "🛡️ APRAS Promise",
+  promise:      "🛡️ BuyWell Promise",
   sample:       "🎁 Sample Banner",
   purity:       "✨ Purity Banner",
   products:     "🍯 Products Section",

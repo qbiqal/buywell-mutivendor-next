@@ -2,6 +2,7 @@
 import React, { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useCart } from "@/components/shop/Cart/CartContext";
@@ -18,7 +19,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 interface ProductDetailClientProps {
-  product: ProductWithVariants & { longDesc?: string | null; metaTitle?: string | null; metaDesc?: string | null; sortOrder: number; sku: string };
+  product: ProductWithVariants & { 
+    longDesc?: string | null; 
+    metaTitle?: string | null; 
+    metaDesc?: string | null; 
+    sortOrder: number; 
+    sku: string;
+    vendor?: { storeName: string | null; storeSlug: string | null } | null;
+  };
   related: ProductWithVariants[];
   canEdit?: boolean;
 }
@@ -66,6 +74,7 @@ function getFallbackGallery(product: ProductDetailClientProps["product"]): Produ
 export default function ProductDetailClient({ product, related, canEdit = false }: ProductDetailClientProps) {
   const { addItem }             = useCart();
   const { success: showToast }  = useToast();
+  const router                  = useRouter();
   const thumbRailRef = useRef<HTMLDivElement>(null);
 
   const activeVariants = product.variants.filter((v) => v.isActive);
@@ -96,6 +105,21 @@ export default function ProductDetailClient({ product, related, canEdit = false 
       unitPriceInr: variant.priceInr,
     });
     showToast(`${product.name} (${variant.name}) × ${qty} added to cart`);
+  }
+
+  function handleBuyNow() {
+    if (!variant) return;
+    addItem({
+      variantId:    variant.id,
+      productId:    product.id,
+      productName:  product.name,
+      variantName:  variant.name,
+      imageUrl:     images[0]?.url,
+      slug:         product.slug,
+      quantity:     qty,
+      unitPriceInr: variant.priceInr,
+    });
+    router.push("/checkout");
   }
 
   function scrollThumbnails(direction: "prev" | "next") {
@@ -194,6 +218,12 @@ export default function ProductDetailClient({ product, related, canEdit = false 
             </Badge>
 
             <h1 className={styles.title}>{product.name}</h1>
+            
+            {product.vendor?.storeName && (
+              <p className={styles.vendorLink}>
+                Sold by <Link href={`/vendors/${product.vendor.storeSlug}`} style={{ color: "var(--green)", fontWeight: 600 }}>{product.vendor.storeName}</Link>
+              </p>
+            )}
 
             {product.description && (
               <p className={styles.desc}>{product.description}</p>
@@ -264,7 +294,10 @@ export default function ProductDetailClient({ product, related, canEdit = false 
                   >+</button>
                 </div>
                 <Button variant="primary" size="lg" onClick={handleAddToCart} className={styles.addBtn}>
-                  Add to Cart — ₹{((variant.priceInr * qty) / 100).toLocaleString("en-IN")}
+                  Add to Cart
+                </Button>
+                <Button variant="secondary" size="lg" onClick={handleBuyNow} className={styles.buyNowBtn}>
+                  Buy Now — ₹{((variant.priceInr * qty) / 100).toLocaleString("en-IN")}
                 </Button>
               </div>
             )}

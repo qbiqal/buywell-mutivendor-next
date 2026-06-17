@@ -41,7 +41,7 @@ export default function ForgotPasswordClient() {
       <div className={styles.card}>
         <div className={styles.logoWrap}>
           <div className={styles.logoIcon}>AN</div>
-          <h1 className={styles.logoName}>APRAS Naturals</h1>
+          <h1 className={styles.logoName}>BuyWell Marketplace</h1>
         </div>
         <h2 className={styles.title}>Reset your password</h2>
         <p className={styles.subtitle}>Enter your account email and we will send a reset code.</p>

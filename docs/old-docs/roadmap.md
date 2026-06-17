@@ -1,4 +1,4 @@
-# APRAS Naturals Roadmap
+# BuyWell Marketplace Roadmap
 
 > Last audited: 2026-05-30
 > Current mode: CMS landing is live at `/`; `/home` is retained as an alias; Coming Soon is retained at `/coming-soon`.
@@ -252,8 +252,8 @@ Implementation direction:
 
 ### Local Development Environment
 
-- ✅ Local PostgreSQL role `apras_user` created.
-- ✅ Local database `apras_naturals_db` created.
+- ✅ Local PostgreSQL role `bw_user` created.
+- ✅ Local database `buywell_multivendor_new` created.
 - ✅ `.env.local` created for local DB, Redis, JWT, and app URL.
 - ✅ Drizzle migrations applied locally.
 - ✅ Seed data loaded: 1 admin, 4 products, 9 variants, 12 product images, 14 CMS sections, 4 blog categories, 90 config keys.
@@ -263,7 +263,7 @@ Implementation direction:
 ### Core
 
 - ✅ DB schema includes users, addresses, products, variants, images, orders, order items, order history, blog, media, site config, CMS sections, testimonials, notifications, notification deliveries, OTP codes, push subscriptions, WhatsApp logs, order sequence.
-- ✅ JWT cookie auth via `an_token`.
+- ✅ JWT cookie auth via `bw_token`.
 - ✅ Admin/customer guards for API routes.
 - ✅ Register, login, forgot password, reset password, email verification, and resend verification APIs.
 - ✅ Registration sends email verification OTP through notification provider facade.

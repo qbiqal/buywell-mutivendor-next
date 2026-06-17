@@ -6,7 +6,7 @@ interface LogoProps {
 }
 
 /**
- * APRAS Naturals 3-leaf logo
+ * BuyWell Marketplace 3-leaf logo
  * — 1 dark green center leaf (pointing up)
  * — 2 lighter green side leaves
  */
@@ -19,7 +19,7 @@ export function LeafLogo({ size = 40, className = "" }: LogoProps) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="APRAS Naturals leaf logo"
+      aria-label="BuyWell Marketplace leaf logo"
     >
       {/* Left leaf — light green, fans left */}
       <path
@@ -75,7 +75,7 @@ export function LogoFull({ size = 40, textSize = 20, darkText = false }: { size?
         letterSpacing: "-0.02em",
         color: darkText ? "var(--ink)" : "#fff",
       }}>
-        APRAS <span style={{ color: "#52B788" }}>Naturals</span>
+        BuyWell <span style={{ color: "#52B788" }}>Naturals</span>
       </span>
     </span>
   );

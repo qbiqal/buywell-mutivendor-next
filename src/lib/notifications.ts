@@ -60,8 +60,8 @@ export async function getNotificationConfig(): Promise<NotificationConfig> {
     getAllSiteConfig("notification"),
     getAllSiteConfig("general"),
   ]);
-  const siteEmail = siteConfig.site_email ?? "noreply@aprasnaturals.com";
-  const siteName = siteConfig.site_name ?? "APRAS Naturals";
+  const siteEmail = siteConfig.site_email ?? "noreply@buywell.in";
+  const siteName = siteConfig.site_name ?? "BuyWell Marketplace";
 
   return {
     inAppEnabled: boolConfig(notificationConfig.notification_in_app_enabled, true),

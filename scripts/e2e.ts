@@ -84,7 +84,7 @@ async function postJson(url: string, body: Record<string, unknown>, init?: Reque
 async function startServer(port: number): Promise<ChildProcess> {
   const child = spawn(
     process.execPath,
-    ["node_modules/next/dist/bin/next", "dev", "--turbopack", "--port", String(port)],
+    ["node_modules/next/dist/bin/next", "dev", "--port", String(port)],
     {
       cwd: process.cwd(),
       env: { ...process.env, PORT: String(port) },
@@ -228,7 +228,7 @@ async function main() {
     });
 
     const adminLogin = await postJson(`${base}/api/auth/login`, {
-      email: "admin@aprasnaturals.com",
+      email: "admin@buywell.in",
       password: "admin123",
     });
     const adminCookie = adminLogin.res.headers.get("set-cookie")?.split(";")[0];

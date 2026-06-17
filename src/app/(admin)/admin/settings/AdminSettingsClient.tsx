@@ -62,6 +62,7 @@ const EXTERNAL_KEY_SETTINGS = [
   "media_r2_secret_access_key",
   "media_r2_bucket_name",
   "media_r2_public_url",
+  "payment_offline_enabled",
   "payment_razorpay_enabled",
   "payment_razorpay_key_id",
   "payment_razorpay_key_secret",
@@ -70,6 +71,9 @@ const EXTERNAL_KEY_SETTINGS = [
   "payment_stripe_publishable_key",
   "payment_stripe_secret_key",
   "payment_stripe_webhook_secret",
+  "payment_bwallet_enabled",
+  "payment_bwallet_api_url",
+  "payment_bwallet_api_key",
   "sentry_enabled",
   "sentry_dsn",
   "sentry_environment",
@@ -236,7 +240,7 @@ export default function AdminSettingsClient() {
               onChange={(e) => setConfig((p) => ({ ...p, notification_email_provider: e.target.value }))}
               options={[{ value: "resend", label: "Resend" }]}
             />
-            <Input label="From Email" value={config.notification_email_from ?? ""} onChange={set("notification_email_from")} placeholder="APRAS Naturals <no-reply@example.com>" />
+            <Input label="From Email" value={config.notification_email_from ?? ""} onChange={set("notification_email_from")} placeholder="BuyWell Marketplace <no-reply@example.com>" />
           </div>
           <label className={styles.inlineCheck}>
             <input
@@ -260,7 +264,7 @@ export default function AdminSettingsClient() {
           </div>
           <div className={styles.formRow}>
             <Input label="SMS API Key" type="password" value={config.notification_sms_api_key ?? ""} onChange={set("notification_sms_api_key")} placeholder="provider API key" autoComplete="off" />
-            <Input label="SMS Sender ID" value={config.notification_sms_sender_id ?? ""} onChange={set("notification_sms_sender_id")} placeholder="APRAS" />
+            <Input label="SMS Sender ID" value={config.notification_sms_sender_id ?? ""} onChange={set("notification_sms_sender_id")} placeholder="BuyWell" />
           </div>
           <Input label="SMS Auth Token" type="password" value={config.notification_sms_auth_token ?? ""} onChange={set("notification_sms_auth_token")} placeholder="provider auth token" autoComplete="off" />
           <div className={styles.formRow}>
@@ -390,6 +394,18 @@ export default function AdminSettingsClient() {
           </div>
 
           <div className={styles.subSection}>
+            <h3 className={styles.subTitle}>BuyWell Global Wallet</h3>
+            <div className={styles.moduleGrid}>
+              <label className={styles.moduleToggle}>
+                <input type="checkbox" checked={config.payment_bwallet_enabled === "true"} onChange={setCheckbox("payment_bwallet_enabled")} />
+                <span><strong>BuyWell E-Commerce Wallet</strong><small>Allows BuyWell MLM members to pay from their ecommerce wallet at checkout</small></span>
+              </label>
+            </div>
+            <Input label="BuyWell API URL" value={config.payment_bwallet_api_url ?? ""} onChange={set("payment_bwallet_api_url")} placeholder="http://localhost:8000" />
+            <Input label="BuyWell API Key" type="password" value={config.payment_bwallet_api_key ?? ""} onChange={set("payment_bwallet_api_key")} placeholder="Marketplace API key" autoComplete="off" />
+          </div>
+
+          <div className={styles.subSection}>
             <h3 className={styles.subTitle}>Observability</h3>
             <label className={styles.inlineCheck}>
               <input type="checkbox" checked={config.sentry_enabled === "true"} onChange={setCheckbox("sentry_enabled")} />
@@ -412,9 +428,9 @@ export default function AdminSettingsClient() {
       {activeTab === "brand" && <Card padding="none" className={styles.settingsCard}>
         <CardHeader><h2 className={styles.sectionTitle}>Brand & Site Information</h2></CardHeader>
         <CardBody className={styles.cardFields}>
-          <Input label="Site Name"    value={config.site_name    ?? ""} onChange={set("site_name")}    placeholder="APRAS Naturals" />
+          <Input label="Site Name"    value={config.site_name    ?? ""} onChange={set("site_name")}    placeholder="BuyWell Marketplace" />
           <Input label="Site Tagline" value={config.site_tagline ?? ""} onChange={set("site_tagline")} placeholder="Pure Honey & Ghee" />
-          <Input label="Email"        value={config.site_email   ?? ""} onChange={set("site_email")}   placeholder="aprasnaturals@gmail.com" type="email" />
+          <Input label="Email"        value={config.site_email   ?? ""} onChange={set("site_email")}   placeholder="hello@buywell.in" type="email" />
           <Input label="Phone / WhatsApp" value={config.site_phone ?? ""} onChange={set("site_phone")} placeholder="+91 9470309006" />
           <Textarea label="Address" value={config.site_address ?? ""} onChange={set("site_address")} placeholder="Ranchi – 834005, Jharkhand" />
           <div className={styles.logoGrid}>
@@ -505,6 +521,14 @@ export default function AdminSettingsClient() {
           <label className={styles.inlineCheck}>
             <input
               type="checkbox"
+              checked={(config.payment_offline_enabled ?? "true") !== "false"}
+              onChange={setCheckbox("payment_offline_enabled")}
+            />
+            Enable Offline payment gateway (shows QR + proof upload on checkout)
+          </label>
+          <label className={styles.inlineCheck}>
+            <input
+              type="checkbox"
               checked={(config.payment_offline_qr_enabled ?? "true") !== "false"}
               onChange={setCheckbox("payment_offline_qr_enabled")}
             />
@@ -528,10 +552,10 @@ export default function AdminSettingsClient() {
             />
           </div>
           <Input label="UPI ID" value={config.payment_upi_id ?? ""} onChange={set("payment_upi_id")} placeholder="aprasnaturals@upi" />
-          <Input label="Company Name (shown on payment page)" value={config.payment_company_name ?? ""} onChange={set("payment_company_name")} placeholder="APRAS Naturals" />
+          <Input label="Company Name (shown on payment page)" value={config.payment_company_name ?? ""} onChange={set("payment_company_name")} placeholder="BuyWell Marketplace" />
         </CardBody>
         <CardFooter>
-          <Button variant="primary" loading={saving} onClick={() => save(["payment_offline_qr_enabled","payment_qr_url","payment_upi_id","payment_company_name"])}>
+          <Button variant="primary" loading={saving} onClick={() => save(["payment_offline_enabled","payment_offline_qr_enabled","payment_qr_url","payment_upi_id","payment_company_name"])}>
             Save Payment Settings
           </Button>
         </CardFooter>

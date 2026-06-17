@@ -1,0 +1,26 @@
+.page { padding: 2rem; max-width: 1400px; }
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
+.title { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0; }
+.headerRight { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.select {
+  background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem; font-size: 0.9375rem; color: var(--text-primary); min-width: 160px;
+}
+
+.summaryCards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.card { background: var(--bg-secondary); padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem; }
+.cardLabel { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+.cardValue { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+.cardValue.green { color: var(--green); }
+
+.tableWrap { overflow-x: auto; border-radius: 0.75rem; border: 1px solid var(--border); }
+.table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.table thead tr { background: var(--bg-secondary); }
+.table th { padding: 0.875rem 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+.table tbody tr { border-top: 1px solid var(--border); }
+.table tbody tr:hover { background: var(--bg-secondary); }
+.table td { padding: 0.875rem 1rem; color: var(--text-primary); }
+.amt { font-weight: 600; }
+.ref { font-family: monospace; font-size: 0.8125rem; }
+.badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; }
+.empty { padding: 3rem; text-align: center; color: var(--text-secondary); }

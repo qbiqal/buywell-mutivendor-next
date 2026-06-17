@@ -89,7 +89,7 @@ const defaultFaqs = [
   { question: "Why does my honey look crystallized or solid?", answer: "Crystallization is completely natural and a sign of pure, raw honey. Real honey contains natural sugars that crystallize over time. To soften it, place the jar in warm water for a few minutes." },
   { question: "What does Mono-Floral mean?", answer: "Mono-floral means bees primarily collected nectar from one specific flower such as Tulsi, Karanj, or Moringa. Each honey keeps its own natural taste profile without artificial additions." },
   { question: "What is Bilona Ghee?", answer: "Bilona is the traditional Indian method of making ghee. A2 milk becomes curd, the curd is wooden-churned into butter, and the butter is slow-heated into rich ghee." },
-  { question: "Can I get a free sample before ordering?", answer: "Yes. APRAS Naturals offers free samples to selected customers. Use the sample request path and the team will contact you to arrange delivery." },
+  { question: "Can I get a free sample before ordering?", answer: "Yes. BuyWell Marketplace offers free samples to selected customers. Use the sample request path and the team will contact you to arrange delivery." },
 ];
 
 const fallbackNavItems: PublicMenuItem[] = [
@@ -212,9 +212,9 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
   const faqSection = sections.faq ?? {};
   const contact = sections.contact ?? {};
   const sitePhone = siteConfig.site_phone || "+919470309006";
-  const siteEmail = siteConfig.site_email || "aprasnaturals@gmail.com";
+  const siteEmail = siteConfig.site_email || "hello@buywell.in";
   const siteLogoUrl = siteConfig.site_logo_url || "";
-  const siteName = siteConfig.site_name || "APRAS Naturals";
+  const siteName = siteConfig.site_name || "BuyWell Marketplace";
   const productLinks = useMemo(() => new Map(featuredProducts.map((p) => [p.slug, `/shop/${p.slug}`])), [featuredProducts]);
   const heroVideoUrl = str(hero, "videoUrl", `${A}/videos/APRUS.mp4`);
   const honeyItems = objectList<HoneyItem>(productsSection, "items", defaultHoneyProducts);
@@ -451,7 +451,7 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
             ) : (
               <>
                 <span className={styles.navLogoIcon}><span className="material-icons">spa</span></span>
-                <span>APRAS <span>Naturals</span></span>
+                <span>BuyWell <span>Naturals</span></span>
               </>
             )}
           </button>
@@ -490,7 +490,7 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
                   ) : (
                     <>
                       <span className={styles.navLogoIcon}><span className="material-icons">spa</span></span>
-                      <span>APRAS <span>Naturals</span></span>
+                      <span>BuyWell <span>Naturals</span></span>
                     </>
                   )}
                 </span>
@@ -556,9 +556,9 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
       <section className={`${styles.section} ${styles.promiseSection}`} id="promise">
         <div className={styles.container}>
           <Reveal style={{ maxWidth: 680 }}>
-            <p className={styles.eyebrow}>{str(promise, "eyebrow", "The APRAS Promise")}</p>
+            <p className={styles.eyebrow}>{str(promise, "eyebrow", "The BuyWell Promise")}</p>
             <h2 className={styles.sectionTitle}>{str(promise, "heading", "Authorized Partner of")} <em>{str(promise, "accent", "Prakvedaa")}</em></h2>
-            <p className={styles.sectionLead}>{str(promise, "lead", "At APRAS Naturals, every jar is sourced ethically, prepared traditionally, and delivered with zero compromise.")}</p>
+            <p className={styles.sectionLead}>{str(promise, "lead", "At BuyWell Marketplace, every jar is sourced ethically, prepared traditionally, and delivered with zero compromise.")}</p>
           </Reveal>
           <div className={styles.promiseGrid}>
             {promiseItems.map(({ icon, title, body }, i) => (
@@ -704,7 +704,7 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
         <div className={styles.container}>
           <Reveal style={{ maxWidth: 600 }}>
             <p className={styles.eyebrow}>{str(gallerySection, "eyebrow", "Our Community")}</p>
-            <h2 className={styles.sectionTitle}>{str(gallerySection, "heading", "APRAS in the Field")}</h2>
+            <h2 className={styles.sectionTitle}>{str(gallerySection, "heading", "BuyWell in the Field")}</h2>
             <p className={styles.sectionLead}>{str(gallerySection, "lead", "Connecting directly with customers at exhibitions, fairs, and community events across India.")}</p>
           </Reveal>
           <div className={styles.galleryGrid}>
@@ -783,7 +783,7 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
         <div className={styles.container}>
           <Reveal className={styles.missionInner}>
             <blockquote>{(sections.mission?.quote as string) || "To reconnect people with the pure, untampered gifts of nature, championing traditional methods and authentic sourcing to bring uncompromising wellness to every table."}</blockquote>
-            <p>— {str(sections.mission, "attribution", "APRAS Naturals Mission")}</p>
+            <p>— {str(sections.mission, "attribution", "BuyWell Marketplace Mission")}</p>
           </Reveal>
         </div>
       </section>
@@ -835,7 +835,7 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
           <div className={styles.orderInner}>
             <Reveal>
               <p className={styles.eyebrow}>{str(contact, "eyebrow", "Contact Us")}</p>
-              <h2 className={styles.sectionTitle}>{str(contact, "heading", "Talk to APRAS Naturals")}</h2>
+              <h2 className={styles.sectionTitle}>{str(contact, "heading", "Talk to BuyWell Marketplace")}</h2>
               <p className={styles.sectionLead}>{str(contact, "lead", "For samples, product questions, partnership enquiries, or support, send us a message and we will respond within 24 hours.")}</p>
             </Reveal>
             <motion.form
@@ -875,9 +875,9 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
       <footer className={styles.footer}>
         <div className={styles.footerCta}>
           <div>
-            <span>Pure naturals, direct from APRAS</span>
+            <span>Pure naturals, direct from BuyWell</span>
             <h2>Need help choosing honey or A2 ghee?</h2>
-            <p>Talk to the APRAS team for samples, wholesale enquiries, partnership questions, or product guidance.</p>
+            <p>Talk to the BuyWell team for samples, wholesale enquiries, partnership questions, or product guidance.</p>
           </div>
           <button type="button" onClick={() => navTo("#contact")}>Contact Us</button>
         </div>
@@ -885,7 +885,7 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
           <div>
             <button className={styles.footerLogo} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
               <span className={styles.footerLogoIcon}><span className="material-icons">spa</span></span>
-              APRAS Naturals
+              BuyWell Marketplace
             </button>
             <p>Authorized partner and CNF of Prakvedaa. Bringing pure, authentic natural products from India&apos;s heartland to your table.</p>
             <div className={styles.footerTrust}>
@@ -913,7 +913,7 @@ export default function LandingClient({ sections, siteConfig, navItems = [], fea
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>© 2026 APRAS Naturals. All rights reserved.</p>
+          <p>© 2026 BuyWell Marketplace. All rights reserved.</p>
           <div><span className="material-icons">verified</span>Authorized Prakvedaa Partner</div>
         </div>
       </footer>

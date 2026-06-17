@@ -12,7 +12,7 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 
-ARG NEXT_PUBLIC_APP_URL=https://aprasnaturals.com
+ARG NEXT_PUBLIC_APP_URL=https://buywell.in
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 # 3GB covers large TS codebases on constrained build servers

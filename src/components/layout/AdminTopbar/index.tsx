@@ -26,7 +26,7 @@ export function AdminTopbar() {
   return (
     <header className={styles.topbar}>
       <div>
-        <p className={styles.kicker}>APRAS Admin</p>
+        <p className={styles.kicker}>BuyWell Admin</p>
         <h2>{title}</h2>
       </div>
       <div className={styles.actions}>

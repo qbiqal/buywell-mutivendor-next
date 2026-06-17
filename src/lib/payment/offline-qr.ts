@@ -23,7 +23,7 @@ export const offlineQrGateway: PaymentGateway = {
   async createSession({ orderId, amount }): Promise<PaymentSession> {
     const qrUrl = (await getSiteConfig("payment_qr_url")) ?? "";
     const upiId = (await getSiteConfig("payment_upi_id")) ?? "";
-    const companyName = (await getSiteConfig("payment_company_name")) ?? "APRAS Naturals";
+    const companyName = (await getSiteConfig("payment_company_name")) ?? "BuyWell Marketplace";
 
     return {
       gatewayName: "offline_qr",

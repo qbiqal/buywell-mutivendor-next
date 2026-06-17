@@ -15,7 +15,7 @@ export default async function PublicLayout({ children }: { children: React.React
 
   // Check for active impersonation session
   const cookieStore = await cookies();
-  const impersonationAdminToken = cookieStore.get("an_impersonate_admin")?.value ?? null;
+  const impersonationAdminToken = cookieStore.get("bw_impersonate_admin")?.value ?? null;
   let impersonatedAs: string | null = null;
   if (impersonationAdminToken) {
     const adminPayload = await verifyToken(impersonationAdminToken);
@@ -67,7 +67,7 @@ export default async function PublicLayout({ children }: { children: React.React
         cartSlot={cartSlot}
         topOffset={impersonatedAs ? 40 : 0}
         logoUrl={generalConfig.site_logo_url || ""}
-        siteName={generalConfig.site_name || "APRAS Naturals"}
+        siteName={generalConfig.site_name || "BuyWell Marketplace"}
       />
       <main style={{ paddingTop: impersonatedAs ? "calc(var(--header-height) + 40px)" : "var(--header-height)" }}>
         {children}
@@ -75,7 +75,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <Footer
         links={footerLinks}
         logoUrl={generalConfig.site_logo_url || ""}
-        siteName={generalConfig.site_name || "APRAS Naturals"}
+        siteName={generalConfig.site_name || "BuyWell Marketplace"}
         tagline={generalConfig.site_tagline || undefined}
         email={generalConfig.site_email || undefined}
         phone={generalConfig.site_phone || undefined}

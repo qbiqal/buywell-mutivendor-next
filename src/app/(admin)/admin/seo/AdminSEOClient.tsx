@@ -186,13 +186,13 @@ export default function AdminSEOClient() {
           <CardHeader><h2 className={styles.sectionTitle}>Sitewide SEO</h2></CardHeader>
           <CardBody className={styles.formStack}>
             <div className={styles.formRow}>
-              <Input label="Default Title" value={config.seo_default_title ?? ""} onChange={set("seo_default_title")} placeholder="APRAS Naturals" />
-              <Input label="Title Template" value={config.seo_title_template ?? "%s | APRAS Naturals"} onChange={set("seo_title_template")} />
+              <Input label="Default Title" value={config.seo_default_title ?? ""} onChange={set("seo_default_title")} placeholder="BuyWell Marketplace" />
+              <Input label="Title Template" value={config.seo_title_template ?? "%s | BuyWell Marketplace"} onChange={set("seo_title_template")} />
             </div>
             <Textarea label="Default Description" rows={3} value={config.seo_default_description ?? ""} onChange={set("seo_default_description")} />
             <Input label="Default Keywords" value={config.seo_default_keywords ?? ""} onChange={set("seo_default_keywords")} placeholder="honey, A2 ghee, raw honey" />
             <div className={styles.formRow}>
-              <Input label="Canonical Base URL" value={config.seo_canonical_base_url ?? ""} onChange={set("seo_canonical_base_url")} placeholder="https://aprasnaturals.com" />
+              <Input label="Canonical Base URL" value={config.seo_canonical_base_url ?? ""} onChange={set("seo_canonical_base_url")} placeholder="https://buywell.in" />
               <Input label="Default Sitemap Priority" value={config.seo_sitemap_priority_default ?? "0.7"} onChange={set("seo_sitemap_priority_default")} />
             </div>
             <Select

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { blogPosts, products } from "@/lib/db/schema";
+import { blogPosts, products, vendors } from "@/lib/db/schema";
 import { getPublishedCmsPages } from "@/lib/cms";
 import { getModuleState } from "@/lib/modules";
 import { getSeoConfig } from "@/lib/seo";
@@ -34,6 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     if (modules.ecommerce) {
       routes.push({ url: `${baseUrl}/shop`, lastModified: now, changeFrequency: "daily", priority: 0.9 });
+      
       const productRows = await db.select({
         slug: products.slug,
         updatedAt: products.updatedAt,
@@ -48,6 +49,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           lastModified: product.updatedAt,
           changeFrequency: "weekly",
           priority: 0.8,
+        });
+      }
+
+      const vendorRows = await db.select({
+        storeSlug: vendors.storeSlug,
+        updatedAt: vendors.updatedAt,
+      }).from(vendors)
+        .where(eq(vendors.status, "approved"))
+        .orderBy(desc(vendors.updatedAt))
+        .limit(500);
+
+      for (const vendor of vendorRows) {
+        routes.push({
+          url: `${baseUrl}/vendors/${vendor.storeSlug}`,
+          lastModified: vendor.updatedAt,
+          changeFrequency: "weekly",
+          priority: 0.7,
         });
       }
     }

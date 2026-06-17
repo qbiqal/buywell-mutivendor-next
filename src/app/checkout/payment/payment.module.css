@@ -120,3 +120,20 @@
 @media (max-width: 600px) {
   .rzpSection { padding: 20px 20px 0; }
 }
+
+/* Wallet Section */
+.walletSection { padding: 20px 40px 0; }
+.walletLoading { text-align: center; color: var(--text-secondary); font-size: 0.875rem; padding: 1rem; }
+.walletLinkBox, .walletApplyBox, .walletEmptyBox {
+  display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem;
+  background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+}
+.walletIcon { font-size: 1.5rem; background: var(--bg-primary); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+.walletInfo { flex-grow: 1; }
+.walletTitle { font-weight: 700; color: var(--text-primary); margin: 0; font-size: 0.9375rem; }
+.walletSub { font-size: 0.8125rem; color: var(--text-secondary); margin: 0.25rem 0 0; }
+.linkBtn {
+  background: var(--green); color: #fff; text-decoration: none; padding: 0.5rem 1rem;
+  border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600; white-space: nowrap;
+}
+.walletPaidNote { background: var(--green); color: #fff; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; margin-top: 1rem; text-align: center; }

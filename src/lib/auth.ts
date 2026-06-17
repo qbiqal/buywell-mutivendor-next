@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 
-export const COOKIE_NAME = "an_token";
+export const COOKIE_NAME = "bw_token";
 const JWT_ALG = "HS256";
 
 export type UserRole = "customer" | "admin" | "qbiqal" | "vendor";

@@ -168,6 +168,7 @@ export default function AdminProductsClient() {
               <tr>
                 <th>Product</th>
                 <th>Category</th>
+                <th>Uploaded By</th>
                 <th>Variants</th>
                 <th>SKU</th>
                 <th>Status</th>
@@ -205,6 +206,13 @@ export default function AdminProductsClient() {
                         {p.subCategory ?? p.category}
                       </Badge>
                       {p.isFeatured && <Badge variant="info" className={styles.featuredBadge}>Featured</Badge>}
+                    </td>
+                    <td>
+                      {p.vendorId ? (
+                        <Badge variant="info">Vendor#{p.vendorId}</Badge>
+                      ) : (
+                        <Badge variant="success">Admin</Badge>
+                      )}
                     </td>
                     <td>
                       <span className={styles.variantCount}>{p.variants.length} variant{p.variants.length !== 1 ? "s" : ""}</span>

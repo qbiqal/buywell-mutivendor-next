@@ -6,7 +6,7 @@ import { createAdminGuard, getAuthPayload } from "@/lib/middleware";
 import { signToken, getTokenFromRequest, COOKIE_NAME, getTokenCookieOptions, isAdminRole } from "@/lib/auth";
 import { handleApiError, NotFoundError } from "@/lib/errors";
 
-const IMPERSONATION_COOKIE = "an_impersonate_admin";
+const IMPERSONATION_COOKIE = "bw_impersonate_admin";
 
 export async function POST(
   req: NextRequest,

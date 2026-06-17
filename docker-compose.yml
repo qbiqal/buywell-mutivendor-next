@@ -1,5 +1,5 @@
 services:
-  # ── APRAS Naturals — Next.js App ─────────────────────────────────────────────
+  # ── BuyWell Marketplace — Next.js App ─────────────────────────────────────────────
   # Postgres and Redis are NOT included here.
   # They live on the shared Hetzner private-network servers:
   #   Postgres → 10.0.0.5  (qbiqal-postgres)
@@ -10,7 +10,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://aprasnaturals.com}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://buywell.in}
     container_name: apras-naturals-app
     restart: unless-stopped
     ports:
@@ -21,7 +21,7 @@ services:
       REDIS_URL: ${REDIS_URL}
       JWT_SECRET: ${JWT_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://aprasnaturals.com}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://buywell.in}
       DEPLOY_SECRET: ${DEPLOY_SECRET}
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']

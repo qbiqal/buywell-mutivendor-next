@@ -8,28 +8,55 @@ import styles from "./confirmation.module.css";
 function ConfirmationContent() {
   const params      = useSearchParams();
   const orderNumber = params.get("orderNumber") ?? "Your Order";
+  const method      = params.get("method") ?? "wallet";
+
+  const isOffline = method === "offline_qr";
 
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <div className={styles.icon}>✅</div>
-        <h1 className={styles.title}>Payment Proof Submitted!</h1>
+        <div className={styles.icon}>{isOffline ? "📋" : "🎉"}</div>
+        <h1 className={styles.title}>
+          {isOffline ? "Payment Proof Submitted!" : "Order Confirmed!"}
+        </h1>
         <p className={styles.sub}>
-          Order <strong>{orderNumber}</strong> — We&apos;ve received your payment screenshot.
+          Order <strong>{orderNumber}</strong> —{" "}
+          {isOffline
+            ? "We've received your payment screenshot. Our team will verify it shortly."
+            : "Your payment was successful and your order is being processed."}
         </p>
         <div className={styles.steps}>
-          <div className={styles.step}>
-            <span className={styles.stepNum}>1</span>
-            <span>Our team will verify your payment within a few hours.</span>
-          </div>
-          <div className={styles.step}>
-            <span className={styles.stepNum}>2</span>
-            <span>You&apos;ll receive a WhatsApp confirmation once verified.</span>
-          </div>
-          <div className={styles.step}>
-            <span className={styles.stepNum}>3</span>
-            <span>Your order will be packed and shipped within 24–48 hours.</span>
-          </div>
+          {isOffline ? (
+            <>
+              <div className={styles.step}>
+                <span className={styles.stepNum}>1</span>
+                <span>Our team will verify your payment within a few hours.</span>
+              </div>
+              <div className={styles.step}>
+                <span className={styles.stepNum}>2</span>
+                <span>You&apos;ll receive a WhatsApp confirmation once verified.</span>
+              </div>
+              <div className={styles.step}>
+                <span className={styles.stepNum}>3</span>
+                <span>Your order will be packed and shipped within 24–48 hours.</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.step}>
+                <span className={styles.stepNum}>1</span>
+                <span>Payment received — your order is confirmed and queued for processing.</span>
+              </div>
+              <div className={styles.step}>
+                <span className={styles.stepNum}>2</span>
+                <span>You&apos;ll receive a WhatsApp update once your order is packed.</span>
+              </div>
+              <div className={styles.step}>
+                <span className={styles.stepNum}>3</span>
+                <span>Delivery within 3–5 business days after dispatch.</span>
+              </div>
+            </>
+          )}
         </div>
         <div className={styles.ctas}>
           <Link href="/orders"><Button variant="primary" size="lg">Track My Order</Button></Link>

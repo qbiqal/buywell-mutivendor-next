@@ -1,4 +1,4 @@
-# APRAS Naturals — Development Blueprint Part 1
+# BuyWell Marketplace — Development Blueprint Part 1
 ## Product Vision, Route Policy, Architecture, and Local Setup
 
 > Last updated: 2026-05-30
@@ -9,7 +9,7 @@
 
 ## 1. Product Vision
 
-APRAS Naturals is a modular CMS + E-Commerce + Blog platform for an authorized Prakvedaa partner selling mono-floral honey and A2 Bilona Ghee.
+BuyWell Marketplace is a modular CMS + E-Commerce + Blog platform for an authorized Prakvedaa partner selling mono-floral honey and A2 Bilona Ghee.
 
 The business flow is intentionally offline-payment first:
 
@@ -140,7 +140,7 @@ Modules consume these settings only when enabled:
 - ✅ Next.js 16.2.2 App Router project.
 - ✅ PostgreSQL schema and Drizzle migration.
 - ✅ Redis with `an:` key prefix.
-- ✅ JWT cookie auth with `an_token`.
+- ✅ JWT cookie auth with `bw_token`.
 - ✅ Admin/customer guards and Next 16 `proxy.ts`.
 - ✅ Public shop, product detail, blog, checkout, payment, and confirmation pages.
 - ✅ Customer orders and profile.
@@ -215,9 +215,9 @@ Rules:
 |---|---|---|
 | Coolify | `178.104.149.128:8000` | Control plane |
 | App server | `178.104.105.31` | Docker app runtime |
-| PostgreSQL | `178.104.158.232:5432` | `apras_naturals_db` |
+| PostgreSQL | `178.104.158.232:5432` | `buywell_multivendor_new` |
 | Redis | `178.104.158.112:6379` | `an:` namespace |
-| Domain | `aprasnaturals.com` | Cloudflare configured |
+| Domain | `buywell.in` | Cloudflare configured |
 
 Current project decision: direct PostgreSQL on `:5432`. Keep code PgBouncer-compatible for later, but do not require PgBouncer now.
 
@@ -231,8 +231,8 @@ Completed locally:
 
 - ✅ PostgreSQL responds on local socket.
 - ✅ Redis responds with `PONG`.
-- ✅ Local role `apras_user` created.
-- ✅ Local DB `apras_naturals_db` created.
+- ✅ Local role `bw_user` created.
+- ✅ Local DB `buywell_multivendor_new` created.
 - ✅ `.env.local` created with local DB/Redis/JWT/app URL.
 - ✅ `npm run db:migrate` applied migrations.
 - ✅ `npm run db:seed` seeded admin/products/CMS/blog categories.

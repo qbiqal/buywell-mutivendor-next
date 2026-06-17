@@ -1,0 +1,16 @@
+.container { padding: 4rem 1.5rem; display: flex; justify-content: center; min-height: 70vh; }
+.card { background: var(--bg-secondary); padding: 2.5rem; border-radius: 1rem; border: 1px solid var(--border); max-width: 480px; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.title { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem; text-align: center; }
+.subtitle { font-size: 0.9375rem; color: var(--text-secondary); text-align: center; margin-bottom: 2rem; }
+.form { display: flex; flex-direction: column; gap: 1.5rem; }
+.formGroup { display: flex; flex-direction: column; gap: 0.5rem; }
+.label { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+.input { background: var(--bg-primary); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 1rem; color: var(--text-primary); outline: none; }
+.input:focus { border-color: var(--green); }
+.radioGroup { display: flex; gap: 1.5rem; margin-top: 0.25rem; }
+.radioLabel { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9375rem; color: var(--text-primary); cursor: pointer; }
+.button { background: var(--green); color: #fff; border: none; padding: 0.875rem; border-radius: 0.5rem; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+.button:hover { background: var(--green-dk); }
+.button:disabled { opacity: 0.6; cursor: not-allowed; }
+.backButton { background: none; border: none; color: var(--text-secondary); font-size: 0.875rem; cursor: pointer; align-self: center; }
+.info { background: var(--bg-primary); padding: 1rem; border-radius: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; border-left: 4px solid var(--green); }

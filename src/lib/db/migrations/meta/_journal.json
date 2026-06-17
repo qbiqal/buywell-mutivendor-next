@@ -64,6 +64,13 @@
       "when": 1781333342469,
       "tag": "0008_many_human_robot",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1781363302490,
+      "tag": "0009_add_wallet_columns",
+      "breakpoints": true
     }
   ]
 }

@@ -1,10 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { addresses } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { createAuthGuard, getAuthPayload } from "@/lib/middleware";
 import { handleApiError, ValidationError } from "@/lib/errors";
 import { requireModuleApi } from "@/lib/modules";
+
+export async function GET(req: NextRequest) {
+  try {
+    const authResult = await createAuthGuard()(req);
+    if (authResult) return authResult;
+    const payload = await getAuthPayload(req);
+    if (!payload) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+
+    const rows = await db.select().from(addresses)
+      .where(eq(addresses.userId, payload.sub))
+      .orderBy(desc(addresses.isDefault));
+
+    return NextResponse.json({ success: true, data: rows });
+  } catch (err) {
+    return handleApiError(err);
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {

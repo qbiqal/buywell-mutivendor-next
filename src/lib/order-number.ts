@@ -1,5 +1,5 @@
 /**
- * Generates sequential order numbers: AN-2024-0001
+ * Generates sequential order numbers: BW-2024-0001
  * Uses a DB sequence table to guarantee uniqueness under concurrent inserts.
  */
 

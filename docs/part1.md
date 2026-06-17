@@ -2,7 +2,7 @@
 ## Full Multivendor Conversion + New Design + Payment Expansion
 
 > Created: 2026-06-13  
-> Scope: Convert single-vendor APRAS Naturals into BuyWell Multivendor Marketplace  
+> Scope: Convert single-vendor BuyWell Marketplace into BuyWell Multivendor Marketplace  
 > Framework: Next.js 16.2.2 · PostgreSQL 17 · Redis 7 · Coolify on Hetzner  
 > Hosting: buywell.in / www.buywell.in → Qbiqal-app-server (10.0.0.4 / 178.104.105.31)
 
@@ -37,7 +37,7 @@
 | Vendor model | Single vendor (admin owns all products) | Multi-vendor (each vendor owns their products) |
 | Roles | customer / admin / qbiqal | customer / vendor / admin / qbiqal |
 | Homepage | Scroll-scrub video hero | Sliding banner carousel (CMS-managed) |
-| Design | APRAS Naturals brand palette | BuyWell marketplace palette (see §2) |
+| Design | BuyWell Marketplace brand palette | BuyWell marketplace palette (see §2) |
 | Payments | Offline QR only | Offline QR + Razorpay + BuyWell Wallet (Part 2) |
 | CMS landing | Section editor for old landing | Banner/slider manager for new homepage |
 | Order flow | Single-vendor order | Split per vendor, commission deducted |
@@ -889,152 +889,152 @@ All policy pages:
 
 ## 13. Phase-by-Phase Development Roadmap
 
-### Phase 0 — Repository & Infrastructure Setup [CURRENT STEP]
+### Phase 0 — Repository & Infrastructure Setup [✅ COMPLETE]
 
 **Goal**: Clean slate, new identity, coming soon page deployed.
 
 Tasks:
-- [ ] Rename `package.json` name: `apras-naturals` → `buywell-multivendor`
-- [ ] Update git remote from `apras-naturals` to `buywell-mutivendor-next`
-- [ ] Clean up: remove `frames/`, `videos/`, loose root PNG/HTML files
-- [ ] Rename Redis key prefix `an:` → `bw:` in `src/lib/redis.ts` and cache helpers
-- [ ] Replace Coming Soon page with BuyWell-branded coming soon
-- [ ] Push to `https://github.com/qbiqal/buywell-mutivendor-next` (main branch)
-- [ ] Create Coolify resource (Docker, app-server, postgres, redis)
-- [ ] Configure build args, env vars, domain `buywell.in` + `www.buywell.in`
-- [ ] Verify first deploy shows coming soon
+- [x] Rename `package.json` name: `apras-naturals` → `buywell-multivendor`
+- [x] Update git remote from `apras-naturals` to `buywell-mutivendor-next`
+- [x] Clean up: remove `frames/`, `videos/`, loose root PNG/HTML files
+- [x] Rename Redis key prefix `an:` → `bw:` in `src/lib/redis.ts` and cache helpers
+- [x] Replace Coming Soon page with BuyWell-branded coming soon
+- [x] Push to `https://github.com/qbiqal/buywell-mutivendor-next` (main branch)
+- [x] Create Coolify resource (Docker, app-server, postgres, redis)
+- [x] Configure build args, env vars, domain `buywell.in` + `www.buywell.in`
+- [x] Verify first deploy shows coming soon
 
 **Deliverable**: buywell.in shows Coming Soon. Auto-deploy on push to main is working.
 
 ---
 
-### Phase 1 — Design System + New Homepage [~5 days]
+### Phase 1 — Design System + New Homepage [✅ COMPLETE]
 
 **Goal**: New color palette, new homepage layout with sliding banner hero.
 
 Tasks:
-- [ ] Replace CSS variables (new palette, §2.1)
-- [ ] Update CustomerHeader: new topbar layout with search bar + orange accent
-- [ ] Update Footer: new BuyWell footer layout
-- [ ] Create `homepage_banners` table + migration
-- [ ] Seed 3 default banners
-- [ ] Build `HomeHeroSlider` client component (touch + auto-play)
-- [ ] Build `/admin/homepage` banner management page
-- [ ] Build banner CRUD API `/api/admin/homepage/banners`
-- [ ] Update homepage page.tsx to fetch & render new sections
-- [ ] Add category strip (horizontal scroll chips from product_categories)
-- [ ] Add "Latest Products" carousel section
-- [ ] Remove old scroll-scrub video hero logic
-- [ ] Update Admin Settings brand section for new site identity
+- [x] Replace CSS variables (new palette, §2.1)
+- [x] Update CustomerHeader: new topbar layout with search bar + orange accent
+- [x] Update Footer: new BuyWell footer layout
+- [x] Create `homepage_banners` table + migration
+- [x] Seed 3 default banners
+- [x] Build `HomeHeroSlider` client component (touch + auto-play)
+- [x] Build `/admin/homepage` banner management page
+- [x] Build banner CRUD API `/api/admin/homepage/banners`
+- [x] Update homepage page.tsx to fetch & render new sections
+- [x] Add category strip (horizontal scroll chips from product_categories)
+- [x] Add "Latest Products" carousel section
+- [x] Remove old scroll-scrub video hero logic
+- [x] Update Admin Settings brand section for new site identity
 
 **Verify**: `npm run verify` passes, homepage matches reference design.
 
 ---
 
-### Phase 2 — Multivendor DB + Vendor Role [~4 days]
+### Phase 2 — Multivendor DB + Vendor Role [✅ COMPLETE]
 
 **Goal**: DB schema extended, vendor role working, vendor application flow.
 
 Tasks:
-- [ ] Write migrations: `vendors`, `order_vendor_splits`, `vendor_commissions`, `vendor_payouts`, `vendor_payout_items`
-- [ ] Alter `users.role` to include 'vendor'
-- [ ] Alter `products.vendor_id`
-- [ ] Add vendor-related `site_config` defaults
-- [ ] `createVendorGuard()` in `src/lib/middleware.ts`
-- [ ] `POST /api/vendor/apply` endpoint
-- [ ] Vendor application form page at `/become-vendor`
-- [ ] Admin notification on new vendor application
+- [x] Write migrations: `vendors`, `order_vendor_splits`, `vendor_commissions`, `vendor_payouts`, `vendor_payout_items`
+- [x] Alter `users.role` to include 'vendor'
+- [x] Alter `products.vendor_id`
+- [x] Add vendor-related `site_config` defaults
+- [x] `createVendorGuard()` in `src/lib/middleware.ts`
+- [x] `POST /api/vendor/apply` endpoint
+- [x] Vendor application form page at `/become-vendor`
+- [x] Admin notification on new vendor application
 
 **Verify**: Vendor application → admin sees it → can approve/reject.
 
 ---
 
-### Phase 3 — Vendor Panel [~6 days]
+### Phase 3 — Vendor Panel [✅ COMPLETE]
 
 **Goal**: Full vendor dashboard, products, orders, payouts.
 
 Tasks:
-- [ ] Vendor layout: `src/app/(vendor)/layout.tsx` with animated sidebar
-- [ ] Vendor sidebar component (teal theme, mobile drawer)
-- [ ] Vendor dashboard: `/vendor/dashboard`
-- [ ] Vendor products: `/vendor/products` (CRUD, own products only)
-- [ ] Vendor orders: `/vendor/orders` (filtered by vendor_id)
-- [ ] Vendor payout screen: `/vendor/payouts`
-- [ ] Vendor analytics: `/vendor/analytics`
-- [ ] Vendor profile: `/vendor/profile`
-- [ ] All vendor APIs: `/api/vendor/*`
-- [ ] Vendor proxy.ts route protection
+- [x] Vendor layout: `src/app/(vendor)/layout.tsx` with animated sidebar
+- [x] Vendor sidebar component (teal theme, mobile drawer)
+- [x] Vendor dashboard: `/vendor/dashboard`
+- [x] Vendor products: `/vendor/products` (CRUD, own products only)
+- [x] Vendor orders: `/vendor/orders` (filtered by vendor_id)
+- [x] Vendor payout screen: `/vendor/payouts`
+- [x] Vendor analytics: `/vendor/analytics`
+- [x] Vendor profile: `/vendor/profile`
+- [x] All vendor APIs: `/api/vendor/*`
+- [x] Vendor proxy.ts route protection
 
 **Verify**: Vendor can log in, manage products, see their orders, view payout balance.
 
 ---
 
-### Phase 4 — Multivendor Order Flow + Commissions [~4 days]
+### Phase 4 — Multivendor Order Flow + Commissions [✅ COMPLETE]
 
 **Goal**: Orders correctly split per vendor, commissions calculated and tracked.
 
 Tasks:
-- [ ] Update `POST /api/orders` for vendor split logic
-- [ ] Create `vendor_commission` + `order_vendor_split` in same transaction
-- [ ] Update admin order detail to show per-vendor items
-- [ ] Commission status lifecycle (pending → cleared on delivery)
-- [ ] `/admin/commissions` UI
-- [ ] `/admin/vendors` UI (list, approve, detail)
-- [ ] Vendor email notification on new order
-- [ ] Payout initiation API + admin UI
-- [ ] Per-vendor commission override in admin vendor detail
+- [x] Update `POST /api/orders` for vendor split logic
+- [x] Create `vendor_commission` + `order_vendor_split` in same transaction
+- [x] Update admin order detail to show per-vendor items
+- [x] Commission status lifecycle (pending → cleared on delivery)
+- [x] `/admin/commissions` UI
+- [x] `/admin/vendors` UI (list, approve, detail)
+- [x] Vendor email notification on new order
+- [x] Payout initiation API + admin UI
+- [x] Per-vendor commission override in admin vendor detail
 
 **Verify**: Multi-vendor order test: order with 2 vendors → 2 commission rows → correct split amounts.
 
 ---
 
-### Phase 5 — Razorpay Integration [~3 days]
+### Phase 5 — Razorpay Integration [✅ COMPLETE]
 
 **Goal**: Online payment via Razorpay working end-to-end.
 
 Tasks:
-- [ ] Install `razorpay` npm package
-- [ ] `src/lib/payment/razorpay.ts` gateway implementation
-- [ ] Update `POST /api/orders` to create Razorpay order when selected
-- [ ] `POST /api/orders/[id]/verify-razorpay` HMAC verification
-- [ ] `POST /api/webhooks/razorpay` handler (idempotent)
-- [ ] Update checkout UI: payment method selector
-- [ ] Admin settings "Payments" tab: Razorpay config fields
-- [ ] BuyWell Wallet stub gateway (admin config, disabled by default)
-- [ ] Test with Razorpay test credentials
+- [x] Install `razorpay` npm package
+- [x] `src/lib/payment/razorpay.ts` gateway implementation
+- [x] Update `POST /api/orders` to create Razorpay order when selected
+- [x] `POST /api/orders/[id]/verify-razorpay` HMAC verification
+- [x] `POST /api/webhooks/razorpay` handler (idempotent)
+- [x] Update checkout UI: payment method selector
+- [x] Admin settings "Payments" tab: Razorpay config fields
+- [x] BuyWell Wallet stub gateway (admin config, disabled by default)
+- [x] Test with Razorpay test credentials
 
 **Verify**: Full checkout with Razorpay test card → order marked paid → admin sees payment.
 
 ---
 
-### Phase 6 — Admin Extensions + Compliance [~3 days]
+### Phase 6 — Admin Extensions + Compliance [✅ COMPLETE]
 
 **Goal**: Admin vendor management, commission UI, compliance pages updated.
 
 Tasks:
-- [ ] `/admin/vendors` list + approve/suspend
-- [ ] `/admin/vendors/[id]` detail
-- [ ] Commission statement tabs in `/admin/commissions`
-- [ ] New compliance pages: seller-agreement, commission-policy, dispute-resolution
-- [ ] Update footer menu to include new legal pages
-- [ ] Update DPDP/GDPR compliance checklist for multivendor context
+- [x] `/admin/vendors` list + approve/suspend
+- [x] `/admin/vendors/[id]` detail
+- [x] Commission statement tabs in `/admin/commissions`
+- [x] New compliance pages: seller-agreement, commission-policy, dispute-resolution
+- [x] Update footer menu to include new legal pages
+- [x] Update DPDP/GDPR compliance checklist for multivendor context
 
 **Verify**: `npm run verify` passes. All pages accessible.
 
 ---
 
-### Phase 7 — Polish, SEO, QA [~2 days]
+### Phase 7 — Polish, SEO, QA [✅ COMPLETE]
 
 **Goal**: Production-ready, tested, deployed.
 
 Tasks:
-- [ ] SEO metadata for new homepage, vendor store pages
-- [ ] Vendor store public page: `/vendors/[slug]`
-- [ ] Product page shows vendor name + link to vendor store
-- [ ] Sitemap includes vendor store pages
-- [ ] Update CLAUDE.md, mind-map.md, roadmap.md
-- [ ] Full `npm run verify`
-- [ ] Deploy to coolify, verify buywell.in
+- [x] SEO metadata for new homepage, vendor store pages
+- [x] Vendor store public page: `/vendors/[slug]`
+- [x] Product page shows vendor name + link to vendor store
+- [x] Sitemap includes vendor store pages
+- [x] Update CLAUDE.md, mind-map.md, roadmap.md
+- [x] Full `npm run verify`
+- [x] Deploy to coolify, verify buywell.in
 
 ---
 

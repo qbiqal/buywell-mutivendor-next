@@ -41,11 +41,11 @@ export async function getSeoConfig(): Promise<SeoConfig> {
     getAllSiteConfig("seo"),
   ]);
 
-  const baseUrl = (seo.seo_canonical_base_url || process.env.NEXT_PUBLIC_APP_URL || "https://aprasnaturals.com").replace(/\/$/, "");
+  const baseUrl = (seo.seo_canonical_base_url || process.env.NEXT_PUBLIC_APP_URL || "https://buywell.in").replace(/\/$/, "");
   return {
-    siteName: general.site_name || "APRAS Naturals",
-    defaultTitle: seo.seo_default_title || general.site_name || "APRAS Naturals",
-    titleTemplate: seo.seo_title_template || "%s | APRAS Naturals",
+    siteName: general.site_name || "BuyWell Marketplace",
+    defaultTitle: seo.seo_default_title || general.site_name || "BuyWell Marketplace",
+    titleTemplate: seo.seo_title_template || "%s | BuyWell Marketplace",
     defaultDescription: seo.seo_default_description || general.site_tagline || "Pure Prakvedaa Honey & A2 Bilona Ghee.",
     keywords: csv(seo.seo_default_keywords || "honey,A2 ghee,Prakvedaa,raw honey,bilona ghee"),
     baseUrl,
@@ -122,7 +122,7 @@ export function absoluteUrl(baseUrl: string, pathOrUrl: string): string {
 }
 
 export function getBaseUrl(): string {
-  return (process.env.NEXT_PUBLIC_APP_URL || "https://aprasnaturals.com").replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_APP_URL || "https://buywell.in").replace(/\/$/, "");
 }
 
 function csv(value: string): string[] {

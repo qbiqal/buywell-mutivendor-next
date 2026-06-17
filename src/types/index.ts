@@ -66,6 +66,8 @@ export interface ProductWithVariants {
   isActive: boolean;
   isFeatured: boolean;
   sortOrder: number;
+  vendorId?: number | null;
+  vendorName?: string | null;
   images: Array<{ id: string; url: string; alt?: string | null; isPrimary: boolean }>;
   variants: Array<{
     id: string;

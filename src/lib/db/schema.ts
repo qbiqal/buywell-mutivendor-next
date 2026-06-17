@@ -29,6 +29,8 @@ export const users = pgTable("users", {
   isActive:       boolean("is_active").default(true).notNull(),
   emailVerified:  boolean("email_verified").default(false).notNull(),
   avatarUrl:      text("avatar_url"),
+  bwUserId:       integer("bw_user_id").unique(), // BuyWell Global User ID
+  bwLinkedAt:     timestamp("bw_linked_at"),
   createdAt:      timestamp("created_at").defaultNow().notNull(),
   updatedAt:      timestamp("updated_at").defaultNow().notNull(),
 });
@@ -117,7 +119,7 @@ export const productImages = pgTable("product_images", {
 
 export const orders = pgTable("orders", {
   id:             text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  orderNumber:    text("order_number").notNull().unique(), // AN-2024-0001
+  orderNumber:    text("order_number").notNull().unique(), // BW-2024-0001
   userId:         text("user_id").references(() => users.id),  // null = guest
   guestName:      text("guest_name"),
   guestEmail:     text("guest_email"),
@@ -154,6 +156,12 @@ export const orders = pgTable("orders", {
   emailSentAt:    timestamp("email_sent_at"),
   // Flags
   isSampleRequest:boolean("is_sample_request").default(false).notNull(),
+  // BuyWell Wallet Integration
+  bwWalletAmount: integer("bw_wallet_amount").default(0),       // paise from wallet
+  bwWalletTransactionId: text("bw_wallet_transaction_id"),    // BuyWell Global txn ID
+  bwUserId:       integer("bw_user_id"),                       // BuyWell Global user ID
+  secondaryGateway: text("secondary_gateway"),                 // razorpay | offline_qr
+  secondaryGatewayRef: text("secondary_gateway_ref"),          // Razorpay payment ID etc.
   createdAt:      timestamp("created_at").defaultNow().notNull(),
   updatedAt:      timestamp("updated_at").defaultNow().notNull(),
 });
@@ -572,7 +580,7 @@ export const whatsappLogs = pgTable("whatsapp_logs", {
 });
 
 // ── Order Sequence ─────────────────────────────────────────────────────────────
-// Generates sequential order numbers per year: AN-2024-0001
+// Generates sequential order numbers per year: BW-2024-0001
 
 export const orderSequence = pgTable("order_sequence", {
   year:   integer("year").primaryKey(),

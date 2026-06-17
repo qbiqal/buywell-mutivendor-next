@@ -6,6 +6,7 @@ interface CartContextValue {
   items:        CartItem[];
   itemCount:    number;
   totalInr:     number;    // paise
+  hydrated:     boolean;
   addItem:      (item: CartItem) => void;
   removeItem:   (variantId: string) => void;
   updateQty:    (variantId: string, qty: number) => void;
@@ -13,14 +14,15 @@ interface CartContextValue {
 }
 
 const CartCtx = createContext<CartContextValue>({
-  items: [], itemCount: 0, totalInr: 0,
+  items: [], itemCount: 0, totalInr: 0, hydrated: false,
   addItem: () => {}, removeItem: () => {}, updateQty: () => {}, clearCart: () => {},
 });
 
-const STORAGE_KEY = "an_cart";
+const STORAGE_KEY = "bw_cart";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items,    setItems]    = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -31,6 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setItems(parsed.items ?? []);
       }
     } catch {}
+    setHydrated(true);
   }, []);
 
   // Persist on change
@@ -69,7 +72,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalInr  = items.reduce((sum, i) => sum + i.unitPriceInr * i.quantity, 0);
 
   return (
-    <CartCtx.Provider value={{ items, itemCount, totalInr, addItem, removeItem, updateQty, clearCart }}>
+    <CartCtx.Provider value={{ items, itemCount, totalInr, hydrated, addItem, removeItem, updateQty, clearCart }}>
       {children}
     </CartCtx.Provider>
   );

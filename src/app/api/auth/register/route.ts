@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     await createInAppNotification({
       userId: user.id,
       type: "account_created",
-      title: "Welcome to APRAS Naturals",
+      title: "Welcome to BuyWell Marketplace",
       body: "Your account has been created. Verify your email to complete account setup.",
       link: "/verify-email",
     });

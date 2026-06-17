@@ -17,7 +17,7 @@ interface BlogListingClientProps {
 }
 
 export default function BlogListingClient({ posts, config }: BlogListingClientProps) {
-  const title    = config.blog_title    ?? "APRAS Naturals Journal";
+  const title    = config.blog_title    ?? "BuyWell Marketplace Journal";
   const subtitle = config.blog_subtitle ?? "Stories of purity, tradition & wellness";
   const layout   = config.blog_layout   ?? "grid";
 

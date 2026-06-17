@@ -35,7 +35,7 @@ export default function OrdersClient() {
     <div className="customer-content">
       <div className="admin-page-header">
         <h1 className="admin-page-title">My Orders</h1>
-        <p className="admin-page-subtitle">Track all your APRAS Naturals orders</p>
+        <p className="admin-page-subtitle">Track all your BuyWell Marketplace orders</p>
       </div>
 
       {loading ? (

@@ -2,7 +2,7 @@
 ## Complete Step-by-Step Guide with CI/CD via GitHub Actions + Coolify
 
 > Applies to any Next.js app with PostgreSQL + Redis on the Qbiqal Hetzner cluster.
-> Written from the APRAS Naturals deployment (2026-06-01). Follow this exactly next time.
+> Written from the BuyWell Marketplace deployment (2026-06-01). Follow this exactly next time.
 
 ---
 
@@ -470,16 +470,16 @@ for KV in \
 done
 ```
 
-### APRAS Naturals R2 reference values
+### BuyWell Marketplace R2 reference values
 
 | Item | Value |
 |---|---|
 | Bucket name | `apras-naturals-media` |
-| Public URL | `https://media.aprasnaturals.com` (custom domain, production-ready) |
+| Public URL | `https://media.buywell.in` (custom domain, production-ready) |
 | r2.dev fallback URL | `https://pub-247bd7bddc43440aa2f82b3bfe2d9b20.r2.dev` |
 | Access Key ID | `d31f2ac430e557f84c59022958bf1aa4` |
 | Secret (in Coolify) | set as `CLOUDFLARE_R2_SECRET_ACCESS_KEY` |
-| `CLOUDFLARE_R2_PUBLIC_URL` in Coolify | `https://media.aprasnaturals.com` |
+| `CLOUDFLARE_R2_PUBLIC_URL` in Coolify | `https://media.buywell.in` |
 
 ---
 
@@ -601,21 +601,21 @@ curl -X PATCH ".../api/v1/applications/$UUID" -d '{"build_pack": "dockerfile", "
 
 ---
 
-## APRAS Naturals Specific Values (Reference)
+## BuyWell Marketplace Specific Values (Reference)
 
 | Item | Value |
 |---|---|
 | App UUID | `gs856v98p5925c8nzcey68f3` |
-| Domain | `https://aprasnaturals.com` |
-| DB | `apras_naturals_db` / user: `apras_user` |
-| DB internal URL | `postgresql://apras_user:...@10.0.0.5:5432/apras_naturals_db` |
+| Domain | `https://buywell.in` |
+| DB | `buywell_multivendor_new` / user: `bw_user` |
+| DB internal URL | `postgresql://bw_user:...@10.0.0.5:5432/buywell_multivendor_new` |
 | Redis URL | `redis://10.0.0.3:6379/0` |
-| Admin email | `admin@aprasnaturals.com` |
+| Admin email | `admin@buywell.in` |
 | Deploy webhook | `http://178.104.149.128:8000/api/v1/deploy?uuid=gs856v98p5925c8nzcey68f3&force=false` |
 | Coolify project | Qbiqal Client Projects → production environment |
 | Coolify log | `http://178.104.149.128:8000/project/x6t42bpwzaxjwn3pmzokvuiy/environment/vjaz1j6oe1988kfcjemr8n2z/application/gs856v98p5925c8nzcey68f3` |
 
 
 Next step for production: In the R2 bucket settings → Custom Domains → point
-  ▎ media.aprasnaturals.com to remove the r2.dev rate-limit. Then update 
+  ▎ media.buywell.in to remove the r2.dev rate-limit. Then update 
   ▎ CLOUDFLARE_R2_PUBLIC_URL in Coolify to the custom domain

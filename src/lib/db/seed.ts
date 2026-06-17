@@ -38,22 +38,22 @@ async function seed() {
   loadLocalEnv();
   const { db, pool } = await import("./index");
 
-  console.log("Seeding APRAS Naturals database...\n");
+  console.log("Seeding BuyWell Marketplace database...\n");
 
   // ── Admin user ──────────────────────────────────────────────────────────────
-  const adminEmail = "admin@aprasnaturals.com";
+  const adminEmail = "admin@buywell.in";
   const existing = await db.select().from(users).where(eq(users.email, adminEmail));
   if (existing.length === 0) {
     await db.insert(users).values({
       email: adminEmail,
       passwordHash: await bcrypt.hash("admin123", 12),
       firstName: "Admin",
-      lastName: "APRAS",
+      lastName: "BuyWell",
       role: "admin",
       isActive: true,
       emailVerified: true,
     });
-    console.log("✓ Admin user created: admin@aprasnaturals.com / admin123");
+    console.log("✓ Admin user created: admin@buywell.in / admin123");
     console.log("  ⚠️  CHANGE THIS PASSWORD IMMEDIATELY AFTER FIRST LOGIN!");
   } else {
     console.log("○ Admin user already exists");
@@ -78,20 +78,20 @@ async function seed() {
   }
 
   // ── Development customer user ──────────────────────────────────────────────
-  const customerEmail = "customer@aprasnaturals.com";
+  const customerEmail = "customer@buywell.in";
   const existingCustomer = await db.select().from(users).where(eq(users.email, customerEmail));
   if (existingCustomer.length === 0) {
     await db.insert(users).values({
       email: customerEmail,
       passwordHash: await bcrypt.hash("customer123", 12),
       firstName: "Customer",
-      lastName: "APRAS",
+      lastName: "BuyWell",
       phone: "+919999999999",
       role: "customer",
       isActive: true,
       emailVerified: true,
     });
-    console.log("✓ Demo customer created: customer@aprasnaturals.com / customer123");
+    console.log("✓ Demo customer created: customer@buywell.in / customer123");
   } else {
     console.log("○ Demo customer already exists");
   }
@@ -351,10 +351,10 @@ async function seed() {
     } },
     { sectionKey: "marquee",       sortOrder: 2,  config: { items: ["PURE RAW HONEY", "100% AUTHENTIC", "LAB TESTED PURITY", "NO ADDED SUGAR", "MONO FLORAL SOURCED", "A2 BILONA GHEE"] } },
     { sectionKey: "promise",       sortOrder: 3,  config: {
-      eyebrow: "The APRAS Promise",
+      eyebrow: "The BuyWell Promise",
       heading: "Authorized Partner of",
       accent: "Prakvedaa",
-      lead: "At APRAS Naturals, every jar is sourced ethically, prepared traditionally, and delivered with zero compromise.",
+      lead: "At BuyWell Marketplace, every jar is sourced ethically, prepared traditionally, and delivered with zero compromise.",
       cards: [
         { icon: "verified_user", title: "100% Authentic", body: "Directly sourced from trusted traditional beekeepers in untouched natural habitats. No intermediaries, no adulteration." },
         { icon: "spa", title: "Ethically Sourced", body: "Supporting sustainable harvesting that protects local farmers, communities, and bee populations across India's heartland." },
@@ -400,7 +400,7 @@ async function seed() {
     } },
     { sectionKey: "gallery",       sortOrder: 8,  config: {
       eyebrow: "Our Community",
-      heading: "APRAS in the Field",
+      heading: "BuyWell in the Field",
       lead: "Connecting directly with customers at exhibitions, fairs, and community events across India.",
       items: [
         { img: "/landing-assets/images/fair.jpeg", title: "Connecting with customers at local fairs across Jharkhand." },
@@ -420,7 +420,7 @@ async function seed() {
       ],
     } },
     { sectionKey: "how_it_works",  sortOrder: 11, config: { eyebrow: "Purchase Process", heading: "Simple as Nature Intended", lead: "Three steps from curiosity to your first spoonful of pure honey." } },
-    { sectionKey: "mission",       sortOrder: 12, config: { quote: "To reconnect people with the pure, untampered gifts of nature.", attribution: "APRAS Naturals Mission" } },
+    { sectionKey: "mission",       sortOrder: 12, config: { quote: "To reconnect people with the pure, untampered gifts of nature.", attribution: "BuyWell Marketplace Mission" } },
     { sectionKey: "faq",           sortOrder: 13, config: {
       eyebrow: "Got Questions?",
       heading: "Frequently Asked",
@@ -428,12 +428,12 @@ async function seed() {
         { question: "Why does my honey look crystallized or solid?", answer: "Crystallization is completely natural and a sign of pure, raw honey. Real honey contains natural sugars that crystallize over time. To soften it, place the jar in warm water for a few minutes." },
         { question: "What does Mono-Floral mean?", answer: "Mono-floral means bees primarily collected nectar from one specific flower such as Tulsi, Karanj, or Moringa. Each honey keeps its own natural taste profile without artificial additions." },
         { question: "What is Bilona Ghee?", answer: "Bilona is the traditional Indian method of making ghee. A2 milk becomes curd, the curd is wooden-churned into butter, and the butter is slow-heated into rich ghee." },
-        { question: "Can I get a free sample before ordering?", answer: "Yes. APRAS Naturals offers free samples to selected customers. Use the contact form and the team will confirm availability." },
+        { question: "Can I get a free sample before ordering?", answer: "Yes. BuyWell Marketplace offers free samples to selected customers. Use the contact form and the team will confirm availability." },
       ],
     } },
     { sectionKey: "contact",       sortOrder: 14, config: {
       eyebrow: "Contact Us",
-      heading: "Talk to APRAS Naturals",
+      heading: "Talk to BuyWell Marketplace",
       lead: "For samples, product questions, partnership enquiries, or support, send us a message and we will respond within 24 hours.",
       enquiryOptions: ["General product enquiry", "Honey product enquiry", "A2 Bilona Ghee enquiry", "Sample request", "Bulk / wholesale enquiry", "Partnership / distribution enquiry", "Order or delivery support"],
     } },
@@ -457,14 +457,14 @@ async function seed() {
       slug: "terms-and-conditions",
       policyType: "terms",
       moduleKey: "core",
-      excerpt: "Terms governing use of APRAS Naturals, orders, accounts, product information, and customer responsibilities.",
+      excerpt: "Terms governing use of BuyWell Marketplace, orders, accounts, product information, and customer responsibilities.",
       content: [
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
-        "<p>Welcome to APRAS Naturals. These Terms and Conditions govern your access to our website, account features, product catalogue, CMS pages, blog content, ecommerce checkout, order support, reviews, refunds, and related services. APRAS Naturals offers pure mono-floral honey, A2 Bilona Ghee, and natural wellness products as an authorized partner and CNF of Prakvedaa.</p>",
+        "<p>Welcome to BuyWell Marketplace. These Terms and Conditions govern your access to our website, account features, product catalogue, CMS pages, blog content, ecommerce checkout, order support, reviews, refunds, and related services. BuyWell Marketplace offers pure mono-floral honey, A2 Bilona Ghee, and natural wellness products as an authorized partner and CNF of Prakvedaa.</p>",
         "<h2>Using Our Website</h2>",
         "<p>You agree to use the website only for lawful personal, household, or permitted business purchase purposes. You must not misuse the platform, interfere with security, scrape data, impersonate another person, upload harmful content, or attempt unauthorized access to admin, customer, payment, notification, or media systems.</p>",
         "<h2>Accounts and Accuracy</h2>",
-        "<p>You are responsible for keeping account credentials confidential and for providing accurate name, phone, email, billing, delivery, and order information. APRAS Naturals may suspend or restrict access where account activity appears fraudulent, abusive, unlawful, or harmful to customers, staff, partners, or platform integrity.</p>",
+        "<p>You are responsible for keeping account credentials confidential and for providing accurate name, phone, email, billing, delivery, and order information. BuyWell Marketplace may suspend or restrict access where account activity appears fraudulent, abusive, unlawful, or harmful to customers, staff, partners, or platform integrity.</p>",
         "<h2>Products and Information</h2>",
         "<p>We aim to present product descriptions, ingredients, sizes, prices, images, availability, and educational content accurately. Natural products such as raw honey and ghee may vary in colour, aroma, texture, crystallization, and batch character. Product information is not medical advice and should not replace professional health guidance.</p>",
         "<h2>Orders, Pricing, and Payment</h2>",
@@ -474,11 +474,11 @@ async function seed() {
         "<h2>Reviews, Comments, and User Content</h2>",
         "<p>Members may post reviews or blog comments where enabled. Content must be honest, relevant, non-abusive, non-infringing, and lawful. We may moderate, reject, edit display formatting, or remove content that contains spam, hate, abuse, personal data of others, unsafe claims, or misleading statements.</p>",
         "<h2>Intellectual Property</h2>",
-        "<p>The APRAS Naturals brand, product presentation, website design, photographs, text, graphics, and software are protected by applicable intellectual property laws. You may not copy, reproduce, resell, or exploit the website content without written permission, except for ordinary personal use and sharing website links.</p>",
+        "<p>The BuyWell Marketplace brand, product presentation, website design, photographs, text, graphics, and software are protected by applicable intellectual property laws. You may not copy, reproduce, resell, or exploit the website content without written permission, except for ordinary personal use and sharing website links.</p>",
         "<h2>Limitation of Liability</h2>",
-        "<p>To the maximum extent permitted by law, APRAS Naturals is not liable for indirect, incidental, consequential, punitive, or special losses arising from website use, delayed delivery, unavailable products, third-party services, network issues, or customer misuse. Nothing in these terms excludes liability that cannot legally be excluded.</p>",
+        "<p>To the maximum extent permitted by law, BuyWell Marketplace is not liable for indirect, incidental, consequential, punitive, or special losses arising from website use, delayed delivery, unavailable products, third-party services, network issues, or customer misuse. Nothing in these terms excludes liability that cannot legally be excluded.</p>",
         "<h2>Changes and Contact</h2>",
-        "<p>We may update these terms to reflect operational, legal, security, or service changes. The current version will be published on this page. For questions, contact APRAS Naturals at aprasnaturals@gmail.com or +91 9470309006.</p>",
+        "<p>We may update these terms to reflect operational, legal, security, or service changes. The current version will be published on this page. For questions, contact BuyWell Marketplace at hello@buywell.in or +91 9470309006.</p>",
       ].join(""),
     },
     {
@@ -486,12 +486,12 @@ async function seed() {
       slug: "privacy-policy",
       policyType: "privacy",
       moduleKey: "core",
-      excerpt: "How APRAS Naturals collects, uses, shares, stores, and protects personal data under DPDP and GDPR readiness principles.",
+      excerpt: "How BuyWell Marketplace collects, uses, shares, stores, and protects personal data under DPDP and GDPR readiness principles.",
       content: [
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
-        "<p>This Privacy Policy explains how APRAS Naturals collects and processes personal data when you browse the website, create an account, place orders, request samples, submit reviews or comments, contact support, receive notifications, or interact with our marketing and analytics features.</p>",
+        "<p>This Privacy Policy explains how BuyWell Marketplace collects and processes personal data when you browse the website, create an account, place orders, request samples, submit reviews or comments, contact support, receive notifications, or interact with our marketing and analytics features.</p>",
         "<h2>Who We Are</h2>",
-        "<p>APRAS Naturals operates from Ranchi, Jharkhand and offers natural honey, A2 Bilona Ghee, and related wellness products as an authorized partner and CNF of Prakvedaa. For privacy, consent, grievance, and data-rights requests, contact aprasnaturals@gmail.com or +91 9470309006.</p>",
+        "<p>BuyWell Marketplace operates from Ranchi, Jharkhand and offers natural honey, A2 Bilona Ghee, and related wellness products as an authorized partner and CNF of Prakvedaa. For privacy, consent, grievance, and data-rights requests, contact hello@buywell.in or +91 9470309006.</p>",
         "<h2>Personal Data We Collect</h2>",
         "<p>Depending on how you use the platform, we may collect identity details, contact details, account credentials, addresses, order history, payment reference details, refund requests, customer support messages, review or comment content, notification preferences, device/browser data, cookie identifiers, analytics events, and fraud-prevention or security logs.</p>",
         "<h2>Why We Process Data</h2>",
@@ -519,14 +519,14 @@ async function seed() {
       slug: "data-protection-consent-policy",
       policyType: "data_protection",
       moduleKey: "core",
-      excerpt: "How APRAS Naturals handles consent, DPDP/GDPR data rights, grievance intake, retention, and breach readiness.",
+      excerpt: "How BuyWell Marketplace handles consent, DPDP/GDPR data rights, grievance intake, retention, and breach readiness.",
       content: [
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
-        "<p>This policy supplements the Privacy Policy and describes how APRAS Naturals manages consent, data-rights requests, grievance intake, security evidence, and breach-response readiness for DPDP and GDPR compliance operations.</p>",
+        "<p>This policy supplements the Privacy Policy and describes how BuyWell Marketplace manages consent, data-rights requests, grievance intake, security evidence, and breach-response readiness for DPDP and GDPR compliance operations.</p>",
         "<h2>Consent Management</h2>",
-        "<p>Consent requests should describe the personal data involved, the purpose of processing, and the way a user can withdraw consent. Withdrawal requests can be sent to aprasnaturals@gmail.com. Withdrawal does not affect processing already completed before withdrawal and may affect our ability to provide requested services that require the data.</p>",
+        "<p>Consent requests should describe the personal data involved, the purpose of processing, and the way a user can withdraw consent. Withdrawal requests can be sent to hello@buywell.in. Withdrawal does not affect processing already completed before withdrawal and may affect our ability to provide requested services that require the data.</p>",
         "<h2>Data-Rights Request Workflow</h2>",
-        "<p>Users may request access, correction, completion, update, deletion, withdrawal, grievance support, and, where GDPR applies, portability, restriction, objection, or review of automated decisions. APRAS Naturals should verify identity, record the request, assign an owner, assess legal exceptions, respond within the applicable timeline, and keep evidence in the admin compliance panel.</p>",
+        "<p>Users may request access, correction, completion, update, deletion, withdrawal, grievance support, and, where GDPR applies, portability, restriction, objection, or review of automated decisions. BuyWell Marketplace should verify identity, record the request, assign an owner, assess legal exceptions, respond within the applicable timeline, and keep evidence in the admin compliance panel.</p>",
         "<h2>Grievance Redressal</h2>",
         "<p>Privacy grievances should include the user name, contact detail, order number if relevant, request type, and supporting context. The support owner should acknowledge, investigate, resolve or escalate, and record the outcome. Users may also use statutory complaint channels where applicable.</p>",
         "<h2>Breach Readiness</h2>",
@@ -545,7 +545,7 @@ async function seed() {
       excerpt: "Refund eligibility, review, approval, and processing timelines.",
       content: [
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
-        "<p>APRAS Naturals wants every customer to receive authentic, safe, and properly packed natural products. Refunds are reviewed through the ecommerce refund workflow against order status, payment confirmation, product condition, delivery evidence, and customer notes.</p>",
+        "<p>BuyWell Marketplace wants every customer to receive authentic, safe, and properly packed natural products. Refunds are reviewed through the ecommerce refund workflow against order status, payment confirmation, product condition, delivery evidence, and customer notes.</p>",
         "<h2>Eligible Refund Situations</h2>",
         "<p>A refund may be considered if the order was prepaid but cancelled before dispatch, the product was unavailable, the wrong product was delivered, the package was damaged in transit, the product arrived unusable, duplicate payment was confirmed, or the support team approves a refund after investigation.</p>",
         "<h2>Non-Refundable Situations</h2>",
@@ -564,7 +564,7 @@ async function seed() {
       excerpt: "Shipping coverage, charges, tracking, and delivery estimates.",
       content: [
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
-        "<p>APRAS Naturals ships eligible honey, A2 Bilona Ghee, samples, and natural products to serviceable areas using available courier and fulfilment partners.</p>",
+        "<p>BuyWell Marketplace ships eligible honey, A2 Bilona Ghee, samples, and natural products to serviceable areas using available courier and fulfilment partners.</p>",
         "<h2>Dispatch and Delivery</h2>",
         "<p>Dispatch timelines depend on stock, payment confirmation, packaging readiness, courier pickup, holidays, weather, and serviceability. Estimated delivery timelines shown during checkout or support communication are indicative and may change due to courier or regional conditions.</p>",
         "<h2>Shipping Fees</h2>",
@@ -583,7 +583,7 @@ async function seed() {
       excerpt: "Cookies and analytics technologies used on the website.",
       content: [
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
-        "<p>This Cookie Policy explains how APRAS Naturals may use cookies, local storage, pixels, tags, analytics scripts, and similar technologies to operate the website, keep users signed in, protect sessions, remember preferences, understand traffic, and improve content.</p>",
+        "<p>This Cookie Policy explains how BuyWell Marketplace may use cookies, local storage, pixels, tags, analytics scripts, and similar technologies to operate the website, keep users signed in, protect sessions, remember preferences, understand traffic, and improve content.</p>",
         "<h2>Cookie Types</h2>",
         "<p><strong>Essential cookies</strong> support login, cart, checkout, security, and admin functions. <strong>Analytics cookies or tags</strong> help measure page traffic, campaign performance, and user journeys where configured. <strong>Marketing tags</strong> may support remarketing or conversion measurement only when enabled by admins.</p>",
         "<h2>Google Tag Manager and Analytics</h2>",
@@ -602,7 +602,7 @@ async function seed() {
       excerpt: "Return and replacement conditions for damaged, wrong, defective, or unsafe deliveries.",
       content: [
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
-        "<p>Because APRAS Naturals sells consumable natural products, returns and replacements are handled carefully for customer safety, product integrity, and hygiene.</p>",
+        "<p>Because BuyWell Marketplace sells consumable natural products, returns and replacements are handled carefully for customer safety, product integrity, and hygiene.</p>",
         "<h2>Replacement Eligibility</h2>",
         "<p>Replacement may be approved for wrong item delivered, damaged jar or bottle, leakage in transit, missing item, verified manufacturing or packing defect, or other support-approved issue. Evidence such as package photos, product photos, unboxing video, invoice, and order number may be required.</p>",
         "<h2>Return Restrictions</h2>",
@@ -619,12 +619,12 @@ async function seed() {
       excerpt: "Order cancellation rules before dispatch, after dispatch, and for unavailable products.",
       content: [
         "<p><strong>Last reviewed:</strong> 2 June 2026</p>",
-        "<p>Customers may request cancellation before dispatch by contacting APRAS Naturals support with the order number. Once the order is packed, dispatched, or handed to courier, cancellation may no longer be possible and the refund or return workflow may apply instead.</p>",
+        "<p>Customers may request cancellation before dispatch by contacting BuyWell Marketplace support with the order number. Once the order is packed, dispatched, or handed to courier, cancellation may no longer be possible and the refund or return workflow may apply instead.</p>",
         "<h2>Pre-Dispatch Cancellation</h2>",
         "<p>If cancellation is accepted before dispatch, prepaid amounts are refunded through the approved refund route after payment verification.</p>",
         "<h2>Post-Dispatch Orders</h2>",
         "<p>For dispatched orders, customers should wait for delivery and then follow the refund, return, or replacement policy if eligible. Courier return-to-origin charges may apply where delivery fails due to incorrect address or recipient unavailability.</p>",
-        "<h2>Cancellation by APRAS Naturals</h2>",
+        "<h2>Cancellation by BuyWell Marketplace</h2>",
         "<p>We may cancel orders due to product unavailability, payment failure, serviceability limits, suspected fraud, listing error, operational constraints, or legal restriction. Approved prepaid cancellations are refunded.</p>",
       ].join(""),
     },
@@ -763,7 +763,7 @@ async function seed() {
       moduleKey: "core",
       parameterKey: "transparent_notice",
       title: "Transparent privacy notice",
-      description: "Privacy information is published in clear language, names APRAS Naturals contact details, and is reachable from nested public policy menus.",
+      description: "Privacy information is published in clear language, names BuyWell Marketplace contact details, and is reachable from nested public policy menus.",
       status: "partial",
       policyType: "privacy",
       evidence: "Privacy Policy page seeded with DPDP/GDPR-ready notice; legal owner should approve final publication wording.",

@@ -37,9 +37,9 @@ export const WHATSAPP_TEMPLATE_KEYS = [
 export type WhatsAppTemplateKey = typeof WHATSAPP_TEMPLATE_KEYS[number];
 
 export const DEFAULT_WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, string> = {
-  manual: "Hi {{customerName}},\n\n{{message}}\n\n- APRAS Naturals",
-  order_confirmed: "Hi {{customerName}},\n\nYour order {{orderNumber}} has been confirmed. We will ship within 24-48 hours.\n\nThank you for choosing APRAS Naturals.",
-  order_shipped: "Hi {{customerName}},\n\nYour order {{orderNumber}} has been shipped.{{trackingLine}}{{deliveryLine}}\n\nThank you for choosing APRAS Naturals.",
+  manual: "Hi {{customerName}},\n\n{{message}}\n\n- BuyWell Marketplace",
+  order_confirmed: "Hi {{customerName}},\n\nYour order {{orderNumber}} has been confirmed. We will ship within 24-48 hours.\n\nThank you for choosing BuyWell Marketplace.",
+  order_shipped: "Hi {{customerName}},\n\nYour order {{orderNumber}} has been shipped.{{trackingLine}}{{deliveryLine}}\n\nThank you for choosing BuyWell Marketplace.",
   payment_rejected: "Hi {{customerName}},\n\nWe could not verify payment for order {{orderNumber}}.{{reasonLine}}\n\nPlease upload a clear payment screenshot or contact us.",
   admin_new_order: "New order {{orderNumber}}\nCustomer: {{customerName}} ({{customerPhone}})\nItems: {{items}}\nTotal: {{totalFormatted}}\nView: {{orderUrl}}",
 };

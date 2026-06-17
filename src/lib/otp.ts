@@ -127,15 +127,15 @@ export async function sendEmailVerificationOtp(params: {
   const result = await sendEmailNotification({
     to: params.email,
     userId: params.userId,
-    subject: "Verify your APRAS Naturals account",
+    subject: "Verify your BuyWell Marketplace account",
     html: renderOtpEmail({
       title: "Verify your email",
       greeting: `Hi ${escapeHtml(params.firstName)},`,
-      intro: "Use this code to verify your APRAS Naturals account.",
+      intro: "Use this code to verify your BuyWell Marketplace account.",
       code: otp.code,
       expiresAt: otp.expiresAt,
     }),
-    text: `Your APRAS Naturals verification code is ${otp.code}. It expires at ${otp.expiresAt.toISOString()}.`,
+    text: `Your BuyWell Marketplace verification code is ${otp.code}. It expires at ${otp.expiresAt.toISOString()}.`,
     metadata: { purpose: "email_verification", otpId: otp.id },
   });
 
@@ -166,15 +166,15 @@ export async function sendPasswordResetOtp(params: {
   const result = await sendEmailNotification({
     to: params.email,
     userId: params.userId,
-    subject: "Reset your APRAS Naturals password",
+    subject: "Reset your BuyWell Marketplace password",
     html: renderOtpEmail({
       title: "Reset your password",
       greeting: `Hi ${escapeHtml(params.firstName)},`,
-      intro: "Use this code to reset your APRAS Naturals password.",
+      intro: "Use this code to reset your BuyWell Marketplace password.",
       code: otp.code,
       expiresAt: otp.expiresAt,
     }),
-    text: `Your APRAS Naturals password reset code is ${otp.code}. It expires at ${otp.expiresAt.toISOString()}.`,
+    text: `Your BuyWell Marketplace password reset code is ${otp.code}. It expires at ${otp.expiresAt.toISOString()}.`,
     metadata: { purpose: "password_reset", otpId: otp.id },
   });
 
@@ -212,7 +212,7 @@ function renderOtpEmail(params: {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #18110a;">
       <div style="padding: 24px; background: #1B4332; color: #fff; border-radius: 8px 8px 0 0;">
-        <h1 style="margin: 0; font-size: 22px;">APRAS Naturals</h1>
+        <h1 style="margin: 0; font-size: 22px;">BuyWell Marketplace</h1>
       </div>
       <div style="padding: 28px; border: 1px solid #e7e0d6; border-top: 0; border-radius: 0 0 8px 8px;">
         <h2 style="margin-top: 0;">${escapeHtml(params.title)}</h2>

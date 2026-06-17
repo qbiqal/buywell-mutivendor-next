@@ -9,14 +9,16 @@
 import type { PaymentGateway } from "./types";
 import { offlineQrGateway } from "./offline-qr";
 import { razorpayGateway } from "./razorpay";
+import { bwalletPaymentGateway } from "./bwallet";
 import { getSiteConfig } from "../config";
 import { AppError } from "../errors";
 
-export type GatewayName = "offline_qr" | "razorpay" | "stripe";
+export type GatewayName = "offline_qr" | "razorpay" | "stripe" | "bwallet";
 
 const GATEWAYS: Record<string, PaymentGateway> = {
   offline_qr: offlineQrGateway,
   razorpay:   razorpayGateway,
+  bwallet:    bwalletPaymentGateway,
   // stripe:  stripeGateway,   ← add later
 };
 
@@ -32,7 +34,10 @@ export async function getPaymentGateway(name?: GatewayName): Promise<PaymentGate
   const enabled = await gateway.isEnabled();
   if (!enabled) {
     console.warn(`[payment] Gateway "${gatewayName}" is disabled`);
-    if (gatewayName !== "offline_qr" && await offlineQrGateway.isEnabled()) return offlineQrGateway;
+    // Try fallbacks in priority order
+    for (const [name, gw] of Object.entries(GATEWAYS)) {
+      if (name !== gatewayName && await gw.isEnabled()) return gw;
+    }
     throw new AppError("Payment gateway is disabled", 503, "PAYMENT_GATEWAY_DISABLED");
   }
 

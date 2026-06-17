@@ -25,6 +25,7 @@ const SECRET_CONFIG_KEYS = new Set([
   "media_r2_secret_access_key",
   "payment_razorpay_key_id",
   "payment_razorpay_key_secret",
+  "payment_bwallet_api_key",
   "payment_stripe_secret_key",
   "payment_stripe_webhook_secret",
   "sentry_dsn",
@@ -99,7 +100,7 @@ export async function getPaymentConfig() {
     stripeWebhookSecret: config.payment_stripe_webhook_secret || process.env.STRIPE_WEBHOOK_SECRET || "",
     qrUrl: config.payment_qr_url ?? "",
     upiId: config.payment_upi_id ?? "",
-    companyName: config.payment_company_name ?? "APRAS Naturals",
+    companyName: config.payment_company_name ?? "BuyWell Marketplace",
   };
 }
 

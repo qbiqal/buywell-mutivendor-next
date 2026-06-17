@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { COOKIE_NAME, getTokenCookieOptions, isAdminRole, verifyToken } from "@/lib/auth";
 import { handleApiError } from "@/lib/errors";
 
-const IMPERSONATION_COOKIE = "an_impersonate_admin";
+const IMPERSONATION_COOKIE = "bw_impersonate_admin";
 
 // DELETE — end impersonation session, restore admin token
 export async function DELETE(req: NextRequest) {

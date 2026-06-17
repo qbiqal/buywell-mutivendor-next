@@ -15,9 +15,9 @@ module.exports = async function seedConfig() {
 
   const defaults = [
     // Site identity
-    { key: 'site_name',            value: 'APRAS Naturals',       category: 'general' },
+    { key: 'site_name',            value: 'BuyWell Marketplace',       category: 'general' },
     { key: 'site_tagline',         value: 'Pure Prakvedaa Honey & A2 Bilona Ghee', category: 'general' },
-    { key: 'site_email',           value: 'aprasnaturals@gmail.com', category: 'general' },
+    { key: 'site_email',           value: 'hello@buywell.in', category: 'general' },
     { key: 'site_phone',           value: '+919470309006',         category: 'general' },
     { key: 'site_address',         value: 'Ranchi – 834005, Jharkhand, India', category: 'general' },
     { key: 'admin_logo_url',       value: '',                      category: 'general' },
@@ -44,7 +44,7 @@ module.exports = async function seedConfig() {
     { key: 'payment_stripe_webhook_secret', value: '',            category: 'payment' },
     { key: 'payment_qr_url',          value: '',                  category: 'payment' },
     { key: 'payment_upi_id',          value: '',                  category: 'payment' },
-    { key: 'payment_company_name',    value: 'APRAS Naturals',    category: 'payment' },
+    { key: 'payment_company_name',    value: 'BuyWell Marketplace',    category: 'payment' },
 
     // Shipping
     { key: 'shipping_free_above',  value: '99900',                category: 'shipping' },
@@ -55,7 +55,7 @@ module.exports = async function seedConfig() {
     { key: 'notification_in_app_enabled', value: 'true',          category: 'notification' },
     { key: 'notification_email_enabled', value: 'true',           category: 'notification' },
     { key: 'notification_email_provider', value: 'resend',        category: 'notification' },
-    { key: 'notification_email_from', value: 'APRAS Naturals <aprasnaturals@gmail.com>', category: 'notification' },
+    { key: 'notification_email_from', value: 'BuyWell Marketplace <hello@buywell.in>', category: 'notification' },
     { key: 'notification_resend_enabled', value: 'true',          category: 'notification' },
     { key: 'notification_resend_api_key', value: '',              category: 'notification' },
     { key: 'notification_sms_enabled', value: 'false',            category: 'notification' },
@@ -87,15 +87,15 @@ module.exports = async function seedConfig() {
     { key: 'whatsapp_order_notify', value: 'true',               category: 'whatsapp' },
     { key: 'whatsapp_phone_number_id', value: '',                category: 'whatsapp' },
     { key: 'whatsapp_access_token', value: '',                   category: 'whatsapp' },
-    { key: 'whatsapp_template_manual', value: 'Hi {{customerName}},\\n\\n{{message}}\\n\\n- APRAS Naturals', category: 'whatsapp' },
-    { key: 'whatsapp_template_order_confirmed', value: 'Hi {{customerName}},\\n\\nYour order {{orderNumber}} has been confirmed. We will ship within 24-48 hours.\\n\\nThank you for choosing APRAS Naturals.', category: 'whatsapp' },
-    { key: 'whatsapp_template_order_shipped', value: 'Hi {{customerName}},\\n\\nYour order {{orderNumber}} has been shipped.{{trackingLine}}{{deliveryLine}}\\n\\nThank you for choosing APRAS Naturals.', category: 'whatsapp' },
+    { key: 'whatsapp_template_manual', value: 'Hi {{customerName}},\\n\\n{{message}}\\n\\n- BuyWell Marketplace', category: 'whatsapp' },
+    { key: 'whatsapp_template_order_confirmed', value: 'Hi {{customerName}},\\n\\nYour order {{orderNumber}} has been confirmed. We will ship within 24-48 hours.\\n\\nThank you for choosing BuyWell Marketplace.', category: 'whatsapp' },
+    { key: 'whatsapp_template_order_shipped', value: 'Hi {{customerName}},\\n\\nYour order {{orderNumber}} has been shipped.{{trackingLine}}{{deliveryLine}}\\n\\nThank you for choosing BuyWell Marketplace.', category: 'whatsapp' },
     { key: 'whatsapp_template_payment_rejected', value: 'Hi {{customerName}},\\n\\nWe could not verify payment for order {{orderNumber}}.{{reasonLine}}\\n\\nPlease upload a clear payment screenshot or contact us.', category: 'whatsapp' },
     { key: 'whatsapp_template_admin_new_order', value: 'New order {{orderNumber}}\\nCustomer: {{customerName}} ({{customerPhone}})\\nItems: {{items}}\\nTotal: {{totalFormatted}}\\nView: {{orderUrl}}', category: 'whatsapp' },
 
     // Blog
     { key: 'blog_enabled',         value: 'true',                 category: 'blog' },
-    { key: 'blog_title',           value: 'APRAS Naturals Journal', category: 'blog' },
+    { key: 'blog_title',           value: 'BuyWell Marketplace Journal', category: 'blog' },
     { key: 'blog_subtitle',        value: 'Stories of purity, tradition & wellness', category: 'blog' },
     { key: 'blog_layout',          value: 'grid',                 category: 'blog' },
     { key: 'blog_posts_per_page',  value: '9',                    category: 'blog' },
@@ -116,7 +116,12 @@ module.exports = async function seedConfig() {
     // Orders
     { key: 'orders_guest_checkout', value: 'true',               category: 'orders' },
     { key: 'orders_sample_enabled', value: 'true',               category: 'orders' },
-    { key: 'orders_prefix',         value: 'AN',                  category: 'orders' },
+    { key: 'orders_prefix',         value: 'BW',                  category: 'orders' },
+
+    // Payment - BuyWell Wallet (Part 2)
+    { key: 'payment_bwallet_enabled', value: 'true',              category: 'payment' },
+    { key: 'payment_bwallet_api_url', value: 'http://localhost:8000', category: 'payment' },
+    { key: 'payment_bwallet_api_key', value: 'd56b1107f7d94f8821f9f7c0b48dbcd83fc389ab4accaed0921e26b0e3f26762', category: 'payment' },
 
     // Localization and currency
     { key: 'locale_default',       value: 'en',                   category: 'localization' },
@@ -131,11 +136,11 @@ module.exports = async function seedConfig() {
     { key: 'sentry_environment',   value: 'production',           category: 'observability' },
 
     // SEO and analytics
-    { key: 'seo_default_title', value: 'APRAS Naturals — Pure Prakvedaa Honey & A2 Bilona Ghee', category: 'seo' },
-    { key: 'seo_title_template', value: '%s | APRAS Naturals', category: 'seo' },
-    { key: 'seo_default_description', value: 'APRAS Naturals is the authorized partner of Prakvedaa. Discover pure mono-floral raw honey and authentic A2 Bilona Ghee sourced ethically from India.', category: 'seo' },
+    { key: 'seo_default_title', value: 'BuyWell Marketplace — Pure Prakvedaa Honey & A2 Bilona Ghee', category: 'seo' },
+    { key: 'seo_title_template', value: '%s | BuyWell Marketplace', category: 'seo' },
+    { key: 'seo_default_description', value: 'BuyWell Marketplace is the authorized partner of Prakvedaa. Discover pure mono-floral raw honey and authentic A2 Bilona Ghee sourced ethically from India.', category: 'seo' },
     { key: 'seo_default_keywords', value: 'honey,A2 ghee,Prakvedaa,organic honey,Jharkhand,raw honey,bilona ghee', category: 'seo' },
-    { key: 'seo_canonical_base_url', value: process.env.NEXT_PUBLIC_APP_URL || 'https://aprasnaturals.com', category: 'seo' },
+    { key: 'seo_canonical_base_url', value: process.env.NEXT_PUBLIC_APP_URL || 'https://buywell.in', category: 'seo' },
     { key: 'seo_default_og_image_url', value: '', category: 'seo' },
     { key: 'seo_indexing_enabled', value: 'true', category: 'seo' },
     { key: 'seo_google_site_verification', value: '', category: 'seo' },

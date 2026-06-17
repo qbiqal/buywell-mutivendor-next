@@ -1,10 +1,10 @@
-# APRAS Naturals — AI Agent Reference
+# BuyWell Multivendor Marketplace — AI Agent Reference
 
-> Last updated: 2026-06-02
+> Last updated: 2026-06-13
 > Framework: Next.js 16.2.2
 > DB: PostgreSQL 17
-> Cache: Redis 7 with `an:` prefix
-> Current route policy: `/` is the CMS landing page, `/home` is an alias, and Coming Soon is available at `/coming-soon`.
+> Cache: Redis 7 with `bw:` prefix
+> Current route policy: `/` is the multi-vendor landing page; `/vendor` is the vendor portal.
 
 ---
 
@@ -14,85 +14,86 @@
 2. No external UI libraries: no shadcn, Radix, Tailwind UI, or component kits.
 3. Read Next.js docs from `node_modules/next/dist/docs/` before changing framework conventions.
 4. Config must come from DB first via `src/lib/config.ts`; env is fallback only.
-5. Redis keys must be passed without the `an:` prefix because ioredis adds it through `keyPrefix`.
-6. Payment must stay pluggable. Offline QR is gateway #1.
-7. Core must stay lightweight. CMS, SEO, E-Commerce, Blog, and payment gateways are target modules.
-8. Keep `/` module-aware: when CMS is disabled it redirects to `/login`; Coming Soon stays at `/coming-soon`.
-9. Use `page.tsx` as the server shell and `*Client.tsx` for interactivity.
-10. Run `npm run verify` after meaningful source changes unless the change is docs-only.
+5. Redis keys must be passed without the `bw:` prefix because ioredis adds it through `keyPrefix`.
+6. Payment must stay pluggable. Offline QR and Razorpay are primary gateways.
+7. Core must stay lightweight. Multi-vendor, CMS, SEO, E-Commerce, and Blog are target modules.
+8. Use `page.tsx` as the server shell and `*Client.tsx` for interactivity.
+9. Run `npm run verify` after meaningful source changes unless the change is docs-only.
 
 ---
 
 ## Current Status
 
-### Complete and Build-Verified
+### Complete and Build-Verified (Part 1 Phases 0-6)
 
-- ✅ Local PostgreSQL database created and initialized.
-- ✅ Redis connectivity verified.
-- ✅ Migrations, seed, config seed, and indexes applied locally.
-- ✅ Production startup runs migrations plus idempotent config/content seeds; the content seed fills missing policy pages, compliance checks, and nested public menu links without running the local bootstrap seed.
-- ✅ `/` full CMS landing page is active.
-- ✅ `/home` remains a CMS landing alias.
-- ✅ `/coming-soon` keeps the previous Coming Soon page.
-- ✅ Landing hero is pure scroll-scrub video: no intro heading/subheading layer, no video overlay, and the video remains paused unless scroll changes frames.
-- ✅ Shop listing and product detail with image gallery carousel, fallback product assets, and admin-only edit shortcut.
-- ✅ CartContext and CartDrawer.
-- ✅ Checkout, QR payment, proof upload, confirmation.
-- ✅ Customer orders and profile/address/password management.
-- ✅ Admin dashboard, orders, products, blog, CMS list, settings.
-- ✅ Reusable admin datatable filter panel on products, customers, orders, and blog with search, status, date range, amount/price/stock/content filters where applicable.
-- ✅ Admin customer list/detail with search, spend/order stats, addresses, orders, and deactivate/reactivate.
-- ✅ Admin media library with grid/list filters, upload, preview, URL copy, alt/folder edit, and guarded delete.
-- ✅ Admin analytics with revenue/orders/payment/product/customer charts, first-party traffic analytics, Today/2D filters, CSV export, and print-to-PDF export.
-- ✅ Shared admin datatable CSV and print-to-PDF exports on products, orders, customers, and blog.
-- ✅ Admin WhatsApp panel with WAHA/Meta provider selection, manual send, template manager, order resend API/buttons, wallet-gated sending, and delivery logs.
-- ✅ Auth recovery flow: forgot password, reset password, email verification, resend verification.
-- ✅ Core notification/OTP provider layer with Resend email gateway, in-app notifications, notification wallets, delivery logs, and push subscription storage.
-- ✅ Qbiqal super-admin role for crediting WhatsApp, email, and SMS notification wallets.
-- ✅ Admin provider key provisions for Resend, SMS, Telegram, Web Push, WhatsApp, R2, Razorpay, Stripe, and Sentry; DB config is primary and `.env` is fallback.
-- ✅ Secret config encryption at rest for provider/API keys.
-- ✅ SEO module with sitewide metadata settings, route overrides, verification codes, GTM/GA/Meta Pixel config, sitemap/robots controls, internal links, and search submission log.
-- ✅ Dynamic sitemap and robots include CMS pages and SEO settings.
-- ✅ Redis rate limiting for login/register/recovery attempts.
-- ✅ Same-site API mutation hardening in `proxy.ts`.
-- ✅ Sentry server-side capture path with DB config/env fallback.
-- ✅ Rich HTML sanitization for blog content and product long descriptions.
-- ✅ CMS page creator/editor and menu manager for landing header, other-pages header, and footer menus, including nested submenu support via `cms_menu_items.parent_item_id`.
-- ✅ CMS page editor has reusable on-page SEO panel, module visibility, policy type, OG image crop upload, keywords, canonical URL, and robots controls.
-- ✅ CMS section editor uses a structured content builder for text, numbers, booleans, arrays, nested objects, and media URL fields, with JSON kept as advanced fallback.
-- ✅ Policy CMS pages seeded for terms, privacy, DPDP/GDPR data protection and consent, refund, return/replacement, cancellation, shipping, and cookies with module-aware visibility.
-- ✅ Module control plane for Core, CMS, SEO, Blog, E-Commerce, and Offline QR.
-- ✅ Admin settings are grouped into tabs for modules, brand, notifications, OTP, providers, localization, and commerce.
-- ✅ Admin module toggles, locked Core toggle, brand logo uploaders, localization, currency, notification, OTP, and Resend settings.
-- ✅ Admin logo uploader crops to 144x144 and website logo uploader crops to 360x96 through `MediaUploader`, with saved-logo clear buttons and crop-modal reset.
-- ✅ Landing page custom topbar/drawer now reflects the uploaded website logo, and admin mobile sidebar behaves as a closed native drawer.
-- ✅ Blog editor has nested categories, on-the-fly category creation, colorful tag suggestions/creation, and full SEO controls.
-- ✅ Product editor has nested product categories, on-the-fly category creation, colorful tags, and full SEO controls.
-- ✅ Blog comments support member-only comments/replies, likes, approval workflow, and English/Hindi abuse filtering.
-- ✅ Product reviews support member-only review submission, likes, and admin approval workflow.
-- ✅ E-Commerce refunds include customer refund request creation and admin requested/review/approved/rejected/processed workflow with event history.
-- ✅ Core compliance admin page tracks GDPR/DPDP checklist status, evidence, policy coverage, and module visibility with 18 seeded readiness checks.
-- ✅ Module-aware public/admin nav, route gates, API gates, and root providers.
-- ✅ Module-aware dynamic cart provider/header imports so CMS-only/Blog-only installs do not load cart UI.
-- ✅ Offline QR payment gateway abstraction and registry-based order creation.
-- ✅ MediaUploader and admin-authenticated upload API.
-- ✅ Cloudflare R2 signed upload helper.
-- ✅ Signed payment-proof upload token.
-- ✅ Server-side order price recalculation and stock decrement.
-- ✅ Product variant preservation/archive behavior for historical order safety.
-- ✅ App-wide Public Sans font, dark mode variables, admin topbar theme switch, and dark-mode persistence.
-- ✅ Shared and landing footers upgraded with stronger CTA/trust sections.
-- ✅ CMS section editor and Blog category admin.
-- ✅ `npm run verify` passes: build, smoke, and E2E.
+- ✅ Project rebranded to BuyWell Multivendor Marketplace (Phase 0).
+- ✅ Redis key prefix updated to `bw:` for namespace isolation (Phase 0).
+- ✅ New multi-vendor homepage with hero banner slider, category strip, and latest products (Phase 1).
+- ✅ Admin homepage banner management UI and API (Phase 1).
+- ✅ Multi-vendor database schema: `vendors`, `order_vendor_splits`, `vendor_commissions`, `vendor_payouts` (Phase 2).
+- ✅ Vendor application flow at `/become-vendor` and admin approval UI (Phase 2).
+- ✅ Vendor panel at `/vendor/*` with dashboard, product management, and order visibility (Phase 3).
+- ✅ Multi-vendor order split logic and commission calculation on payment verification (Phase 4).
+- ✅ Razorpay payment gateway integration with webhook support (Phase 5).
+- ✅ Admin vendor management and payout processing (Phase 6).
+- ✅ Admin `/admin/commissions` UI (Commission Statement) implemented (Phase 6).
+- ✅ Phase 7: SEO polish, public vendor store pages (`/vendors/[slug]`), and vendor name visibility on product pages complete.
+- ✅ Part 2: BuyWell Global Integration (E-Commerce Wallet + User Sync) complete.
+- ✅ Verified `npm run verify` passes with all Part 1 & 2 features.
 
 ### Partial / Pending
 
-- 🟡 Deeper `src/modules/<module>/` package splitting is reserved for future heavy MLM/payment engines; current modules are gated and current cart code is dynamically imported.
 - 🟡 Push subscription storage and provider config exist; actual Web Push sending depends on final provider/runtime choice.
-- 🟡 SMS/Telegram provider config exists; actual provider adapters depend on selected vendor/API contract.
-- ❌ Seed admin password must be rotated or replaced with first-admin setup before production.
 
-See `docs/roadmap.md` for the source-of-truth tracker.
+---
+
+## Architecture
+
+```txt
+Core
+  auth, users, qbiqal super-admin, settings, notification wallets, notifications, OTP, media library, DB, Redis, cache, route protection, module registry, provider key config
+
+Multivendor Module
+  /vendor/*, /admin/vendors, /admin/payouts, vendors, order_vendor_splits, vendor_commissions, vendor_payouts, commissions, payouts
+
+CMS Module
+  / (homepage), /admin/homepage, homepage_banners, cms_sections, cms_pages, cms_menus, policy pages
+
+SEO Module
+  /admin/seo, reusable SEO panels, seo_page_overrides, sitemap/robots
+
+E-Commerce Module
+  /shop, /checkout, /orders, /profile, admin orders/products/customers/reviews/refunds
+
+Blog Module
+  /blog, /admin/blog, blog_posts, categories, comments
+```
+
+---
+
+## File Index (Key Additions)
+
+### Multivendor & Admin
+
+| Path | Purpose |
+|---|---|
+| `src/app/(vendor)/*` | Vendor portal routes |
+| `src/app/api/vendor/*` | Vendor portal APIs |
+| `src/app/(admin)/admin/vendors/*` | Admin vendor management |
+| `src/app/(admin)/admin/payouts/*` | Admin payout management |
+| `src/app/(admin)/admin/homepage/*` | Admin homepage banner builder |
+| `src/lib/vendor-commission.ts` | Commission split logic |
+| `src/lib/payment/razorpay.ts` | Razorpay gateway |
+
+---
+
+## Cache Keys
+
+Use unprefixed keys in code: `config:*`, `query:homepage:banners`, `query:products:*`, etc.
+ioredis stores them as `bw:<key>`.
+
+Latest verification completed on 2026-06-13.
+
 
 ---
 
@@ -364,7 +365,7 @@ Implemented module behavior:
 | `payment/types.ts` | Gateway contract |
 | `payment/offline-qr.ts` | Offline QR gateway |
 | `payment/index.ts` | Gateway registry |
-| `order-number.ts` | `AN-YYYY-NNNN` sequence |
+| `order-number.ts` | `BW-YYYY-NNNN` sequence |
 | `whatsapp.ts` | WAHA/Meta WhatsApp config, templates, wallet-gated sending, and delivery logging |
 | `email.ts` | Backward-compatible email wrapper over notification provider facade |
 | `observability.ts` | Sentry envelope capture with DB config/env fallback |

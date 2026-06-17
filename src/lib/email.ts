@@ -34,11 +34,11 @@ export async function sendOrderConfirmationEmail(params: {
 }): Promise<boolean> {
   return sendEmail({
     to: params.to,
-    subject: `Order Confirmed — ${params.orderNumber} | APRAS Naturals`,
+    subject: `Order Confirmed — ${params.orderNumber} | BuyWell Marketplace`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #D97706; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-          <h1 style="color: #fff; margin: 0; font-size: 24px;">🍯 APRAS Naturals</h1>
+          <h1 style="color: #fff; margin: 0; font-size: 24px;">🍯 BuyWell Marketplace</h1>
         </div>
         <div style="padding: 32px; background: #fff; border: 1px solid #eee;">
           <h2 style="color: #18110a;">Order Confirmed ✅</h2>
@@ -53,7 +53,7 @@ export async function sendOrderConfirmationEmail(params: {
           </a>
         </div>
         <p style="text-align:center; color:#999; font-size:12px; padding:16px;">
-          © APRAS Naturals · Authorized Prakvedaa Partner · Ranchi, Jharkhand
+          © BuyWell Marketplace · Authorized Prakvedaa Partner · Ranchi, Jharkhand
         </p>
       </div>
     `,

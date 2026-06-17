@@ -268,13 +268,13 @@ function exportAnalyticsPdf(data: AnalyticsData) {
     ["Visitors", String(data.traffic.uniqueVisitors)],
     ["Sessions", String(data.traffic.sessions)],
   ];
-  popup.document.write(`<!doctype html><html><head><title>APRAS Analytics</title><style>
+  popup.document.write(`<!doctype html><html><head><title>BuyWell Analytics</title><style>
     body{font-family:Arial,sans-serif;margin:24px;color:#111827}
     h1{font-size:20px;margin:0 0 8px} p{margin:0 0 18px;color:#4b5563}
     table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px}
     th,td{border:1px solid #d1d5db;padding:8px;text-align:left}
     th{background:#f3f4f6}
-  </style></head><body><h1>APRAS Analytics</h1><p>${data.range.days === 1 ? "Today" : `Last ${data.range.days} days`}</p><table><tbody>${rows.map(([key, value]) => `<tr><th>${key}</th><td>${value}</td></tr>`).join("")}</tbody></table><h2>Top Products</h2><table><thead><tr><th>Product</th><th>Quantity</th><th>Revenue</th></tr></thead><tbody>${data.topProducts.map((row) => `<tr><td>${escapeHtml(row.productName)}</td><td>${row.quantity}</td><td>₹${formatMoney(row.revenueInr)}</td></tr>`).join("")}</tbody></table><h2>Top Pages</h2><table><thead><tr><th>Path</th><th>Views</th><th>Visitors</th></tr></thead><tbody>${data.traffic.topPages.map((row) => `<tr><td>${escapeHtml(row.path)}</td><td>${row.views}</td><td>${row.visitors}</td></tr>`).join("")}</tbody></table><script>window.print();</script></body></html>`);
+  </style></head><body><h1>BuyWell Analytics</h1><p>${data.range.days === 1 ? "Today" : `Last ${data.range.days} days`}</p><table><tbody>${rows.map(([key, value]) => `<tr><th>${key}</th><td>${value}</td></tr>`).join("")}</tbody></table><h2>Top Products</h2><table><thead><tr><th>Product</th><th>Quantity</th><th>Revenue</th></tr></thead><tbody>${data.topProducts.map((row) => `<tr><td>${escapeHtml(row.productName)}</td><td>${row.quantity}</td><td>₹${formatMoney(row.revenueInr)}</td></tr>`).join("")}</tbody></table><h2>Top Pages</h2><table><thead><tr><th>Path</th><th>Views</th><th>Visitors</th></tr></thead><tbody>${data.traffic.topPages.map((row) => `<tr><td>${escapeHtml(row.path)}</td><td>${row.views}</td><td>${row.visitors}</td></tr>`).join("")}</tbody></table><script>window.print();</script></body></html>`);
   popup.document.close();
 }
 

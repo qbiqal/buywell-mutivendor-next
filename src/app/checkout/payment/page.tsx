@@ -30,6 +30,8 @@ export default async function PaymentPage() {
   const razorpayEnabled = (await getSiteConfig("payment_razorpay_enabled")) === "true"
     && !!(await getSiteConfig("payment_razorpay_key_id"));
   const razorpayKeyId = (await getSiteConfig("payment_razorpay_key_id")) ?? "";
+  // Offline gateway is enabled by default unless explicitly set to "false"
+  const offlineEnabled = (await getSiteConfig("payment_offline_enabled")) !== "false";
   const modules = await getModuleState();
   const navLinks = getEnabledPublicNav(modules);
 
@@ -43,6 +45,7 @@ export default async function PaymentPage() {
           companyName={companyName}
           razorpayEnabled={razorpayEnabled}
           razorpayKeyId={razorpayKeyId}
+          offlineEnabled={offlineEnabled}
         />
       </main>
     </>
