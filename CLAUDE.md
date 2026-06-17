@@ -1,6 +1,6 @@
 # BuyWell Multivendor Marketplace — AI Agent Reference
 
-> Last updated: 2026-06-13
+> Last updated: 2026-06-17
 > Framework: Next.js 16.2.2
 > DB: PostgreSQL 17
 > Cache: Redis 7 with `bw:` prefix
@@ -40,6 +40,24 @@
 - ✅ Phase 7: SEO polish, public vendor store pages (`/vendors/[slug]`), and vendor name visibility on product pages complete.
 - ✅ Part 2: BuyWell Global Integration (E-Commerce Wallet + User Sync) complete.
 - ✅ Verified `npm run verify` passes with all Part 1 & 2 features.
+- ✅ Image upload persistence: local-storage fallback (`public/uploads/`) now survives redeploys via Docker named volume. R2 fallback logic also fixed (all 4 credentials must be present; partial config no longer silently fails with 500).
+
+### Production: Image Storage Setup
+
+Media uploads use a **two-tier storage strategy**:
+
+| Condition | Storage | Persistence |
+|---|---|---|
+| All R2 credentials configured | Cloudflare R2 | ☁️ R2 bucket |
+| R2 not configured (fallback) | `public/uploads/` | 🗄️ Docker volume `nn399lysa851mtmlqy2xz8t7_uploads` mounted at `/app/public/uploads` |
+
+**Coolify persistent volume** — added directly to `local_persistent_volumes` in Coolify's DB:
+- uuid: `d3986j8x2oclms59q4xqtayj`
+- name: `nn399lysa851mtmlqy2xz8t7_uploads`
+- mount_path: `/app/public/uploads`
+- resource_id: 21 (buywell-multivendor app)
+
+**Never** edit Coolify's generated `/data/coolify/applications/nn399lysa851mtmlqy2xz8t7/docker-compose.yaml` directly — it is regenerated from the DB on every deploy. The volume record in Coolify's DB is what persists.
 
 ### Partial / Pending
 

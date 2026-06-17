@@ -1,7 +1,7 @@
 # BuyWell Multivendor Marketplace — Platform Mind Map
 
-> Last updated: 2026-06-13
-> Current state: Multi-vendor marketplace is active; Part 2 Integration complete; `/` is the new homepage.
+> Last updated: 2026-06-17
+> Current state: Multi-vendor marketplace is active; Part 2 Integration complete; `/` is the new homepage; image upload persistence fixed via Docker named volume.
 
 ---
 
@@ -25,7 +25,8 @@ BuyWell Multivendor Marketplace
 │   ├── Observability: Sentry envelope capture
 │   ├── Brand logos: admin logo + website logo via DB config
 │   ├── Compliance: GDPR/DPDP checklist + Multi-vendor policy coverage
-│   └── /admin/media
+│   ├── /admin/media
+│   └── Media storage: R2 (when all 4 credentials set) → local fallback (public/uploads/ on Docker volume nn399lysa851mtmlqy2xz8t7_uploads)
 │
 ├── Multivendor Module
 │   ├── /vendor/* (Vendor Portal)
@@ -148,7 +149,22 @@ Admin
 
 ---
 
-## 5. Next Work Order
+## 5. Production Infrastructure
+
+| Component | Details |
+|---|---|
+| App server | Qbiqal-app-server (178.104.105.31) — CX32 8GB |
+| Coolify app UUID | `nn399lysa851mtmlqy2xz8t7` (resource_id: 21) |
+| Uploads volume | Docker named volume `nn399lysa851mtmlqy2xz8t7_uploads` → `/app/public/uploads` |
+| Volume record | Coolify `local_persistent_volumes` id=4, uuid=`d3986j8x2oclms59q4xqtayj` |
+| Domain | `buywell.in` / `www.buywell.in` via Traefik on Coolify |
+
+**Key constraint**: Coolify's `/data/coolify/applications/nn399lysa851mtmlqy2xz8t7/docker-compose.yaml` is regenerated from its Postgres DB on every deploy. Add volumes or config via Coolify's DB or UI — never by editing that file directly.
+
+---
+
+## 6. Next Work Order
 
 1. 🟡 Monitor production wallet integration.
 2. ❌ Part 3: MLM tree visualization in Marketplace (Optional).
+3. 🟡 Configure Cloudflare R2 in Admin Settings when ready to migrate away from local storage.
