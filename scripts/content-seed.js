@@ -199,7 +199,7 @@ const DEFAULT_MENUS = [
       { label: 'Data Protection', href: '/data-protection-consent-policy', itemType: 'cms_page', policyType: 'data_protection', parentLabel: 'Policies', sortOrder: 6 },
       { label: 'Refunds', href: '/refund-policy', itemType: 'cms_page', policyType: 'refund', parentLabel: 'Policies', sortOrder: 7 },
       { label: 'Shipping', href: '/shipping-policy', itemType: 'cms_page', policyType: 'shipping', parentLabel: 'Policies', sortOrder: 8 },
-      { label: 'Contact', href: '/#contact', itemType: 'landing_anchor', sortOrder: 9 },
+      { label: 'Contact', href: '/contact', itemType: 'landing_anchor', sortOrder: 9 },
     ],
   },
   {
@@ -214,7 +214,7 @@ const DEFAULT_MENUS = [
       { label: 'Data Protection', href: '/data-protection-consent-policy', itemType: 'cms_page', policyType: 'data_protection', parentLabel: 'Policies', sortOrder: 6 },
       { label: 'Returns', href: '/return-replacement-policy', itemType: 'cms_page', policyType: 'returns', parentLabel: 'Policies', sortOrder: 7 },
       { label: 'Refunds', href: '/refund-policy', itemType: 'cms_page', policyType: 'refund', parentLabel: 'Policies', sortOrder: 8 },
-      { label: 'Contact', href: '/#contact', itemType: 'landing_anchor', sortOrder: 9 },
+      { label: 'Contact', href: '/contact', itemType: 'landing_anchor', sortOrder: 9 },
     ],
   },
   {
@@ -232,7 +232,7 @@ const DEFAULT_MENUS = [
       { label: 'Return and Replacement', href: '/return-replacement-policy', itemType: 'cms_page', policyType: 'returns', parentLabel: 'Policies', sortOrder: 9 },
       { label: 'Cancellation Policy', href: '/cancellation-policy', itemType: 'cms_page', policyType: 'cancellation', parentLabel: 'Policies', sortOrder: 10 },
       { label: 'Shipping Policy', href: '/shipping-policy', itemType: 'cms_page', policyType: 'shipping', parentLabel: 'Policies', sortOrder: 11 },
-      { label: 'Free Sample', href: '/#contact', itemType: 'landing_anchor', sortOrder: 12 },
+      { label: 'Free Sample', href: '/contact', itemType: 'landing_anchor', sortOrder: 12 },
     ],
   },
 ];

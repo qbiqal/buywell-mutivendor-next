@@ -160,96 +160,76 @@ export function HomepageClient({
     el.scrollBy({ left: dir === "left" ? -300 : 300, behavior: "smooth" });
   }
 
-  const hasHeroBanners = heroBanners.length > 0;
-
   return (
     <div className={styles.page}>
 
-      {/* ── Hero ── */}
-      {hasHeroBanners ? (
-        <section className={styles.heroSection}>
-          <HomeHeroSlider banners={heroBanners} autoPlayMs={5000} />
-        </section>
-      ) : (
-        <section className={styles.brandHero}>
-          <div className={styles.brandHeroBg} aria-hidden>
-            {/* Animated floating shapes */}
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                className={styles.heroBlob}
-                style={{ "--blob-i": i } as React.CSSProperties}
-                animate={{
-                  y: [0, -20, 0],
-                  scale: [1, 1.08, 1],
-                  opacity: [0.35, 0.6, 0.35],
-                }}
-                transition={{ duration: 4 + i * 0.7, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}
-              />
-            ))}
-          </div>
-          <div className={styles.brandHeroContent}>
-            <motion.span
-              className={styles.heroEyebrow}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              India&apos;s Trusted Multivendor Marketplace
-            </motion.span>
-            <motion.h1
-              className={styles.heroHeadline}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            >
-              Shop Smarter.{" "}
-              <span className={styles.heroAccent}>Sell Better.</span>
-              <br />Live Well.
-            </motion.h1>
-            <motion.p
-              className={styles.heroSub}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              Thousands of curated products from verified sellers. Pure, authentic, and delivered to your door anywhere in India.
-            </motion.p>
+      {/* ── 2-Column Hero: Category Sidebar + Slider ── */}
+      <section className={styles.heroWrapper}>
+        <div className={styles.heroGrid}>
 
-            <motion.form
-              onSubmit={handleSearch}
-              className={styles.heroSearch}
-              initial={{ opacity: 0, y: 20, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.55 }}
-            >
-              <span className={styles.searchIcon} aria-hidden>🔍</span>
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products, categories, brands…"
-                className={styles.heroSearchInput}
-              />
-              <button type="submit" className={styles.heroSearchBtn}>Search</button>
-            </motion.form>
-
-            <motion.div
-              className={styles.heroTrust}
-              initial="hidden"
-              animate="show"
-              variants={staggerContainer}
-              style={{ transitionDelay: "0.65s" } as React.CSSProperties}
-            >
-              {TRUST_BADGES.map((b) => (
-                <motion.span key={b.label} className={styles.heroTrustChip} variants={fadeUp}>
-                  {b.icon} {b.label}
-                </motion.span>
+          {/* Left: Category Quick Links */}
+          <div className={styles.heroCategoryPanel}>
+            <div className={styles.heroCategoryHeader}>
+              <span className={styles.heroCategoryTitle}>Shop by Category</span>
+            </div>
+            <nav className={styles.heroCategoryList}>
+              {categories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/shop?category=${cat.slug}`}
+                  className={styles.heroCategoryItem}
+                  style={{ "--cat-color": cat.color ?? "#0d7659" } as React.CSSProperties}
+                >
+                  <span className={styles.heroCatIcon}>{getCategoryIcon(cat.name, cat.icon ?? null)}</span>
+                  <span className={styles.heroCatName}>{cat.name}</span>
+                  <span className={styles.heroCatArrow}>›</span>
+                </Link>
               ))}
-            </motion.div>
+              <Link href="/shop" className={[styles.heroCategoryItem, styles.heroCatAll].join(" ")}>
+                <span className={styles.heroCatIcon}>🛒</span>
+                <span className={styles.heroCatName}>All Categories</span>
+                <span className={styles.heroCatArrow}>›</span>
+              </Link>
+            </nav>
+
+            {/* Search bar inside category panel (desktop) */}
+            <div className={styles.heroCatSearch}>
+              <form onSubmit={handleSearch} className={styles.heroCatSearchForm}>
+                <span className={styles.heroCatSearchIcon} aria-hidden>🔍</span>
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products…"
+                  className={styles.heroCatSearchInput}
+                />
+              </form>
+            </div>
           </div>
-        </section>
-      )}
+
+          {/* Right: Hero Slider */}
+          <div className={styles.heroSliderPanel}>
+            <HomeHeroSlider banners={heroBanners} autoPlayMs={5000} className={styles.heroSlider} />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Mobile search bar ── */}
+      <section className={styles.mobileSearch}>
+        <div className={styles.container}>
+          <form onSubmit={handleSearch} className={styles.searchForm}>
+            <span className={styles.searchIcon} aria-hidden>🔍</span>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search products, categories, brands…"
+              className={styles.searchInput}
+            />
+            <button type="submit" className={styles.searchBtn}>Search</button>
+          </form>
+        </div>
+      </section>
 
       {/* ── Marquee ticker ── */}
       <div className={styles.marqueeWrap} aria-hidden>
@@ -259,25 +239,6 @@ export function HomepageClient({
           ))}
         </div>
       </div>
-
-      {/* ── Mobile search (visible when hero has banner) ── */}
-      {hasHeroBanners && (
-        <section className={styles.mobileSearch}>
-          <div className={styles.container}>
-            <form onSubmit={handleSearch} className={styles.searchForm}>
-              <span className={styles.searchIcon} aria-hidden>🔍</span>
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products, categories, brands…"
-                className={styles.searchInput}
-              />
-              <button type="submit" className={styles.searchBtn}>Search</button>
-            </form>
-          </div>
-        </section>
-      )}
 
       {/* ── Category Grid ── */}
       {categories.length > 0 && (

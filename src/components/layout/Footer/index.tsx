@@ -32,7 +32,7 @@ const CUSTOMER_LINKS: FooterLink[] = [
   { label: "Track Order", href: "/orders" },
   { label: "Notifications", href: "/notifications" },
   { label: "BuyWell Wallet", href: "/profile/link-bwallet" },
-  { label: "Contact Support", href: "mailto:hello@buywell.in" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 const POLICY_LINKS: FooterLink[] = [

@@ -135,7 +135,7 @@ export function HomepageBannerClient() {
 
       <div className={styles.toolbar}>
         <p className={styles.hint}>
-          {activeTab === "hero" ? "Hero banners appear in the main slider (recommended: 1440×520px, 16:9 ratio)." : "Promo banners appear in the 2-column row below featured products (recommended: 720×360px, 2:1 ratio)."}
+          {activeTab === "hero" ? "Hero banners appear in the right-side slider on the homepage (recommended: 1200×500 px, 12:5 ratio). Auto-crop is applied on upload." : "Promo banners appear in the 2-column row below featured products (recommended: 720×360 px, 2:1 ratio). Auto-crop is applied on upload."}
         </p>
         <button className={styles.addBtn} onClick={openNew}>+ Add Banner</button>
       </div>
@@ -195,7 +195,13 @@ export function HomepageBannerClient() {
                 ) : (
                   <MediaUploader
                     onUpload={(files: UploadedFile[]) => setForm((f) => ({ ...f, imageUrl: files[0]?.url ?? "" }))}
-                    accept={["image/jpeg", "image/png", "image/webp", "image/gif"]}
+                    accept={["image/jpeg", "image/png", "image/webp"]}
+                    aspectRatio={form.bannerType === "hero" ? 12 / 5 : 2}
+                    recommendedDimensions={
+                      form.bannerType === "hero"
+                        ? { width: 1200, height: 500, label: "Recommended: 1200×500 px (12:5 ratio) — auto-crop enabled" }
+                        : { width: 720, height: 360, label: "Recommended: 720×360 px (2:1 ratio) — auto-crop enabled" }
+                    }
                   />
                 )}
               </div>
