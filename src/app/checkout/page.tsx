@@ -54,6 +54,7 @@ export default async function CheckoutPage() {
           offlineEnabled={offlineEnabled}
           razorpayKeyId={razorpayKeyId}
           companyName={companyName}
+          isLoggedIn={user !== null}
         />
       </main>
     </>

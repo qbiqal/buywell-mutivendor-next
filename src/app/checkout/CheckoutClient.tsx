@@ -9,7 +9,7 @@ import { formatInr } from "@/lib/utils";
 import styles from "./checkout.module.css";
 
 type AuthStatus = "checking" | "loggedIn" | "guest";
-type PaymentMethod = "wallet" | "razorpay" | "offline_qr";
+type PaymentMethod = "wallet" | "razorpay";
 
 interface AddressForm {
   name: string; phone: string; line1: string; line2: string;
@@ -25,9 +25,10 @@ interface Props {
   offlineEnabled:  boolean;
   razorpayKeyId:   string;
   companyName:     string;
+  isLoggedIn:      boolean;
 }
 
-export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayEnabled, offlineEnabled, razorpayKeyId, companyName }: Props) {
+export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayEnabled, razorpayKeyId, companyName, isLoggedIn }: Props) {
   const router    = useRouter();
   const params    = useSearchParams();
   const { items, totalInr, hydrated, clearCart } = useCart();
@@ -35,7 +36,7 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
 
   const isSample = params.get("sample") === "true";
 
-  const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
+  const [authStatus, setAuthStatus] = useState<AuthStatus>(isLoggedIn ? "loggedIn" : "checking");
   const [loading,    setLoading]    = useState(false);
   const [notes,      setNotes]      = useState("");
 
@@ -48,15 +49,15 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
   );
   const [billing,    setBilling]    = useState<AddressForm>(EMPTY_ADDR);
   const [sameBilling, setSameBilling] = useState(true);
-  const [saveAddress, setSaveAddrFlag] = useState(!savedAddress); // only prompt if no saved address
+  const [saveAddress, setSaveAddrFlag] = useState(!savedAddress);
 
   const setAddr = (k: keyof AddressForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setAddress(p => ({ ...p, [k]: e.target.value }));
   const setBill = (k: keyof AddressForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setBilling(p => ({ ...p, [k]: e.target.value }));
 
-  // Payment method
-  const defaultMethod: PaymentMethod = bwalletEnabled ? "wallet" : razorpayEnabled ? "razorpay" : "offline_qr";
+  // Payment method — only wallet or razorpay
+  const defaultMethod: PaymentMethod = bwalletEnabled ? "wallet" : "razorpay";
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(defaultMethod);
 
   // Wallet state
@@ -69,23 +70,17 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
   const [pendingOrderId,   setPendingOrderId]   = useState("");
   const [pendingOrderNum,  setPendingOrderNum]  = useState("");
   const [pendingTotal,     setPendingTotal]     = useState(0);
-  const [pendingToken,     setPendingToken]     = useState("");
-
-  // Guest account creation
-  const [accountMode,  setAccountMode]  = useState<"guest" | "create">("guest");
-  const [email,        setEmail]        = useState("");
-  const [password,     setPassword]     = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   const SHIPPING   = totalInr >= 99900 ? 0 : 6000;
   const grandTotal = totalInr + SHIPPING;
 
   useEffect(() => {
+    if (isLoggedIn) return; // already set to loggedIn from SSR prop
     fetch("/api/auth/me")
       .then(r => r.ok ? r.json() : null)
       .then(d => setAuthStatus(d?.success ? "loggedIn" : "guest"))
       .catch(() => setAuthStatus("guest"));
-  }, []);
+  }, [isLoggedIn]);
 
   // Fetch wallet balance when wallet method selected
   useEffect(() => {
@@ -160,21 +155,8 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
 
     setLoading(true);
     try {
-      // Guest account creation
-      if (authStatus === "guest" && accountMode === "create") {
-        const nameParts = address.name.trim().split(/\s+/);
-        const regRes = await fetch("/api/auth/register", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, firstName: nameParts[0] || "Customer", lastName: nameParts.slice(1).join(" ") || undefined, phone: address.phone }),
-        });
-        const regData = await regRes.json();
-        if (!regData.success) { showError(regData.error ?? "Could not create account"); return; }
-      }
-
-      // Build billing address
       const billingAddr = sameBilling ? address : billing;
 
-      // Create order
       const res = await fetch("/api/orders", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -190,10 +172,9 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
       const data = await res.json();
       if (!data.success) { showError(data.error ?? "Failed to place order"); return; }
 
-      const { orderId, orderNumber, totalInr: orderTotal, uploadToken } = data.data;
+      const { orderId, orderNumber, totalInr: orderTotal } = data.data;
 
-      // Save address if requested
-      if (authStatus === "loggedIn" && saveAddress) {
+      if (saveAddress) {
         fetch("/api/customer/addresses", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: address.name, phone: address.phone, line1: address.line1, line2: address.line2 || null, city: address.city, state: address.state, pincode: address.pincode, isDefault: true }),
@@ -201,14 +182,6 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
       }
 
       if (!isSample) clearCart();
-
-      // ── Route based on payment method ────────────────────────────────────────
-
-      if (paymentMethod === "offline_qr") {
-        const p = new URLSearchParams({ orderId, orderNumber, total: String(orderTotal), token: uploadToken });
-        router.push(`/checkout/payment?${p}`);
-        return;
-      }
 
       if (paymentMethod === "razorpay") {
         const ok = await openRazorpay(orderId, orderTotal, orderNumber);
@@ -229,21 +202,18 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
         const amountFromWallet = Math.min(walletBalance, orderTotal);
         const remaining = orderTotal - amountFromWallet;
 
-        // If wallet covers only part → confirm with user first
         if (remaining > 0) {
           if (!razorpayEnabled) {
-            showError(`Your wallet balance (${formatInr(walletBalance)}) is less than the order total (${formatInr(orderTotal)}). Please enable Razorpay or top up your wallet.`);
+            showError(`Your wallet balance (${formatInr(walletBalance)}) is less than the order total (${formatInr(orderTotal)}). Please top up your wallet.`);
             return;
           }
           setPendingOrderId(orderId);
           setPendingOrderNum(orderNumber);
           setPendingTotal(orderTotal);
-          setPendingToken(uploadToken);
           setShowPartialModal(true);
           return;
         }
 
-        // Wallet covers full amount
         const walletRes = await fetch(`/api/orders/${orderId}/pay-wallet`, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ amount: amountFromWallet }),
@@ -266,7 +236,6 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
       const amountFromWallet = walletBalance;
       const remaining = pendingTotal - amountFromWallet;
 
-      // 1. Debit wallet for partial
       const walletRes = await fetch(`/api/orders/${pendingOrderId}/pay-wallet`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: amountFromWallet, secondaryGateway: "razorpay" }),
@@ -276,13 +245,11 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
 
       showSuccess(`Wallet Applied`, `${formatInr(amountFromWallet)} from wallet. Please complete the remaining ${formatInr(remaining)} via Razorpay.`);
 
-      // 2. Open Razorpay for remaining
       const rzpOk = await openRazorpay(pendingOrderId, remaining, pendingOrderNum);
       if (rzpOk) {
         showSuccess("Payment Successful!", "Your order is confirmed.");
         router.push(`/checkout/confirmation?orderNumber=${pendingOrderNum}&method=wallet`);
       } else {
-        // Razorpay failed/dismissed — auto-refund wallet
         showWarn("Razorpay payment not completed. Refunding wallet balance...");
         const refundRes = await fetch(`/api/orders/${pendingOrderId}/refund-wallet`, {
           method: "POST", headers: { "Content-Type": "application/json" },
@@ -301,7 +268,42 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
     }
   }
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
+  // ─── Guest / checking states ──────────────────────────────────────────────────
+  if (authStatus === "checking") {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <div className={styles.loginPrompt}>
+            <p style={{ color: "var(--text-secondary)" }}>Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (authStatus === "guest") {
+    return (
+      <div className={styles.page}>
+        <div className={styles.container}>
+          <div className={styles.loginPrompt}>
+            <span className="material-icons" style={{ fontSize: 48, color: "var(--accent)" }}>lock</span>
+            <h2>Sign in to Place Your Order</h2>
+            <p>Only registered members can checkout. Sign in or create an account — your cart will be saved.</p>
+            <div className={styles.loginPromptActions}>
+              <Button variant="primary" onClick={() => router.push("/login?redirect=/checkout")}>
+                Sign In
+              </Button>
+              <Button variant="secondary" onClick={() => router.push("/register?redirect=/checkout")}>
+                Create Account
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Render (logged-in only) ──────────────────────────────────────────────────
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -311,42 +313,11 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
           {/* Left — forms */}
           <div className={styles.formCol}>
 
-            {/* Guest account creation */}
-            {authStatus === "guest" && (
-              <div className={styles.section} style={{ marginBottom: 20 }}>
-                <h2 className={styles.sectionTitle}>Your Account</h2>
-                <div className={styles.accountToggleRow}>
-                  <label className={[styles.accountOption, accountMode === "guest" ? styles.accountOptionActive : ""].join(" ")}>
-                    <input type="radio" name="accountMode" value="guest" checked={accountMode === "guest"} onChange={() => setAccountMode("guest")} />
-                    <span className={styles.accountOptionText}><strong>Continue as Guest</strong><small>No account needed</small></span>
-                  </label>
-                  <label className={[styles.accountOption, accountMode === "create" ? styles.accountOptionActive : ""].join(" ")}>
-                    <input type="radio" name="accountMode" value="create" checked={accountMode === "create"} onChange={() => setAccountMode("create")} />
-                    <span className={styles.accountOptionText}><strong>Create Account</strong><small>Track orders after checkout</small></span>
-                  </label>
-                </div>
-                {accountMode === "create" && (
-                  <div className={styles.accountFields}>
-                    <Input label="Email *" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" required />
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.fieldLabel}>Password *</label>
-                      <div className={styles.passwordWrap}>
-                        <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters" className={styles.passwordInput} required />
-                        <button type="button" className={styles.eyeBtn} onClick={() => setShowPassword(p => !p)}>
-                          <span className="material-icons">{showPassword ? "visibility_off" : "visibility"}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Delivery address */}
             <div className={styles.section}>
               <h2 className={styles.sectionTitle}>Delivery Address</h2>
               {savedAddress && (
-                <p className={styles.savedNotice}>📍 Pre-filled from your saved address. Edit if needed.</p>
+                <p className={styles.savedNotice}>Pre-filled from your saved address. Edit if needed.</p>
               )}
               <div className={styles.formFields}>
                 <div className={styles.formGrid}>
@@ -362,13 +333,10 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
                 </div>
               </div>
 
-              {/* Save address toggle */}
-              {authStatus === "loggedIn" && (
-                <label className={styles.checkboxRow} style={{ marginTop: 16 }}>
-                  <input type="checkbox" checked={saveAddress} onChange={e => setSaveAddrFlag(e.target.checked)} />
-                  <span>Save this address for future orders</span>
-                </label>
-              )}
+              <label className={styles.checkboxRow} style={{ marginTop: 16 }}>
+                <input type="checkbox" checked={saveAddress} onChange={e => setSaveAddrFlag(e.target.checked)} />
+                <span>Save this address for future orders</span>
+              </label>
             </div>
 
             {/* Billing address */}
@@ -400,7 +368,7 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
               <Textarea label="Order Notes (Optional)" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any delivery instructions?" />
             </div>
 
-            {/* Payment method */}
+            {/* Payment method — BuyWell Wallet only (+ Razorpay when enabled) */}
             {!isSample && (
               <div className={styles.section} style={{ marginTop: 20 }}>
                 <h2 className={styles.sectionTitle}>Payment Method</h2>
@@ -437,19 +405,7 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
                     </label>
                   )}
 
-                  {/* Offline QR */}
-                  {offlineEnabled && (
-                    <label className={[styles.paymentOption, paymentMethod === "offline_qr" ? styles.paymentOptionActive : ""].join(" ")}>
-                      <input type="radio" name="payment" value="offline_qr" checked={paymentMethod === "offline_qr"} onChange={() => setPaymentMethod("offline_qr")} />
-                      <span className={styles.paymentIcon}>📱</span>
-                      <span className={styles.paymentInfo}>
-                        <strong>UPI / QR Code</strong>
-                        <small>Scan QR and upload payment screenshot</small>
-                      </span>
-                    </label>
-                  )}
-
-                  {!bwalletEnabled && !razorpayEnabled && !offlineEnabled && (
+                  {!bwalletEnabled && !razorpayEnabled && (
                     <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>No payment methods are currently enabled. Please contact support.</p>
                   )}
                 </div>
@@ -473,7 +429,6 @@ export default function CheckoutClient({ savedAddress, bwalletEnabled, razorpayE
                   </div>
                 </div>
               ) : !hydrated ? (
-                /* Skeleton while cart loads from localStorage */
                 <div style={{ animation: "pulse 1.5s ease-in-out infinite" }}>
                   <div style={{ height: 18, background: "var(--border-color)", borderRadius: 4, marginBottom: 10 }} />
                   <div style={{ height: 18, background: "var(--border-color)", borderRadius: 4, marginBottom: 10, width: "70%" }} />
