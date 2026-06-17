@@ -36,9 +36,14 @@ export async function POST(req: NextRequest) {
 
     let url: string;
     const mediaConfig = await getAllSiteConfig("media");
-    const storage: "local" | "r2" = (mediaConfig.media_storage === "r2" || (process.env.NODE_ENV === "production" && process.env.CLOUDFLARE_R2_BUCKET_NAME))
-      ? "r2"
-      : "local";
+    // Only use R2 when all four credentials are present — partial config falls back to local.
+    const r2Configured = !!(
+      (mediaConfig.media_r2_account_id    || process.env.CLOUDFLARE_R2_ACCOUNT_ID) &&
+      (mediaConfig.media_r2_access_key_id || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID) &&
+      (mediaConfig.media_r2_secret_access_key || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY) &&
+      (mediaConfig.media_r2_bucket_name   || process.env.CLOUDFLARE_R2_BUCKET_NAME)
+    );
+    const storage: "local" | "r2" = (mediaConfig.media_storage === "r2" && r2Configured) ? "r2" : "local";
 
     if (storage === "r2") {
       const { uploadToR2 } = await import("@/lib/media");
