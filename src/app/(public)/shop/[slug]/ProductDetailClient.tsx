@@ -220,11 +220,66 @@ export default function ProductDetailClient({ product, related, canEdit = false 
             </Badge>
 
             <h1 className={styles.title}>{product.name}</h1>
-            
+
             {product.vendor?.storeName && (
-              <p className={styles.vendorLink}>
-                Sold by <Link href={`/vendors/${product.vendor.storeSlug}`} style={{ color: "var(--green)", fontWeight: 600 }}>{product.vendor.storeName}</Link>
-              </p>
+              <div className={styles.vendorSection}>
+                <div className={styles.vendorHeader}>
+                  {product.vendor.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={product.vendor.logoUrl} alt={product.vendor.storeName} className={styles.vendorLogo} />
+                  ) : (
+                    <div className={styles.vendorLogoPlaceholder}>{product.vendor.storeName[0]}</div>
+                  )}
+                  <div className={styles.vendorInfo}>
+                    <span className={styles.vendorLabel}>Sold by</span>
+                    <Link href={`/vendors/${product.vendor.storeSlug}`} className={styles.vendorName}>{product.vendor.storeName}</Link>
+                    <div className={styles.vendorRatingRow}>
+                      {[1,2,3,4,5].map((s) => (
+                        <span key={s} className={styles.star} style={{ color: parseFloat(vendorRating) >= s ? "#f59e0b" : "#d1d5db" }}>★</span>
+                      ))}
+                      <span className={styles.ratingText}>{parseFloat(vendorRating).toFixed(1)}</span>
+                      {product.vendor.adminRating != null && (
+                        <span className={styles.adminRatingBadge}>Admin: {product.vendor.adminRating}/5</span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.rateVendorBtn}
+                    onClick={() => {
+                      if (!isLoggedIn) { router.push("/login"); return; }
+                      setRatingOpen((o) => !o);
+                    }}
+                  >
+                    {myRating > 0 ? "Update Rating" : "Rate Vendor"}
+                  </button>
+                </div>
+                {ratingOpen && (
+                  <div className={styles.ratingForm}>
+                    <p className={styles.ratingFormTitle}>Your rating for {product.vendor.storeName}</p>
+                    <div className={styles.starPicker}>
+                      {[1,2,3,4,5].map((s) => (
+                        <button key={s} type="button" className={styles.starPickerBtn} onClick={() => setMyRating(s)}>
+                          <span style={{ color: myRating >= s ? "#f59e0b" : "#d1d5db", fontSize: "1.75rem" }}>★</span>
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      className={styles.reviewInput}
+                      rows={3}
+                      placeholder="Share your experience with this vendor (optional)"
+                      value={myReview}
+                      onChange={(e) => setMyReview(e.target.value)}
+                    />
+                    <div className={styles.ratingFormActions}>
+                      <button type="button" className={styles.ratingSubmitBtn} onClick={submitVendorRating} disabled={ratingLoading || myRating < 1}>
+                        {ratingLoading ? "Submitting…" : "Submit Rating"}
+                      </button>
+                      <button type="button" className={styles.ratingCancelBtn} onClick={() => setRatingOpen(false)}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {product.description && (
