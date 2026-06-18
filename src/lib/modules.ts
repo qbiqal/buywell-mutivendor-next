@@ -89,6 +89,7 @@ export const APP_MODULES: AppModule[] = [
       { label: "Vendors", href: "/admin/vendors", icon: "🏪" },
       { label: "Commissions", href: "/admin/commissions", icon: "📊" },
       { label: "Payouts", href: "/admin/payouts", icon: "💸" },
+      { label: "GST Report", href: "/admin/gst", icon: "🧾" },
       { label: "Customers", href: "/admin/customers", icon: "👥" },
       { label: "Analytics", href: "/admin/analytics", icon: "📈" },
     ],

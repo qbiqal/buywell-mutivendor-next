@@ -66,6 +66,25 @@ export default function VendorProductFormClient({ productId }: Props) {
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [editVariantForm,  setEditVariantForm]  = useState<NewVariantState>({ ...EMPTY_VARIANT });
   const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+  const [hsnCode,     setHsnCode]     = useState("");
+  const [taxRateId,   setTaxRateId]   = useState<number | "">("");
+  const [taxRates,    setTaxRates]    = useState<Array<{ id: number; name: string; cgstRate: number; sgstRate: number; igstRate: number }>>([]);
+  const [hsnSearch,   setHsnSearch]   = useState("");
+  const [hsnResults,  setHsnResults]  = useState<Array<{ id: number; code: string; description: string; taxRateId: number | null }>>([]);
+  const [hsnDropdown, setHsnDropdown] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/vendor/tax/rates").then(r => r.json()).then(d => { if (d.success) setTaxRates(d.rates); });
+  }, []);
+
+  useEffect(() => {
+    if (!hsnSearch || hsnSearch.length < 2) { setHsnResults([]); setHsnDropdown(false); return; }
+    const t = setTimeout(() => {
+      fetch(`/api/vendor/tax/hsn-codes?search=${encodeURIComponent(hsnSearch)}&limit=10`)
+        .then(r => r.json()).then(d => { if (d.success) { setHsnResults(d.codes); setHsnDropdown(d.codes.length > 0); } });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [hsnSearch]);
 
   function openConfirm(title: string, message: string): Promise<boolean> {
     return new Promise((resolve) => {
@@ -92,6 +111,9 @@ export default function VendorProductFormClient({ productId }: Props) {
             imageUrl: primaryImage?.url ?? "",
           });
           setVariants(p.variants ?? []);
+          setHsnCode(p.hsnCode ?? "");
+          setHsnSearch(p.hsnCode ?? "");
+          setTaxRateId(p.taxRateId ?? "");
         }
       })
       .finally(() => setLoading(false));
@@ -121,7 +143,7 @@ export default function VendorProductFormClient({ productId }: Props) {
       const res    = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form }),
+        body: JSON.stringify({ ...form, hsnCode: hsnCode || null, taxRateId: taxRateId !== "" ? Number(taxRateId) : null }),
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error || "Save failed."); return; }
@@ -275,6 +297,61 @@ export default function VendorProductFormClient({ productId }: Props) {
             <input type="checkbox" checked={form.isFeatured} onChange={(e) => set("isFeatured", e.target.checked)} />
             <span>Featured</span>
           </label>
+        </div>
+
+        {/* Tax & GST */}
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>Tax &amp; GST</h3>
+          <div className={styles.field} style={{ position: "relative" }}>
+            <label className={styles.label}>HSN Code</label>
+            <input
+              className={styles.input}
+              placeholder="Search HSN code (e.g. 0409 for honey)…"
+              value={hsnSearch}
+              onChange={(e) => { setHsnSearch(e.target.value); setHsnCode(e.target.value); }}
+              onFocus={() => hsnResults.length > 0 && setHsnDropdown(true)}
+              onBlur={() => setTimeout(() => setHsnDropdown(false), 200)}
+            />
+            {hsnDropdown && (
+              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100, background: "var(--bg-primary)", border: "1px solid var(--border)", borderRadius: 6, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", maxHeight: 180, overflowY: "auto" }}>
+                {hsnResults.map(h => (
+                  <div
+                    key={h.id}
+                    style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid var(--border)", fontSize: 13 }}
+                    onMouseDown={() => {
+                      setHsnCode(h.code); setHsnSearch(`${h.code} — ${h.description}`);
+                      if (h.taxRateId) setTaxRateId(h.taxRateId);
+                      setHsnDropdown(false);
+                    }}
+                  >
+                    <strong style={{ color: "var(--green)" }}>{h.code}</strong> — {h.description}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className={styles.field}>
+            <label className={styles.label}>GST Tax Rate</label>
+            <select
+              className={styles.input}
+              value={taxRateId}
+              onChange={(e) => setTaxRateId(e.target.value === "" ? "" : Number(e.target.value))}
+            >
+              <option value="">— Exempt / Not applicable —</option>
+              {taxRates.map(r => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+          </div>
+          {taxRateId !== "" && (() => {
+            const r = taxRates.find(t => t.id === Number(taxRateId));
+            if (!r) return null;
+            return (
+              <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: "0 0 0.5rem" }}>
+                Intra-state: CGST {(r.cgstRate / 100).toFixed(2)}% + SGST {(r.sgstRate / 100).toFixed(2)}% | Inter-state: IGST {(r.igstRate / 100).toFixed(2)}%
+              </p>
+            );
+          })()}
         </div>
 
         <div className={styles.saveRow}>

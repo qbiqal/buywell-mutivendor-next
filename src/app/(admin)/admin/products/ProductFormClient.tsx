@@ -64,6 +64,25 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
   const [tags,        setTags]        = useState<string[]>([]);
   const [variants,    setVariants]    = useState<Variant[]>([{ ...EMPTY_VARIANT }]);
   const [images,      setImages]      = useState<ProductImage[]>([]);
+  const [hsnCode,     setHsnCode]     = useState("");
+  const [taxRateId,   setTaxRateId]   = useState<number | "">("");
+  const [taxRates,    setTaxRates]    = useState<Array<{ id: number; name: string; totalRate: number; cgstRate: number; sgstRate: number; igstRate: number }>>([]);
+  const [hsnSearch,   setHsnSearch]   = useState("");
+  const [hsnResults,  setHsnResults]  = useState<Array<{ id: number; code: string; description: string; taxRateId: number | null }>>([]);
+  const [hsnDropdown, setHsnDropdown] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/tax/rates").then(r => r.json()).then(d => { if (d.success) setTaxRates(d.rates); });
+  }, []);
+
+  useEffect(() => {
+    if (!hsnSearch || hsnSearch.length < 2) { setHsnResults([]); setHsnDropdown(false); return; }
+    const t = setTimeout(() => {
+      fetch(`/api/admin/tax/hsn-codes?search=${encodeURIComponent(hsnSearch)}&limit=10`)
+        .then(r => r.json()).then(d => { if (d.success) { setHsnResults(d.codes); setHsnDropdown(d.codes.length > 0); } });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [hsnSearch]);
 
   // Auto-slug from name
   function handleNameChange(val: string) {
@@ -94,6 +113,9 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
         setNoIndex(p.noIndex ?? false);
         setNoFollow(p.noFollow ?? false);
         setTags(p.tags ?? []);
+        setHsnCode(p.hsnCode ?? "");
+        setTaxRateId(p.taxRateId ?? "");
+        setHsnSearch(p.hsnCode ?? "");
         setVariants(p.variants.length > 0 ? p.variants.map((v: Variant) => ({
           id: v.id, name: v.name, priceInr: v.priceInr / 100, mrpInr: (v.mrpInr ?? 0) / 100,
           weight: v.weight ?? "", stock: v.stock, sku: v.sku, isActive: v.isActive, imageUrl: v.imageUrl ?? "",
@@ -137,6 +159,8 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
         metaTitle: metaTitle || null, metaDesc: metaDesc || null,
         seoKeywords, ogImageUrl: ogImageUrl || null, canonicalUrl: canonicalUrl || null,
         noIndex, noFollow, tags,
+        hsnCode: hsnCode || null,
+        taxRateId: taxRateId !== "" ? Number(taxRateId) : null,
         variants: variants.map((v) => ({
           ...v,
           priceInr: Math.round(Number(v.priceInr) * 100),
@@ -306,6 +330,63 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
               value={sortOrder}
               onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}
             />
+          </Card>
+
+          {/* Tax & GST */}
+          <Card padding="md" className={styles.section}>
+            <h2 className={styles.sectionTitle}>Tax & GST</h2>
+            <div style={{ position: "relative", marginBottom: "1rem" }}>
+              <label className={styles.fieldLabel} style={{ display: "block", marginBottom: 4, fontSize: 13, color: "var(--text-secondary)", fontWeight: 600 }}>HSN Code</label>
+              <input
+                className={styles.inlineInput}
+                style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--border-color)", borderRadius: 6, background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 14, boxSizing: "border-box" }}
+                placeholder="Search HSN code (e.g. 0409 honey)…"
+                value={hsnSearch}
+                onChange={(e) => { setHsnSearch(e.target.value); setHsnCode(e.target.value); }}
+                onFocus={() => hsnResults.length > 0 && setHsnDropdown(true)}
+                onBlur={() => setTimeout(() => setHsnDropdown(false), 200)}
+              />
+              {hsnDropdown && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100, background: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: 6, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", maxHeight: 200, overflowY: "auto" }}>
+                  {hsnResults.map(h => (
+                    <div
+                      key={h.id}
+                      style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid var(--border-color)", fontSize: 13 }}
+                      onMouseDown={() => {
+                        setHsnCode(h.code); setHsnSearch(`${h.code} — ${h.description}`);
+                        if (h.taxRateId) setTaxRateId(h.taxRateId);
+                        setHsnDropdown(false);
+                      }}
+                    >
+                      <strong style={{ color: "var(--green)" }}>{h.code}</strong> — {h.description}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ display: "block", marginBottom: 4, fontSize: 13, color: "var(--text-secondary)", fontWeight: 600 }}>GST Tax Rate</label>
+              <select
+                style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid var(--border-color)", borderRadius: 6, background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 14 }}
+                value={taxRateId}
+                onChange={(e) => setTaxRateId(e.target.value === "" ? "" : Number(e.target.value))}
+              >
+                <option value="">— Exempt / Not set —</option>
+                {taxRates.map(r => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+              </select>
+            </div>
+            {taxRateId !== "" && (() => {
+              const r = taxRates.find(t => t.id === Number(taxRateId));
+              if (!r) return null;
+              return (
+                <div style={{ background: "var(--bg-secondary)", borderRadius: 6, padding: "10px 12px", fontSize: 13, color: "var(--text-secondary)" }}>
+                  <div>Intra-state: CGST {(r.cgstRate / 100).toFixed(2)}% + SGST {(r.sgstRate / 100).toFixed(2)}%</div>
+                  <div>Inter-state: IGST {(r.igstRate / 100).toFixed(2)}%</div>
+                </div>
+              );
+            })()}
           </Card>
 
           {/* SEO */}
