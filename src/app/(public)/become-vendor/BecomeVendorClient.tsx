@@ -18,6 +18,7 @@ export function BecomeVendorClient() {
 
   const [existing, setExisting] = useState<ApplicationStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notLoggedIn, setNotLoggedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState(1);
 
@@ -41,8 +42,11 @@ export function BecomeVendorClient() {
 
   useEffect(() => {
     fetch("/api/vendor/apply")
-      .then((r) => r.json())
-      .then((d) => { if (d.vendor) setExisting(d.vendor); })
+      .then(async (r) => {
+        if (r.status === 401) { setNotLoggedIn(true); return; }
+        const d = await r.json();
+        if (d.vendor) setExisting(d.vendor);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -84,6 +88,35 @@ export function BecomeVendorClient() {
     return (
       <div className={styles.page}>
         <div className={styles.loading}>Loading…</div>
+      </div>
+    );
+  }
+
+  if (notLoggedIn) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.statusCard}>
+          <div className={styles.statusIcon} style={{ background: "#e0f2fe" }}>🔐</div>
+          <h2 className={styles.statusTitle}>Login Required</h2>
+          <p className={styles.statusMsg}>
+            You need a BuyWell account to apply as a vendor.
+          </p>
+          <div style={{ display: "flex", gap: "12px", justifyContent: "center", marginTop: "16px" }}>
+            <button
+              className={styles.dashBtn}
+              onClick={() => router.push("/login?redirect=/become-vendor")}
+            >
+              Log In
+            </button>
+            <button
+              className={styles.dashBtn}
+              onClick={() => router.push("/register?redirect=/become-vendor")}
+              style={{ background: "var(--green)" }}
+            >
+              Create Account
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
