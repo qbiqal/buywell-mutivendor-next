@@ -49,6 +49,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (body[key] !== undefined) update[key] = body[key];
   }
   if (body.longDesc !== undefined) update.longDesc = body.longDesc ? sanitizeHtml(body.longDesc) : null;
+  if (body.hsnCode !== undefined) update.hsnCode = body.hsnCode || null;
+  if (body.taxRateId !== undefined) update.taxRateId = body.taxRateId ? Number(body.taxRateId) : null;
 
   const [updated] = await db.update(products).set(update).where(eq(products.id, product.id)).returning();
 

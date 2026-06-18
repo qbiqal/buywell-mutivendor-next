@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   if (!vendor) return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
 
   const body = await req.json();
-  const { name, slug, category, description, longDesc, sku, imageUrl } = body;
+  const { name, slug, category, description, longDesc, sku, imageUrl, hsnCode, taxRateId } = body;
   if (!name?.trim() || !slug?.trim() || !category?.trim() || !sku?.trim()) {
     return NextResponse.json({ error: "name, slug, category, sku are required" }, { status: 400 });
   }
@@ -63,6 +63,8 @@ export async function POST(req: NextRequest) {
     longDesc: longDesc ? sanitizeHtml(longDesc) : null,
     sku: sku.trim(),
     vendorId: vendor.id,
+    hsnCode: hsnCode || null,
+    taxRateId: taxRateId ? Number(taxRateId) : null,
   }).returning();
 
   if (imageUrl?.trim()) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { vendors, vendorRatings } from "@/lib/db/schema";
-import { eq, and, avg, sql } from "drizzle-orm";
+import { eq, and, avg } from "drizzle-orm";
 import { getAuthPayload } from "@/lib/middleware";
 import { handleApiError, NotFoundError, ValidationError } from "@/lib/errors";
 

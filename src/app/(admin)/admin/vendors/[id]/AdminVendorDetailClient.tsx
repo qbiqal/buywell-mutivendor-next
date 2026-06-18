@@ -230,6 +230,40 @@ export default function AdminVendorDetailClient({ id }: { id: string }) {
           </div>
         </div>
 
+        {/* Admin Rating */}
+        <div className={styles.infoCard}>
+          <h3 className={styles.cardTitle}>Admin Rating</h3>
+          <p className={styles.cardHelp}>Rate this vendor internally (1–5 stars). This is separate from customer ratings and visible on the product page.</p>
+          <div style={{ marginBottom: "12px" }}>
+            <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+              {[1,2,3,4,5].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    fontSize: "1.75rem", padding: "0",
+                    color: adminRating >= s ? "#f59e0b" : "#d1d5db",
+                    lineHeight: 1,
+                  }}
+                  onClick={() => setAdminRating(s)}
+                >★</button>
+              ))}
+              {adminRating > 0 && (
+                <button type="button" style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", color: "#6b7280", marginLeft: "4px" }} onClick={() => setAdminRating(0)}>Clear</button>
+              )}
+            </div>
+            <textarea
+              className={styles.reasonInput}
+              rows={2}
+              value={adminRatingNote}
+              onChange={(e) => setAdminRatingNote(e.target.value)}
+              placeholder="Internal note about this vendor rating…"
+            />
+          </div>
+          <button className={styles.saveBtn} onClick={saveAdminRating} disabled={actioning}>Save Admin Rating</button>
+        </div>
+
         {/* Actions */}
         <div className={styles.actionsCard}>
           <h3 className={styles.cardTitle}>Actions</h3>
