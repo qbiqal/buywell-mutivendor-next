@@ -12,12 +12,6 @@ import type { ProductWithVariants } from "@/types";
 import { ProductReviews } from "./ProductReviews";
 import styles from "./product-detail.module.css";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  honey: "warning",
-  ghee:  "success",
-  other: "info",
-};
-
 interface ProductDetailClientProps {
   product: ProductWithVariants & { 
     longDesc?: string | null; 
@@ -29,46 +23,6 @@ interface ProductDetailClientProps {
   };
   related: ProductWithVariants[];
   canEdit?: boolean;
-}
-
-type ProductGalleryImage = ProductWithVariants["images"][number];
-
-const FALLBACK_GALLERY: Record<string, string[]> = {
-  "tulsi-honey": [
-    "/landing-assets/images/highres/tulsi-honey.jpeg",
-    "/landing-assets/images/honey-group.jpeg",
-    "/landing-assets/images/highres/honey-honey.jpeg",
-  ],
-  "karanj-honey": [
-    "/landing-assets/images/highres/karang-honey.jpeg",
-    "/landing-assets/images/honey-group.jpeg",
-    "/landing-assets/images/highres/honey-honey.jpeg",
-  ],
-  "moringa-honey": [
-    "/landing-assets/images/highres/moringa-honey.jpeg",
-    "/landing-assets/images/honey-group.jpeg",
-    "/landing-assets/images/highres/honey-honey.jpeg",
-  ],
-  "a2-bilona-ghee": [
-    "/landing-assets/images/highres/ghee.jpeg",
-    "/landing-assets/images/highres/ghee-detail.jpeg",
-    "/landing-assets/images/ghee-group.jpeg",
-  ],
-};
-
-function getFallbackGallery(product: ProductDetailClientProps["product"]): ProductGalleryImage[] {
-  const urls = FALLBACK_GALLERY[product.slug] ?? (
-    product.category === "ghee"
-      ? FALLBACK_GALLERY["a2-bilona-ghee"]
-      : ["/landing-assets/images/honey-group.jpeg", "/landing-assets/images/highres/honey-honey.jpeg"]
-  );
-
-  return urls.map((url, index) => ({
-    id: `fallback-${product.slug}-${index}`,
-    url,
-    alt: `${product.name} ${index + 1}`,
-    isPrimary: index === 0,
-  }));
 }
 
 export default function ProductDetailClient({ product, related, canEdit = false }: ProductDetailClientProps) {
@@ -83,10 +37,8 @@ export default function ProductDetailClient({ product, related, canEdit = false 
   const [qty,          setQty]          = useState(1);
 
   const variant     = activeVariants[selectedIdx];
-  const images      = product.images.length > 0
-    ? product.images
-    : getFallbackGallery(product);
-  const activeImg   = images[activeImgIdx] ?? images[0] ?? { id: "placeholder", url: "", alt: product.name, isPrimary: true };
+  const images    = product.images;
+  const activeImg = images[activeImgIdx] ?? images[0] ?? null;
 
   const discount = variant?.mrpInr && variant.mrpInr > variant.priceInr
     ? Math.round(((variant.mrpInr - variant.priceInr) / variant.mrpInr) * 100)
@@ -153,7 +105,7 @@ export default function ProductDetailClient({ product, related, canEdit = false 
           {/* Image gallery */}
           <div className={styles.gallery}>
             <div className={styles.mainImage}>
-              {activeImg.url ? (
+              {activeImg?.url ? (
                 <Image
                   src={activeImg.url}
                   alt={activeImg.alt ?? product.name}
@@ -164,7 +116,7 @@ export default function ProductDetailClient({ product, related, canEdit = false 
                 />
               ) : (
                 <div className={styles.imgPlaceholder}>
-                  <span>{product.category === "ghee" ? "🥛" : "🍯"}</span>
+                  <span>🛍️</span>
                 </div>
               )}
               {discount > 0 && <span className={styles.discountBadge}>-{discount}% OFF</span>}
@@ -194,7 +146,7 @@ export default function ProductDetailClient({ product, related, canEdit = false 
                       {img.url ? (
                         <Image src={img.url} alt={img.alt ?? product.name} fill className={styles.thumbImg} sizes="84px" />
                       ) : (
-                        <span className={styles.thumbPlaceholder}>🍯</span>
+                        <span className={styles.thumbPlaceholder}>🛍️</span>
                       )}
                     </button>
                   ))}
@@ -213,8 +165,8 @@ export default function ProductDetailClient({ product, related, canEdit = false 
 
           {/* Product info */}
           <div className={styles.info}>
-            <Badge variant={CATEGORY_COLORS[product.category] as never} className={styles.catBadge}>
-              {product.subCategory ?? product.category}
+            <Badge variant="info" className={styles.catBadge}>
+              {product.categoryName ?? product.category}
             </Badge>
 
             <h1 className={styles.title}>{product.name}</h1>
