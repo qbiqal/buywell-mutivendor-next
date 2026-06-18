@@ -293,6 +293,99 @@
   font-size: 14px;
 }
 
+.filtersRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filterLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.filterInput {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  min-width: 160px;
+  height: 36px;
+}
+
+.filterInput:focus { outline: none; border-color: var(--accent); }
+
+.clearFilters {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  height: 36px;
+  align-self: flex-end;
+}
+.clearFilters:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+
+.tableWrap { overflow-x: auto; }
+
+.vendorTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.vendorTable thead tr {
+  background: var(--bg-secondary);
+}
+
+.vendorTable th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.vendorTable tbody tr {
+  border-top: 1px solid var(--border-subtle, var(--border-color));
+}
+
+.vendorTable tbody tr:hover { background: var(--bg-secondary); }
+
+.vendorTable td {
+  padding: 10px 14px;
+  color: var(--text-primary);
+}
+
+.vendorLink {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 700;
+}
+.vendorLink:hover { text-decoration: underline; }
+
 @media (max-width: 1050px) {
   .statsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .layout { grid-template-columns: 1fr; }
