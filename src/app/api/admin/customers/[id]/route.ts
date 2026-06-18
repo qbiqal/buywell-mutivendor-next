@@ -93,17 +93,22 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    if (typeof body.isActive !== "boolean") {
-      throw new ValidationError("isActive boolean is required");
+    if (typeof body.isActive !== "boolean" && typeof body.emailVerified !== "boolean") {
+      throw new ValidationError("isActive or emailVerified boolean is required");
     }
+
+    const update: Record<string, unknown> = { updatedAt: new Date() };
+    if (typeof body.isActive === "boolean") update.isActive = body.isActive;
+    if (typeof body.emailVerified === "boolean") update.emailVerified = body.emailVerified;
 
     const rows = await db
       .update(users)
-      .set({ isActive: body.isActive, updatedAt: new Date() })
+      .set(update)
       .where(and(eq(users.id, id), eq(users.role, "customer")))
       .returning({
         id: users.id,
         isActive: users.isActive,
+        emailVerified: users.emailVerified,
         updatedAt: users.updatedAt,
       });
 
