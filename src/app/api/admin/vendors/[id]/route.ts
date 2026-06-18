@@ -66,6 +66,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (commissionOverride !== undefined) update.commissionOverride = commissionOverride;
   if (body.rejectedReason !== undefined) update.rejectedReason = body.rejectedReason || null;
+  if (body.adminRating !== undefined) {
+    const ar = body.adminRating === null ? null : parseInt(body.adminRating, 10);
+    if (ar !== null && (isNaN(ar) || ar < 1 || ar > 5)) {
+      return NextResponse.json({ error: "adminRating must be 1–5" }, { status: 400 });
+    }
+    update.adminRating = ar;
+  }
+  if (body.adminRatingNote !== undefined) update.adminRatingNote = body.adminRatingNote || null;
   if (action === "approve") { update.approvedAt = new Date(); update.rejectedAt = null; update.rejectedReason = null; }
   if (action === "reject") { update.rejectedAt = new Date(); update.approvedAt = null; }
 

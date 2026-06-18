@@ -29,6 +29,8 @@ interface Vendor {
   totalSales: number;
   totalOrders: number;
   rating: string;
+  adminRating: number | null;
+  adminRatingNote: string | null;
   isFeatured: boolean;
   approvedAt: string | null;
   rejectedAt: string | null;
@@ -53,6 +55,8 @@ export default function AdminVendorDetailClient({ id }: { id: string }) {
   const [commission, setCommission] = useState("");
   const [rejectedReason, setRejectedReason] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [adminRating, setAdminRating] = useState<number>(0);
+  const [adminRatingNote, setAdminRatingNote] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
