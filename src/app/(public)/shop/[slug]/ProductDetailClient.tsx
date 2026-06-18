@@ -45,9 +45,30 @@ export default function ProductDetailClient({ product, related, canEdit = false 
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [qty,          setQty]          = useState(1);
 
+  // Vendor rating state
+  const [ratingOpen,    setRatingOpen]    = useState(false);
+  const [myRating,      setMyRating]      = useState(0);
+  const [myReview,      setMyReview]      = useState("");
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [vendorRating,  setVendorRating]  = useState(product.vendor?.rating ?? "0.00");
+  const [isLoggedIn,    setIsLoggedIn]    = useState(false);
+
+  useEffect(() => {
+    fetch("/api/auth/me").then(r => r.json()).then(d => {
+      if (d.user) setIsLoggedIn(true);
+      if (product.vendor?.storeSlug && d.user) {
+        fetch(`/api/vendors/${product.vendor.storeSlug}/rate`).then(r => r.json()).then(rd => {
+          if (rd.myRating) { setMyRating(rd.myRating.rating); setMyReview(rd.myRating.review ?? ""); }
+        }).catch(() => {});
+      }
+    }).catch(() => {});
+  }, [product.vendor?.storeSlug]);
+
   const variant     = activeVariants[selectedIdx];
   const images    = product.images;
-  const activeImg = images[activeImgIdx] ?? images[0] ?? null;
+  // Use variant-specific image if set, otherwise fall back to gallery
+  const displayImageUrl = (variant as (typeof variant & { imageUrl?: string | null }) | undefined)?.imageUrl;
+  const activeImg = displayImageUrl ? { url: displayImageUrl, alt: variant?.name ?? product.name, id: "variant-img" } : (images[activeImgIdx] ?? images[0] ?? null);
 
   const discount = variant?.mrpInr && variant.mrpInr > variant.priceInr
     ? Math.round(((variant.mrpInr - variant.priceInr) / variant.mrpInr) * 100)
@@ -81,6 +102,26 @@ export default function ProductDetailClient({ product, related, canEdit = false 
       unitPriceInr: variant.priceInr,
     });
     router.push("/checkout");
+  }
+
+  async function submitVendorRating() {
+    if (!product.vendor?.storeSlug || myRating < 1) return;
+    setRatingLoading(true);
+    try {
+      const res = await fetch(`/api/vendors/${product.vendor.storeSlug}/rate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: myRating, review: myReview || undefined }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Thank you for rating this vendor!");
+        setRatingOpen(false);
+        if (data.newAverage) setVendorRating(String(data.newAverage));
+      }
+    } finally {
+      setRatingLoading(false);
+    }
   }
 
   function scrollThumbnails(direction: "prev" | "next") {

@@ -57,7 +57,7 @@ export default function OrdersClient() {
               <div className={styles.orderTop}>
                 <div>
                   <p className={styles.orderNumber}>{order.orderNumber}</p>
-                  <p className={styles.orderDate}>{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
+                  <p className={styles.orderDate}>{formatDateTime(order.createdAt)}</p>
                 </div>
                 <Badge statusKey={order.status}>{STATUS_LABELS[order.status] ?? order.status}</Badge>
               </div>
