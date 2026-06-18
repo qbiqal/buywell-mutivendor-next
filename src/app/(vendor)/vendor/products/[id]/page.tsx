@@ -4,6 +4,7 @@ import VendorProductFormClient from "../VendorProductFormClient";
 
 export const metadata: Metadata = { title: "Edit Product | Vendor Dashboard" };
 
-export default function VendorEditProductPage({ params }: { params: { id: string } }) {
-  return <VendorProductFormClient productId={params.id} />;
+export default async function VendorEditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <VendorProductFormClient productId={id} />;
 }
