@@ -1,6 +1,6 @@
 # BuyWell Multivendor Marketplace — AI Agent Reference
 
-> Last updated: 2026-06-17
+> Last updated: 2026-06-18
 > Framework: Next.js 16.2.2
 > DB: PostgreSQL 17
 > Cache: Redis 7 with `bw:` prefix
@@ -41,6 +41,22 @@
 - ✅ Part 2: BuyWell Global Integration (E-Commerce Wallet + User Sync) complete.
 - ✅ Verified `npm run verify` passes with all Part 1 & 2 features.
 - ✅ Image upload persistence: local-storage fallback (`public/uploads/`) now survives redeploys via Docker named volume. R2 fallback logic also fixed (all 4 credentials must be present; partial config no longer silently fails with 500).
+- ✅ Date+time in all data tables (admin/vendor/customer) — uses `formatDateTime` from `src/lib/utils.ts`.
+- ✅ Reusable `ConfirmModal` component at `src/components/ui/ConfirmModal/` — replaces all `window.confirm()` calls.
+- ✅ Vendor impersonation: admin can log in as any approved vendor from `/admin/vendors` → redirects to `/vendor/dashboard`.
+- ✅ Customer impersonation redirect fixed: → `/orders` (was `/`).
+- ✅ Vendor impersonation API: `POST /api/admin/vendors/[id]/impersonate`.
+- ✅ Commission DELETE API: `DELETE /api/admin/commissions/[id]` — hard delete for bad records.
+- ✅ Schema: `product_variants.imageUrl` (per-variant image), `vendors.adminRating/adminRatingNote`, new tables `vendor_ratings`, `tax_rates`, `hsn_codes`; `products.hsnCode/taxRateId`. Migration `0011_cold_butterfly.sql`.
+- ✅ Variant-specific images: vendor/admin can set per-variant image; product detail page swaps image on variant select.
+- ✅ Vendor section on product detail page: "Sold by [Vendor]" with star rating and customer rating form.
+- ✅ Customer vendor rating: `POST /api/vendors/[slug]/rate` — one rating per user, updates `vendors.rating`.
+- ✅ Admin vendor rating: admin sets 1-5 star rating + note from `/admin/vendors/[id]` detail page.
+- ✅ Analytics vendor/product/date filters: `/admin/analytics` supports `vendorId`, `productName`, `dateFrom`, `dateTo`; shows vendor breakdown table.
+- ✅ Indian GST module: `tax_rates` + `hsn_codes` tables seeded via `scripts/gst-seed.js` (runs on deploy). ~100 HSN codes, 9 tax rate brackets.
+- ✅ GST fields in admin and vendor product forms: HSN code autocomplete + tax rate dropdown with CGST/SGST/IGST breakdown display.
+- ✅ GST Report page at `/admin/gst`: date range + vendor filter, summary cards (taxable value, CGST, SGST, IGST), by-rate breakdown table, order detail, CSV export.
+- ✅ GST report API: `GET /api/admin/gst/report` — back-calculates tax from product tax rates on verified orders.
 
 ### Production: Image Storage Setup
 
