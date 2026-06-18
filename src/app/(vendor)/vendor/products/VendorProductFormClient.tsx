@@ -18,21 +18,50 @@ interface FormState {
   imageUrl: string;
 }
 
+interface Variant {
+  id: string;
+  name: string;
+  priceInr: number;
+  mrpInr: number | null;
+  stock: number;
+  weight: string | null;
+  sku: string;
+}
+
+interface NewVariantState {
+  name: string;
+  priceInr: string;
+  mrpInr: string;
+  stock: string;
+  weight: string;
+  sku: string;
+}
+
 interface Props {
   productId?: string;
 }
+
+const EMPTY_VARIANT: NewVariantState = { name: "", priceInr: "", mrpInr: "", stock: "0", weight: "", sku: "" };
 
 export default function VendorProductFormClient({ productId }: Props) {
   const router = useRouter();
   const toast = useToast();
   const isEdit = !!productId;
 
-  const [loading, setLoading] = useState(isEdit);
-  const [saving, setSaving] = useState(false);
+  const [loading,  setLoading]  = useState(isEdit);
+  const [saving,   setSaving]   = useState(false);
   const [form, setForm] = useState<FormState>({
     name: "", slug: "", category: "", description: "", sku: "",
     isActive: true, isFeatured: false, imageUrl: "",
   });
+
+  // Variant state
+  const [variants,      setVariants]      = useState<Variant[]>([]);
+  const [addingVariant, setAddingVariant] = useState(false);
+  const [savingVariant, setSavingVariant] = useState(false);
+  const [newVariant,    setNewVariant]    = useState<NewVariantState>(EMPTY_VARIANT);
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [editVariantForm,  setEditVariantForm]  = useState<NewVariantState>(EMPTY_VARIANT);
 
   useEffect(() => {
     if (!productId) return;
@@ -52,6 +81,7 @@ export default function VendorProductFormClient({ productId }: Props) {
             isFeatured: p.isFeatured ?? false,
             imageUrl: primaryImage?.url ?? "",
           });
+          setVariants(p.variants ?? []);
         }
       })
       .finally(() => setLoading(false));
@@ -62,6 +92,7 @@ export default function VendorProductFormClient({ productId }: Props) {
       const next = { ...f, [key]: value };
       if (key === "name" && typeof value === "string") {
         next.slug = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        if (!next.sku) next.sku = next.slug.toUpperCase().slice(0, 12);
       }
       return next;
     });
@@ -75,19 +106,103 @@ export default function VendorProductFormClient({ productId }: Props) {
     }
     setSaving(true);
     try {
-      const url = isEdit ? `/api/vendor/products/${productId}` : "/api/vendor/products";
+      const url    = isEdit ? `/api/vendor/products/${productId}` : "/api/vendor/products";
       const method = isEdit ? "PATCH" : "POST";
-      const res = await fetch(url, {
+      const res    = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form }),
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error || "Save failed."); return; }
-      toast.success(isEdit ? "Product updated." : "Product created.");
-      router.push("/vendor/products");
+      if (isEdit) {
+        toast.success("Product updated.");
+        router.push("/vendor/products");
+      } else {
+        // Redirect to edit page so vendor can add variants immediately
+        toast.success("Product created. Add variants below.");
+        router.push(`/vendor/products/${data.product.id}`);
+      }
     } catch { toast.error("Network error."); }
     finally { setSaving(false); }
+  }
+
+  async function handleAddVariant() {
+    if (!productId) return;
+    if (!newVariant.name.trim() || !newVariant.sku.trim() || !newVariant.priceInr) {
+      toast.error("Variant name, SKU, and price are required.");
+      return;
+    }
+    setSavingVariant(true);
+    try {
+      const res = await fetch(`/api/vendor/products/${productId}/variants`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name:     newVariant.name.trim(),
+          sku:      newVariant.sku.trim(),
+          priceInr: Math.round(parseFloat(newVariant.priceInr) * 100),
+          mrpInr:   newVariant.mrpInr ? Math.round(parseFloat(newVariant.mrpInr) * 100) : null,
+          stock:    parseInt(newVariant.stock || "0", 10),
+          weight:   newVariant.weight.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error || "Failed to add variant."); return; }
+      setVariants((v) => [...v, data.variant]);
+      setNewVariant(EMPTY_VARIANT);
+      setAddingVariant(false);
+      toast.success("Variant added.");
+    } catch { toast.error("Network error."); }
+    finally { setSavingVariant(false); }
+  }
+
+  async function handleDeleteVariant(variantId: string) {
+    if (!productId || !confirm("Remove this variant?")) return;
+    const res = await fetch(`/api/vendor/products/${productId}/variants/${variantId}`, { method: "DELETE" });
+    if (res.ok) {
+      setVariants((v) => v.filter((x) => x.id !== variantId));
+      toast.success("Variant removed.");
+    } else {
+      toast.error("Failed to remove variant.");
+    }
+  }
+
+  function startEditVariant(v: Variant) {
+    setEditingVariantId(v.id);
+    setEditVariantForm({
+      name:     v.name,
+      sku:      v.sku,
+      priceInr: String(v.priceInr / 100),
+      mrpInr:   v.mrpInr != null ? String(v.mrpInr / 100) : "",
+      stock:    String(v.stock),
+      weight:   v.weight ?? "",
+    });
+  }
+
+  async function handleSaveVariantEdit(variantId: string) {
+    if (!productId) return;
+    setSavingVariant(true);
+    try {
+      const res = await fetch(`/api/vendor/products/${productId}/variants/${variantId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name:     editVariantForm.name.trim(),
+          sku:      editVariantForm.sku.trim(),
+          priceInr: Math.round(parseFloat(editVariantForm.priceInr) * 100),
+          mrpInr:   editVariantForm.mrpInr ? Math.round(parseFloat(editVariantForm.mrpInr) * 100) : null,
+          stock:    parseInt(editVariantForm.stock || "0", 10),
+          weight:   editVariantForm.weight.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error || "Update failed."); return; }
+      setVariants((v) => v.map((x) => x.id === variantId ? data.variant : x));
+      setEditingVariantId(null);
+      toast.success("Variant updated.");
+    } catch { toast.error("Network error."); }
+    finally { setSavingVariant(false); }
   }
 
   if (loading) return <div className={styles.loading}>Loading…</div>;
@@ -156,6 +271,118 @@ export default function VendorProductFormClient({ productId }: Props) {
           </button>
         </div>
       </form>
+
+      {/* Variants — only in edit mode */}
+      {isEdit && (
+        <div className={styles.card} style={{ marginTop: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h3 className={styles.cardTitle} style={{ margin: 0 }}>Variants (Price &amp; Stock)</h3>
+            {!addingVariant && (
+              <button type="button" className={styles.saveBtn} onClick={() => setAddingVariant(true)}>
+                + Add Variant
+              </button>
+            )}
+          </div>
+
+          {variants.length === 0 && !addingVariant && (
+            <p style={{ color: "#6b7280", fontSize: "14px" }}>No variants yet. Add at least one variant with price and stock for customers to order this product.</p>
+          )}
+
+          {/* Existing variants */}
+          {variants.map((v) => (
+            <div key={v.id} className={styles.variantRow}>
+              {editingVariantId === v.id ? (
+                <div className={styles.variantForm}>
+                  <div className={styles.variantInputRow}>
+                    <div className={styles.field}>
+                      <label className={styles.label}>Name</label>
+                      <input className={styles.input} value={editVariantForm.name} onChange={(e) => setEditVariantForm((f) => ({ ...f, name: e.target.value }))} />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>SKU</label>
+                      <input className={styles.input} value={editVariantForm.sku} onChange={(e) => setEditVariantForm((f) => ({ ...f, sku: e.target.value }))} />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>Price (₹)</label>
+                      <input className={styles.input} type="number" min="0" step="0.01" value={editVariantForm.priceInr} onChange={(e) => setEditVariantForm((f) => ({ ...f, priceInr: e.target.value }))} />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>MRP (₹)</label>
+                      <input className={styles.input} type="number" min="0" step="0.01" value={editVariantForm.mrpInr} onChange={(e) => setEditVariantForm((f) => ({ ...f, mrpInr: e.target.value }))} />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>Stock</label>
+                      <input className={styles.input} type="number" min="0" value={editVariantForm.stock} onChange={(e) => setEditVariantForm((f) => ({ ...f, stock: e.target.value }))} />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>Weight</label>
+                      <input className={styles.input} value={editVariantForm.weight} placeholder="500g" onChange={(e) => setEditVariantForm((f) => ({ ...f, weight: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className={styles.variantActions}>
+                    <button type="button" className={styles.saveBtn} onClick={() => handleSaveVariantEdit(v.id)} disabled={savingVariant}>
+                      {savingVariant ? "Saving…" : "Save"}
+                    </button>
+                    <button type="button" className={styles.cancelBtn} onClick={() => setEditingVariantId(null)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.variantDisplay}>
+                  <span className={styles.variantName}>{v.name}</span>
+                  <span className={styles.variantDetail}>₹{(v.priceInr / 100).toLocaleString("en-IN")}{v.mrpInr ? ` / MRP ₹${(v.mrpInr / 100).toLocaleString("en-IN")}` : ""}</span>
+                  <span className={styles.variantDetail}>{v.stock} in stock</span>
+                  {v.weight && <span className={styles.variantDetail}>{v.weight}</span>}
+                  <span className={styles.variantDetail} style={{ color: "#6b7280", fontSize: "12px" }}>{v.sku}</span>
+                  <div className={styles.variantActions}>
+                    <button type="button" className={styles.cancelBtn} onClick={() => startEditVariant(v)}>Edit</button>
+                    <button type="button" className={styles.deleteBtn} onClick={() => handleDeleteVariant(v.id)}>Remove</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Add variant form */}
+          {addingVariant && (
+            <div className={styles.variantForm}>
+              <div className={styles.variantInputRow}>
+                <div className={styles.field}>
+                  <label className={styles.label}>Name *</label>
+                  <input className={styles.input} placeholder="e.g. 500g" value={newVariant.name} onChange={(e) => setNewVariant((f) => ({ ...f, name: e.target.value }))} />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>SKU *</label>
+                  <input className={styles.input} value={newVariant.sku} onChange={(e) => setNewVariant((f) => ({ ...f, sku: e.target.value }))} />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Price (₹) *</label>
+                  <input className={styles.input} type="number" min="0" step="0.01" placeholder="299.00" value={newVariant.priceInr} onChange={(e) => setNewVariant((f) => ({ ...f, priceInr: e.target.value }))} />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>MRP (₹)</label>
+                  <input className={styles.input} type="number" min="0" step="0.01" placeholder="399.00" value={newVariant.mrpInr} onChange={(e) => setNewVariant((f) => ({ ...f, mrpInr: e.target.value }))} />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Stock</label>
+                  <input className={styles.input} type="number" min="0" value={newVariant.stock} onChange={(e) => setNewVariant((f) => ({ ...f, stock: e.target.value }))} />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Weight</label>
+                  <input className={styles.input} placeholder="500g" value={newVariant.weight} onChange={(e) => setNewVariant((f) => ({ ...f, weight: e.target.value }))} />
+                </div>
+              </div>
+              <div className={styles.variantActions}>
+                <button type="button" className={styles.saveBtn} onClick={handleAddVariant} disabled={savingVariant}>
+                  {savingVariant ? "Adding…" : "Add Variant"}
+                </button>
+                <button type="button" className={styles.cancelBtn} onClick={() => { setAddingVariant(false); setNewVariant(EMPTY_VARIANT); }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

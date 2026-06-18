@@ -51,6 +51,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.longDesc !== undefined) update.longDesc = body.longDesc ? sanitizeHtml(body.longDesc) : null;
 
   const [updated] = await db.update(products).set(update).where(eq(products.id, product.id)).returning();
+
+  if (body.imageUrl !== undefined) {
+    const url = body.imageUrl?.trim() ?? "";
+    const [existing] = await db.select({ id: productImages.id })
+      .from(productImages)
+      .where(and(eq(productImages.productId, product.id), eq(productImages.isPrimary, true)))
+      .limit(1);
+    if (url) {
+      if (existing) {
+        await db.update(productImages).set({ url }).where(eq(productImages.id, existing.id));
+      } else {
+        await db.insert(productImages).values({ productId: product.id, url, isPrimary: true, sortOrder: 0 });
+      }
+    } else if (existing) {
+      await db.delete(productImages).where(eq(productImages.id, existing.id));
+    }
+  }
+
   return NextResponse.json({ success: true, product: updated });
 }
 

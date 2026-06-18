@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { products, productImages } from "@/lib/db/schema";
-import { eq, and, desc, ilike, asc } from "drizzle-orm";
+import { eq, and, desc, ilike } from "drizzle-orm";
 import { createVendorGuard, getVendorForUser } from "@/lib/middleware";
 import { sanitizeHtml } from "@/lib/sanitize";
 
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   if (!vendor) return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
 
   const body = await req.json();
-  const { name, slug, category, description, longDesc, sku } = body;
+  const { name, slug, category, description, longDesc, sku, imageUrl } = body;
   if (!name?.trim() || !slug?.trim() || !category?.trim() || !sku?.trim()) {
     return NextResponse.json({ error: "name, slug, category, sku are required" }, { status: 400 });
   }
@@ -64,6 +64,15 @@ export async function POST(req: NextRequest) {
     sku: sku.trim(),
     vendorId: vendor.id,
   }).returning();
+
+  if (imageUrl?.trim()) {
+    await db.insert(productImages).values({
+      productId: product.id,
+      url: imageUrl.trim(),
+      isPrimary: true,
+      sortOrder: 0,
+    });
+  }
 
   return NextResponse.json({ success: true, product }, { status: 201 });
 }
