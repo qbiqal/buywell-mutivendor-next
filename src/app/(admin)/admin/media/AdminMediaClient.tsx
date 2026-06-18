@@ -7,6 +7,8 @@ import { Input, Select } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { formatDateTime } from "@/lib/utils";
 import { MediaUploader, type UploadedFile } from "@/components/media/MediaUploader";
 import styles from "./admin-media.module.css";
 
@@ -63,6 +65,13 @@ export default function AdminMediaClient() {
   const [editing, setEditing] = useState<MediaItem | null>(null);
   const [editForm, setEditForm] = useState({ alt: "", folder: "general" });
   const [saving, setSaving] = useState(false);
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
 
   useEffect(() => {
     loadMedia();
@@ -127,7 +136,7 @@ export default function AdminMediaClient() {
       showError("Remove references before deleting this file");
       return;
     }
-    if (!confirm(`Delete "${item.originalName}"? This cannot be undone.`)) return;
+    if (!(await openConfirm("Delete File", `Delete "${item.originalName}"? This cannot be undone.`))) return;
     const res = await fetch(`/api/admin/media/${item.id}`, { method: "DELETE" });
     const data = await res.json();
     if (!data.success) {
@@ -233,7 +242,7 @@ export default function AdminMediaClient() {
                   <td>{item.mimeType}</td>
                   <td>{formatBytes(item.sizeBytes)}</td>
                   <td>{item.referenceCount}</td>
-                  <td>{new Date(item.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</td>
+                  <td>{formatDateTime(item.createdAt)}</td>
                   <td>
                     <div className={styles.actions}>
                       <button type="button" onClick={() => copyUrl(item.url)}>Copy</button>
@@ -305,6 +314,14 @@ export default function AdminMediaClient() {
           <Button variant="primary" loading={saving} onClick={saveEdit}>Save Changes</Button>
         </div>
       </Modal>
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="danger"
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@
     "db:push": "drizzle-kit push",
     "db:seed": "tsx src/lib/db/seed.ts",
     "db:content-seed": "node scripts/content-seed.js",
+    "db:gst-seed": "node scripts/gst-seed.js",
     "db:indexes": "tsx src/lib/db/indexes.ts",
     "db:studio": "drizzle-kit studio",
     "lint": "echo 'lint: no eslint configured — skipped'",

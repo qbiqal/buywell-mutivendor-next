@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { formatDateTime } from "@/lib/utils";
 import type { BlogCategory, BlogPost } from "@/lib/db/schema";
 import styles from "./admin-blog.module.css";
 
@@ -32,6 +34,13 @@ export default function AdminBlogClient() {
   const [categories, setCategories] = useState<BlogCategory[]>([]);
   const [categoryForm, setCategoryForm] = useState({ id: "", name: "", slug: "", parentId: "", color: "#D97706", sortOrder: "0" });
   const deferredSearch = useDeferredValue(search);
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
 
   useEffect(() => {
     fetch("/api/admin/blog/categories")
@@ -123,7 +132,7 @@ export default function AdminBlogClient() {
   }
 
   async function deletePost(id: string, title: string) {
-    if (!confirm(`Delete "${title}"?`)) return;
+    if (!(await openConfirm("Delete Post", `Delete "${title}"? This cannot be undone.`))) return;
     const res  = await fetch(`/api/admin/blog/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (data.success) { success("Post deleted"); setPosts((p) => p.filter((x) => x.id !== id)); }
@@ -150,7 +159,7 @@ export default function AdminBlogClient() {
   }
 
   async function deleteCategory(id: string, name: string) {
-    if (!confirm(`Delete category "${name}"?`)) return;
+    if (!(await openConfirm("Delete Category", `Delete category "${name}"? This cannot be undone.`))) return;
     const res = await fetch(`/api/admin/blog/categories?id=${id}`, { method: "DELETE" });
     const data = await res.json();
     if (!data.success) { showError(data.error ?? "Category delete failed"); return; }
@@ -251,7 +260,7 @@ export default function AdminBlogClient() {
                 <Badge statusKey={post.status} className={styles.statusBadge}>{post.status}</Badge>
               </div>
               <div className={styles.cardBody}>
-                <p className={styles.cardDate}>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("en-IN") : "Draft"}</p>
+                <p className={styles.cardDate}>{post.publishedAt ? formatDateTime(post.publishedAt) : "Draft"}</p>
                 <h3 className={styles.cardTitle}>{post.title}</h3>
                 <p className={styles.cardExcerpt}>{post.excerpt}</p>
                 <div className={styles.cardActions}>
@@ -271,7 +280,7 @@ export default function AdminBlogClient() {
                 <tr key={post.id}>
                   <td className={styles.postTitle}>{post.title}</td>
                   <td><Badge statusKey={post.status}>{post.status}</Badge></td>
-                  <td className={styles.date}>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("en-IN") : "—"}</td>
+                  <td className={styles.date}>{post.publishedAt ? formatDateTime(post.publishedAt) : "—"}</td>
                   <td>{post.viewCount}</td>
                   <td>
                     <Link href={`/admin/blog/${post.id}/edit`} className={styles.editLink}>Edit</Link>
@@ -284,6 +293,14 @@ export default function AdminBlogClient() {
           </table>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="danger"
+      />
     </div>
   );
 }

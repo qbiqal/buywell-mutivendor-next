@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orderItems, orders, trafficEvents, users } from "@/lib/db/schema";
+import { orderItems, orders, trafficEvents, users, orderVendorSplits, vendors, vendorCommissions } from "@/lib/db/schema";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError } from "@/lib/errors";
 import { requireModuleApi } from "@/lib/modules";
@@ -14,11 +14,55 @@ export async function GET(req: NextRequest) {
     if (moduleResult) return moduleResult;
 
     const { searchParams } = req.nextUrl;
-    const days = clamp(parseInt(searchParams.get("days") ?? "30"), 1, 365);
-    const format = searchParams.get("format");
-    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const days       = clamp(parseInt(searchParams.get("days") ?? "30"), 1, 365);
+    const format     = searchParams.get("format");
+    const vendorId   = searchParams.get("vendorId") ? parseInt(searchParams.get("vendorId")!, 10) : null;
+    const productName= searchParams.get("productName") ?? null;
+    const dateFrom   = searchParams.get("dateFrom") ?? null;
+    const dateTo     = searchParams.get("dateTo") ?? null;
 
-    const [summaryRows, revenueRows, statusRows, paymentRows, topProducts, customerRows, trafficSummaryRows, topPages, referrers, sources] = await Promise.all([
+    // Date window: dateFrom/dateTo override days preset
+    const since: Date = dateFrom
+      ? new Date(`${dateFrom}T00:00:00.000Z`)
+      : new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const until: Date | null = dateTo ? new Date(`${dateTo}T23:59:59.999Z`) : null;
+
+    // If vendorId filter: find order IDs that include that vendor
+    let filteredOrderIds: string[] | null = null;
+    if (vendorId !== null && !isNaN(vendorId)) {
+      const vendorSplits = await db
+        .select({ orderId: orderVendorSplits.orderId })
+        .from(orderVendorSplits)
+        .where(eq(orderVendorSplits.vendorId, vendorId));
+      filteredOrderIds = vendorSplits.map((s) => s.orderId);
+      if (filteredOrderIds.length === 0) filteredOrderIds = ["__no_match__"];
+    }
+
+    // If productName filter: find order IDs that include that product
+    if (productName) {
+      const productItems = await db
+        .select({ orderId: orderItems.orderId })
+        .from(orderItems)
+        .where(sql`${orderItems.productSnapshot}->>'productName' ilike ${'%' + productName + '%'}`);
+      const productOrderIds = productItems.map((i) => i.orderId);
+      if (filteredOrderIds !== null) {
+        // Intersect
+        const set = new Set(productOrderIds);
+        filteredOrderIds = filteredOrderIds.filter((id) => set.has(id));
+      } else {
+        filteredOrderIds = productOrderIds.length > 0 ? productOrderIds : ["__no_match__"];
+      }
+    }
+
+    // Build base conditions for orders
+    const baseConditions = [gte(orders.createdAt, since)];
+    if (until) baseConditions.push(lte(orders.createdAt, until));
+    if (filteredOrderIds) baseConditions.push(inArray(orders.id, filteredOrderIds));
+    const orderWhere = and(...baseConditions);
+
+    const effectiveDays = dateFrom ? Math.max(1, Math.ceil((until ?? new Date()).getTime() - since.getTime()) / (24 * 60 * 60 * 1000)) : days;
+
+    const [summaryRows, revenueRows, statusRows, paymentRows, topProducts, customerRows, trafficSummaryRows, topPages, referrers, sources, vendorBreakdownRows] = await Promise.all([
       db
         .select({
           totalOrders: sql<number>`count(*)`,
@@ -28,7 +72,7 @@ export async function GET(req: NextRequest) {
           averageOrderInr: sql<number>`coalesce(avg(${orders.totalInr}), 0)`,
         })
         .from(orders)
-        .where(gte(orders.createdAt, since)),
+        .where(orderWhere),
       db
         .select({
           date: sql<string>`to_char(date_trunc('day', ${orders.createdAt}), 'YYYY-MM-DD')`,
@@ -36,27 +80,17 @@ export async function GET(req: NextRequest) {
           revenueInr: sql<number>`coalesce(sum(case when ${orders.paymentStatus} = 'verified' then ${orders.totalInr} else 0 end), 0)`,
         })
         .from(orders)
-        .where(gte(orders.createdAt, since))
+        .where(orderWhere)
         .groupBy(sql`date_trunc('day', ${orders.createdAt})`)
         .orderBy(sql`date_trunc('day', ${orders.createdAt})`),
       db
-        .select({
-          status: orders.status,
-          count: sql<number>`count(*)`,
-        })
-        .from(orders)
-        .where(gte(orders.createdAt, since))
-        .groupBy(orders.status)
-        .orderBy(sql`count(*) desc`),
+        .select({ status: orders.status, count: sql<number>`count(*)` })
+        .from(orders).where(orderWhere)
+        .groupBy(orders.status).orderBy(sql`count(*) desc`),
       db
-        .select({
-          status: orders.paymentStatus,
-          count: sql<number>`count(*)`,
-        })
-        .from(orders)
-        .where(gte(orders.createdAt, since))
-        .groupBy(orders.paymentStatus)
-        .orderBy(sql`count(*) desc`),
+        .select({ status: orders.paymentStatus, count: sql<number>`count(*)` })
+        .from(orders).where(orderWhere)
+        .groupBy(orders.paymentStatus).orderBy(sql`count(*) desc`),
       db
         .select({
           productName: sql<string>`coalesce(${orderItems.productSnapshot}->>'productName', ${orderItems.productSnapshot}->>'name', 'Unknown')`,
@@ -65,7 +99,7 @@ export async function GET(req: NextRequest) {
         })
         .from(orderItems)
         .innerJoin(orders, eq(orderItems.orderId, orders.id))
-        .where(and(gte(orders.createdAt, since), sql`${orders.status} != 'cancelled'`))
+        .where(and(orderWhere, sql`${orders.status} != 'cancelled'`))
         .groupBy(sql`coalesce(${orderItems.productSnapshot}->>'productName', ${orderItems.productSnapshot}->>'name', 'Unknown')`)
         .orderBy(sql`sum(${orderItems.totalInr}) desc`)
         .limit(10),
@@ -75,7 +109,7 @@ export async function GET(req: NextRequest) {
           count: sql<number>`count(*)`,
         })
         .from(users)
-        .where(and(eq(users.role, "customer"), gte(users.createdAt, since)))
+        .where(and(eq(users.role, "customer"), gte(users.createdAt, since), ...(until ? [lte(users.createdAt, until)] : [])))
         .groupBy(sql`date_trunc('day', ${users.createdAt})`)
         .orderBy(sql`date_trunc('day', ${users.createdAt})`),
       db
@@ -85,7 +119,7 @@ export async function GET(req: NextRequest) {
           sessions: sql<number>`count(distinct ${trafficEvents.sessionId})`,
         })
         .from(trafficEvents)
-        .where(gte(trafficEvents.createdAt, since)),
+        .where(and(gte(trafficEvents.createdAt, since), ...(until ? [lte(trafficEvents.createdAt, until)] : []))),
       db
         .select({
           path: trafficEvents.path,
@@ -93,7 +127,7 @@ export async function GET(req: NextRequest) {
           visitors: sql<number>`count(distinct ${trafficEvents.visitorId})`,
         })
         .from(trafficEvents)
-        .where(gte(trafficEvents.createdAt, since))
+        .where(and(gte(trafficEvents.createdAt, since), ...(until ? [lte(trafficEvents.createdAt, until)] : [])))
         .groupBy(trafficEvents.path)
         .orderBy(sql`count(*) desc`)
         .limit(10),
@@ -103,7 +137,7 @@ export async function GET(req: NextRequest) {
           views: sql<number>`count(*)`,
         })
         .from(trafficEvents)
-        .where(gte(trafficEvents.createdAt, since))
+        .where(and(gte(trafficEvents.createdAt, since), ...(until ? [lte(trafficEvents.createdAt, until)] : [])))
         .groupBy(sql`coalesce(nullif(${trafficEvents.referrer}, ''), 'Direct')`)
         .orderBy(sql`count(*) desc`)
         .limit(8),
@@ -113,23 +147,47 @@ export async function GET(req: NextRequest) {
           views: sql<number>`count(*)`,
         })
         .from(trafficEvents)
-        .where(gte(trafficEvents.createdAt, since))
+        .where(and(gte(trafficEvents.createdAt, since), ...(until ? [lte(trafficEvents.createdAt, until)] : [])))
         .groupBy(sql`coalesce(nullif(${trafficEvents.source}, ''), 'direct')`)
         .orderBy(sql`count(*) desc`)
         .limit(8),
+      // Vendor breakdown: join order_vendor_splits + vendors + vendor_commissions
+      db
+        .select({
+          vendorId: vendors.id,
+          storeName: vendors.storeName,
+          orderCount: sql<number>`count(distinct ${orderVendorSplits.orderId})`,
+          revenueInr: sql<number>`coalesce(sum(${orderVendorSplits.subtotal}), 0)`,
+          commissionAmount: sql<number>`coalesce(sum(${vendorCommissions.commissionAmount}), 0)`,
+        })
+        .from(orderVendorSplits)
+        .innerJoin(vendors, eq(vendors.id, orderVendorSplits.vendorId))
+        .innerJoin(orders, eq(orders.id, orderVendorSplits.orderId))
+        .leftJoin(vendorCommissions, and(
+          eq(vendorCommissions.orderId, orderVendorSplits.orderId),
+          eq(vendorCommissions.vendorId, orderVendorSplits.vendorId),
+        ))
+        .where(and(gte(orders.createdAt, since), ...(until ? [lte(orders.createdAt, until)] : [])))
+        .groupBy(vendors.id, vendors.storeName)
+        .orderBy(sql`coalesce(sum(${orderVendorSplits.subtotal}), 0) desc`),
     ]);
 
     const summary = summaryRows[0] ?? {
-      totalOrders: 0,
-      verifiedRevenueInr: 0,
-      pendingVerification: 0,
-      sampleRequests: 0,
-      averageOrderInr: 0,
+      totalOrders: 0, verifiedRevenueInr: 0, pendingVerification: 0,
+      sampleRequests: 0, averageOrderInr: 0,
     };
     const trafficSummary = trafficSummaryRows[0] ?? { pageViews: 0, uniqueVisitors: 0, sessions: 0 };
 
     const data = {
-      range: { days, since: since.toISOString() },
+      range: {
+        days: Math.round(effectiveDays),
+        since: since.toISOString(),
+        until: until?.toISOString() ?? null,
+        dateFrom,
+        dateTo,
+        vendorId,
+        productName,
+      },
       summary: {
         totalOrders: Number(summary.totalOrders ?? 0),
         verifiedRevenueInr: Number(summary.verifiedRevenueInr ?? 0),
@@ -137,7 +195,7 @@ export async function GET(req: NextRequest) {
         sampleRequests: Number(summary.sampleRequests ?? 0),
         averageOrderInr: Math.round(Number(summary.averageOrderInr ?? 0)),
       },
-      revenueByDay: fillDailySeries(days, since, revenueRows.map((row) => ({
+      revenueByDay: fillDailySeries(Math.round(effectiveDays), since, revenueRows.map((row) => ({
         date: row.date,
         orderCount: Number(row.orderCount ?? 0),
         revenueInr: Number(row.revenueInr ?? 0),
@@ -149,7 +207,7 @@ export async function GET(req: NextRequest) {
         quantity: Number(row.quantity ?? 0),
         revenueInr: Number(row.revenueInr ?? 0),
       })),
-      customerGrowth: fillCountSeries(days, since, customerRows.map((row) => ({
+      customerGrowth: fillCountSeries(Math.round(effectiveDays), since, customerRows.map((row) => ({
         date: row.date,
         count: Number(row.count ?? 0),
       }))),
@@ -171,13 +229,20 @@ export async function GET(req: NextRequest) {
           views: Number(row.views ?? 0),
         })),
       },
+      vendorBreakdown: vendorBreakdownRows.map((row) => ({
+        vendorId: row.vendorId,
+        storeName: row.storeName,
+        orderCount: Number(row.orderCount ?? 0),
+        revenueInr: Number(row.revenueInr ?? 0),
+        commissionAmount: Number(row.commissionAmount ?? 0),
+      })),
     };
 
     if (format === "csv") {
       return new NextResponse(toCsv(data.revenueByDay), {
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": `attachment; filename=\"buywell-analytics-${days}d.csv\"`,
+          "Content-Disposition": `attachment; filename="buywell-analytics-${days}d.csv"`,
         },
       });
     }

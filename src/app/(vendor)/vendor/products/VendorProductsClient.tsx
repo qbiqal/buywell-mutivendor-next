@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { formatDateTime } from "@/lib/utils";
 import styles from "./vendor-products.module.css";
 
 interface ProductRow {
@@ -24,6 +26,13 @@ export default function VendorProductsClient() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [toggling, setToggling] = useState<string | null>(null);
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -56,7 +65,7 @@ export default function VendorProductsClient() {
   }
 
   async function deleteProduct(id: string, name: string) {
-    if (!confirm(`Deactivate "${name}"? This will hide it from the store.`)) return;
+    if (!(await openConfirm("Deactivate Product", `Deactivate "${name}"? This will hide it from the store.`))) return;
     setToggling(id);
     try {
       const res = await fetch(`/api/vendor/products/${id}`, { method: "DELETE" });
@@ -123,7 +132,7 @@ export default function VendorProductsClient() {
                       {p.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td>{new Date(p.createdAt).toLocaleDateString("en-IN")}</td>
+                  <td>{formatDateTime(p.createdAt)}</td>
                   <td>
                     <div className={styles.actions}>
                       <Link href={`/vendor/products/${p.id}`} className={styles.editBtn}>Edit</Link>
@@ -140,6 +149,14 @@ export default function VendorProductsClient() {
           </table>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="warning"
+      />
     </div>
   );
 }

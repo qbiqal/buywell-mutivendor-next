@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/ui/Toast";
 import { DataTableFilters, type DataTableFilterField } from "@/components/admin/DataTableFilters";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import type { ProductWithVariants } from "@/types";
 import styles from "./admin-products.module.css";
 
@@ -42,6 +43,13 @@ export default function AdminProductsClient() {
   const [page,      setPage]      = useState(1);
   const [total,     setTotal]     = useState(0);
   const LIMIT = 20;
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
 
   // Load categories once for badge display
   useEffect(() => {
@@ -89,7 +97,7 @@ export default function AdminProductsClient() {
   }
 
   async function deleteProduct(id: string, name: string) {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    if (!(await openConfirm("Delete Product", `Delete "${name}"? This cannot be undone.`))) return;
     const res  = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (data.success) { success("Product deleted"); setProducts((p) => p.filter((x) => x.id !== id)); }
@@ -254,6 +262,14 @@ export default function AdminProductsClient() {
           <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages} className={styles.pageBtn}>Next →</button>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="danger"
+      />
     </div>
   );
 }

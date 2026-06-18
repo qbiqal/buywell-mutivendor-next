@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useToast } from "@/components/ui/Toast";
 import styles from "./profile.module.css";
 
@@ -36,6 +37,13 @@ export default function ProfileClient() {
   const [savingPw,      setSavingPw]      = useState(false);
   const [deleteModal,   setDeleteModal]   = useState(false);
   const [deletingAcct,  setDeletingAcct]  = useState(false);
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
   const [cancellingDel, setCancellingDel] = useState(false);
 
   useEffect(() => {
@@ -91,7 +99,7 @@ export default function ProfileClient() {
   }
 
   async function deleteAddress(id: string) {
-    if (!confirm("Remove this address?")) return;
+    if (!(await openConfirm("Remove Address", "Are you sure you want to remove this address?"))) return;
     const res  = await fetch(`/api/customer/addresses?id=${id}`, { method: "DELETE" });
     const data = await res.json();
     if (data.success) {
@@ -359,6 +367,14 @@ export default function ProfileClient() {
           </div>
         </div>
       </Modal>
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="danger"
+      />
     </div>
   );
 }

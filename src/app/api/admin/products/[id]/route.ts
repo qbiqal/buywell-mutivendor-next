@@ -103,6 +103,7 @@ export async function PUT(
           sku: v.sku as string,
           isActive: (v.isActive as boolean) ?? true,
           sortOrder: i,
+          imageUrl: (v.imageUrl as string) || null,
         };
 
         if (existingIds.has(variantId)) {

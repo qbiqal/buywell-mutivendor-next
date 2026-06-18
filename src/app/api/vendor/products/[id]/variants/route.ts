@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
   const body = await req.json();
-  const { name, priceInr, mrpInr, stock, weight, sku } = body;
+  const { name, priceInr, mrpInr, stock, weight, sku, imageUrl } = body;
 
   if (!name?.trim() || !sku?.trim() || priceInr == null || stock == null) {
     return NextResponse.json({ error: "name, sku, priceInr, stock are required" }, { status: 400 });
@@ -58,6 +58,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     stock: Math.max(0, Math.round(Number(stock))),
     weight: weight?.trim() || null,
     sku: sku.trim(),
+    imageUrl: imageUrl?.trim() || null,
   }).returning();
 
   return NextResponse.json({ success: true, variant }, { status: 201 });

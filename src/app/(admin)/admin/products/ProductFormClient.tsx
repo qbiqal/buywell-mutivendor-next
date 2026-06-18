@@ -21,6 +21,7 @@ interface Variant {
   stock: number;
   sku: string;
   isActive: boolean;
+  imageUrl?: string;
 }
 
 interface ProductImage {
@@ -35,7 +36,7 @@ interface ProductFormClientProps {
   productId?: string;
 }
 
-const EMPTY_VARIANT: Variant = { name: "", priceInr: 0, mrpInr: 0, weight: "", stock: 0, sku: "", isActive: true };
+const EMPTY_VARIANT: Variant = { name: "", priceInr: 0, mrpInr: 0, weight: "", stock: 0, sku: "", isActive: true, imageUrl: "" };
 
 export default function ProductFormClient({ mode, productId }: ProductFormClientProps) {
   const router = useRouter();
@@ -95,7 +96,7 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
         setTags(p.tags ?? []);
         setVariants(p.variants.length > 0 ? p.variants.map((v: Variant) => ({
           id: v.id, name: v.name, priceInr: v.priceInr / 100, mrpInr: (v.mrpInr ?? 0) / 100,
-          weight: v.weight ?? "", stock: v.stock, sku: v.sku, isActive: v.isActive,
+          weight: v.weight ?? "", stock: v.stock, sku: v.sku, isActive: v.isActive, imageUrl: v.imageUrl ?? "",
         })) : [{ ...EMPTY_VARIANT }]);
         setImages(p.images);
       })
@@ -236,7 +237,12 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
                     <Input label="MRP (₹)" type="number" min="0" step="0.01" value={v.mrpInr || ""} onChange={(e) => updateVariant(i, "mrpInr", e.target.value)} placeholder="350" />
                     <Input label="Weight" value={v.weight} onChange={(e) => updateVariant(i, "weight", e.target.value)} placeholder="500g" />
                     <Input label="Stock" type="number" min="0" value={v.stock || ""} onChange={(e) => updateVariant(i, "stock", parseInt(e.target.value) || 0)} placeholder="100" />
+                    <Input label="Variant Image URL" value={v.imageUrl ?? ""} onChange={(e) => updateVariant(i, "imageUrl", e.target.value)} placeholder="https://…" />
                   </div>
+                  {v.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={v.imageUrl} alt={v.name} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 6, marginTop: 8, border: "1px solid var(--border-color)" }} />
+                  )}
                 </div>
               ))}
             </CardBody>

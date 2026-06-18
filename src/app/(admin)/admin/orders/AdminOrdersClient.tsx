@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import { DataTableFilters, type DataTableFilterField } from "@/components/admin/DataTableFilters";
 import type { Order } from "@/lib/db/schema";
+import { formatDateTime } from "@/lib/utils";
 import styles from "./admin-orders.module.css";
 
 const STATUS_FILTERS = [
@@ -148,7 +149,7 @@ export default function AdminOrdersClient() {
                     <td>₹{(order.totalInr / 100).toLocaleString("en-IN")}</td>
                     <td><Badge statusKey={`${order.paymentStatus}`}>{order.paymentStatus.replace(/_/g, " ")}</Badge></td>
                     <td><Badge statusKey={order.status}>{order.status.replace(/_/g, " ")}</Badge></td>
-                    <td className={styles.date}>{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</td>
+                    <td className={styles.date}>{formatDateTime(order.createdAt)}</td>
                     <td><Link href={`/admin/orders/${order.id}`} className={styles.viewLink} onClick={(e) => e.stopPropagation()}>View →</Link></td>
                   </tr>
                 ))}

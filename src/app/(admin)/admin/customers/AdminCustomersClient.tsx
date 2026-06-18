@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/ui/Toast";
 import { DataTableFilters, type DataTableFilterField } from "@/components/admin/DataTableFilters";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { formatDateTime } from "@/lib/utils";
 import styles from "./admin-customers.module.css";
 
 interface CustomerRow {
@@ -54,6 +56,13 @@ export default function AdminCustomersClient() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const LIMIT = 20;
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -186,7 +195,7 @@ export default function AdminCustomersClient() {
                     <td>{customer.phone ? <a href={`tel:${customer.phone}`} className={styles.phone} onClick={(e) => e.stopPropagation()}>{customer.phone}</a> : "—"}</td>
                     <td><span className={styles.metricStrong}>{customer.orderCount}</span></td>
                     <td>₹{(customer.totalSpendInr / 100).toLocaleString("en-IN")}</td>
-                    <td>{customer.lastOrderAt ? new Date(customer.lastOrderAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}</td>
+                    <td>{customer.lastOrderAt ? formatDateTime(customer.lastOrderAt) : "—"}</td>
                     <td>
                       <Badge variant={customer.isActive ? "success" : "danger"}>{customer.isActive ? "Active" : "Inactive"}</Badge>
                     </td>
@@ -198,10 +207,10 @@ export default function AdminCustomersClient() {
                           size="sm"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            if (!confirm(`Impersonate ${customer.email}? Your admin session will be paused.`)) return;
+                            if (!(await openConfirm("Impersonate Customer", `Log in as ${customer.email}? Your admin session will be paused and restored when you exit.`))) return;
                             const res = await fetch(`/api/admin/customers/${customer.id}/impersonate`, { method: "POST" });
                             const data = await res.json();
-                            if (data.success) { window.location.href = "/"; }
+                            if (data.success) { window.location.href = "/orders"; }
                           }}
                           title="Login as this customer"
                         >
@@ -234,6 +243,14 @@ export default function AdminCustomersClient() {
           <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page >= pages} className={styles.pageBtn}>Next</button>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="warning"
+      />
     </div>
   );
 }

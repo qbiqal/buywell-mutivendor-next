@@ -78,6 +78,13 @@
       "when": 1750166400000,
       "tag": "0010_add_user_soft_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781794442997,
+      "tag": "0011_cold_butterfly",
+      "breakpoints": true
     }
   ]
 }

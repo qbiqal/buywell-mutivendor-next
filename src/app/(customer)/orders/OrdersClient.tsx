@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
 import type { Order } from "@/lib/db/schema";
+import { formatDateTime } from "@/lib/utils";
 import styles from "./orders.module.css";
 
 type OrderWithItems = Order & { items: { quantity: number; productSnapshot: Record<string, unknown> }[] };

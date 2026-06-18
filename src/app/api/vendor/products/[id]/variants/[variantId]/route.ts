@@ -29,6 +29,7 @@ export async function PATCH(
   if (body.stock !== undefined) update.stock = Math.max(0, Math.round(Number(body.stock)));
   if (body.weight !== undefined) update.weight = body.weight || null;
   if (body.sku !== undefined) update.sku = body.sku;
+  if (body.imageUrl !== undefined) update.imageUrl = body.imageUrl?.trim() || null;
 
   const [updated] = await db.update(productVariants)
     .set(update)

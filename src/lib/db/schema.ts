@@ -76,6 +76,8 @@ export const products = pgTable("products", {
   noFollow:     boolean("no_follow").default(false).notNull(),
   tags:         text("tags").array(),
   vendorId:     integer("vendor_id"),  // FK added after vendors table is defined
+  hsnCode:      text("hsn_code"),      // Indian HSN code (e.g. "0409" for honey)
+  taxRateId:    integer("tax_rate_id"), // FK to tax_rates
   createdAt:    timestamp("created_at").defaultNow().notNull(),
   updatedAt:    timestamp("updated_at").defaultNow().notNull(),
 });
@@ -106,6 +108,7 @@ export const productVariants = pgTable("product_variants", {
   sku:          text("sku").notNull().unique(),
   isActive:     boolean("is_active").default(true).notNull(),
   sortOrder:    integer("sort_order").default(0).notNull(),
+  imageUrl:     text("image_url"),               // variant-specific image (overrides product primary)
 });
 
 export const productImages = pgTable("product_images", {
@@ -615,7 +618,9 @@ export const vendors = pgTable("vendors", {
   commissionOverride: integer("commission_override"),             // basis points; NULL = use global
   totalSales:       integer("total_sales").default(0).notNull(), // paise, denormalised
   totalOrders:      integer("total_orders").default(0).notNull(),
-  rating:           text("rating").default("0.00").notNull(),
+  rating:           text("rating").default("0.00").notNull(),   // avg customer rating
+  adminRating:      integer("admin_rating"),                      // 1–5, set by admin
+  adminRatingNote:  text("admin_rating_note"),
   isFeatured:       boolean("is_featured").default(false).notNull(),
   metaTitle:        text("meta_title"),
   metaDescription:  text("meta_description"),
@@ -674,6 +679,44 @@ export const vendorPayoutItems = pgTable("vendor_payout_items", {
   payoutId:     integer("payout_id").notNull().references(() => vendorPayouts.id),
   commissionId: integer("commission_id").notNull().references(() => vendorCommissions.id),
   amount:       integer("amount").notNull(),
+});
+
+// ── Vendor Customer Ratings ────────────────────────────────────────────────────
+
+export const vendorRatings = pgTable("vendor_ratings", {
+  id:        text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  vendorId:  integer("vendor_id").notNull().references(() => vendors.id, { onDelete: "cascade" }),
+  userId:    text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  rating:    integer("rating").notNull(), // 1–5
+  review:    text("review"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ── GST / Tax Module ───────────────────────────────────────────────────────────
+
+export const taxRates = pgTable("tax_rates", {
+  id:          serial("id").primaryKey(),
+  name:        text("name").notNull(),          // "GST 5%", "GST 12%", etc.
+  totalRate:   integer("total_rate").notNull(),  // basis points, e.g. 500 = 5%
+  cgstRate:    integer("cgst_rate").notNull(),   // basis points, half of totalRate for intra-state
+  sgstRate:    integer("sgst_rate").notNull(),   // basis points, half of totalRate for intra-state
+  igstRate:    integer("igst_rate").notNull(),   // basis points, equal to totalRate for inter-state
+  cessRate:    integer("cess_rate").default(0).notNull(), // additional cess in basis points
+  description: text("description"),
+  isActive:    boolean("is_active").default(true).notNull(),
+  sortOrder:   integer("sort_order").default(0).notNull(),
+  createdAt:   timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const hsnCodes = pgTable("hsn_codes", {
+  id:          serial("id").primaryKey(),
+  code:        text("code").notNull().unique(), // e.g. "0409"
+  description: text("description").notNull(),
+  chapter:     text("chapter"),                // e.g. "04" (Dairy, honey, eggs)
+  taxRateId:   integer("tax_rate_id").references(() => taxRates.id), // default rate for this HSN
+  isActive:    boolean("is_active").default(true).notNull(),
+  createdAt:   timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 // ── Homepage Banners ───────────────────────────────────────────────────────────
@@ -746,3 +789,6 @@ export type OrderVendorSplit      = typeof orderVendorSplits.$inferSelect;
 export type VendorCommission      = typeof vendorCommissions.$inferSelect;
 export type VendorPayout          = typeof vendorPayouts.$inferSelect;
 export type VendorPayoutItem      = typeof vendorPayoutItems.$inferSelect;
+export type VendorRating          = typeof vendorRatings.$inferSelect;
+export type TaxRate               = typeof taxRates.$inferSelect;
+export type HsnCode               = typeof hsnCodes.$inferSelect;

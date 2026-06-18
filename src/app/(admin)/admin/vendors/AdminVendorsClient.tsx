@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { formatDateTime } from "@/lib/utils";
 import styles from "./admin-vendors.module.css";
 
 interface VendorRow {
@@ -37,6 +39,13 @@ export default function AdminVendorsClient() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [actioning, setActioning] = useState<number | null>(null);
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -150,7 +159,7 @@ export default function AdminVendorsClient() {
                     <td>{v.totalOrders}</td>
                     <td>₹{(v.totalSales / 100).toFixed(0)}</td>
                     <td>{v.rating}</td>
-                    <td>{new Date(v.createdAt).toLocaleDateString("en-IN")}</td>
+                    <td>{formatDateTime(v.createdAt)}</td>
                     <td>
                       <div className={styles.actions}>
                         <Link href={`/admin/vendors/${v.id}`} className={styles.viewBtn}>View</Link>
@@ -169,11 +178,24 @@ export default function AdminVendorsClient() {
                           </>
                         )}
                         {v.status === "approved" && (
-                          <button
-                            className={styles.suspendBtn}
-                            onClick={() => handleAction(v.id, "suspend")}
-                            disabled={actioning === v.id}
-                          >Suspend</button>
+                          <>
+                            <button
+                              className={styles.suspendBtn}
+                              onClick={() => handleAction(v.id, "suspend")}
+                              disabled={actioning === v.id}
+                            >Suspend</button>
+                            <button
+                              className={styles.impersonateBtn}
+                              disabled={actioning === v.id}
+                              onClick={async () => {
+                                if (!(await openConfirm("Impersonate Vendor", `Log in as vendor "${v.storeName}" (${v.userEmail ?? v.email ?? ""})? Your admin session will be paused.`))) return;
+                                const res = await fetch(`/api/admin/vendors/${v.id}/impersonate`, { method: "POST" });
+                                const data = await res.json();
+                                if (data.success) { window.location.href = "/vendor/dashboard"; }
+                                else { toast.error(data.error || "Impersonation failed"); }
+                              }}
+                            >🎭 Impersonate</button>
+                          </>
                         )}
                         {v.status === "suspended" && (
                           <button
@@ -191,6 +213,14 @@ export default function AdminVendorsClient() {
           </table>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="warning"
+      />
     </div>
   );
 }

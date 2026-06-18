@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { formatDateTime } from "@/lib/utils";
 import type { CmsPage } from "@/lib/db/schema";
 import styles from "./cms-pages.module.css";
 
@@ -13,6 +15,13 @@ export default function AdminCMSPagesClient() {
   const [pages, setPages] = useState<CmsPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
 
   useEffect(() => {
     loadPages();
@@ -30,7 +39,7 @@ export default function AdminCMSPagesClient() {
   }
 
   async function deletePage(id: string) {
-    if (!confirm("Delete this CMS page? Menu links pointing to it will no longer resolve to a page record.")) return;
+    if (!(await openConfirm("Delete CMS Page", "Delete this page? Menu links pointing to it will no longer resolve to a page record."))) return;
     setDeleting(id);
     try {
       const res = await fetch(`/api/admin/cms/pages/${id}`, { method: "DELETE" });
@@ -77,7 +86,7 @@ export default function AdminCMSPagesClient() {
               </div>
               <div className={styles.metaLine}>
                 <span>/{page.slug}</span>
-                <span>Updated {new Date(page.updatedAt).toLocaleDateString("en-IN")}</span>
+                <span>Updated {formatDateTime(page.updatedAt)}</span>
               </div>
             </div>
             <div className={styles.actions}>
@@ -97,6 +106,14 @@ export default function AdminCMSPagesClient() {
           </div>
         ))}
       </div>
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="danger"
+      />
     </div>
   );
 }

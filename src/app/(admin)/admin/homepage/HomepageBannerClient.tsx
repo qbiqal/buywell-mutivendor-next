@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { MediaUploader, type UploadedFile } from "@/components/media/MediaUploader";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import styles from "./homepage.module.css";
 
 interface Banner {
@@ -35,6 +36,13 @@ export function HomepageBannerClient() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [activeTab, setActiveTab] = useState<"hero" | "promo">("hero");
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
 
   async function load() {
     setLoading(true);
@@ -98,7 +106,7 @@ export function HomepageBannerClient() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this banner?")) return;
+    if (!(await openConfirm("Delete Banner", "Delete this banner? This cannot be undone."))) return;
     const r = await fetch(`/api/admin/homepage/banners/${id}`, { method: "DELETE" });
     const d = await r.json();
     if (d.success) { toast.success("Banner deleted"); load(); }
@@ -285,6 +293,14 @@ export function HomepageBannerClient() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="danger"
+      />
     </div>
   );
 }

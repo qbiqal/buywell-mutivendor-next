@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { formatDateTime } from "@/lib/utils";
 import styles from "./vendor-orders.module.css";
 
 interface OrderRow {
@@ -81,7 +82,7 @@ export default function VendorOrdersClient() {
                     <td className={styles.amt}>₹{(o.subtotal / 100).toFixed(0)}</td>
                     <td><span className={styles.badge} style={{ color: osc, background: osc + "18" }}>{o.orderStatus}</span></td>
                     <td><span className={styles.badge} style={{ color: sc, background: sc + "18" }}>{o.status}</span></td>
-                    <td>{new Date(o.createdAt).toLocaleDateString("en-IN")}</td>
+                    <td>{formatDateTime(o.createdAt)}</td>
                   </tr>
                 );
               })}

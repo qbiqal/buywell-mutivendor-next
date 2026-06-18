@@ -62,8 +62,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       .select({
         product: products,
         vendor: {
+          id: vendors.id,
           storeName: vendors.storeName,
           storeSlug: vendors.storeSlug,
+          logoUrl: vendors.logoUrl,
+          rating: vendors.rating,
+          adminRating: vendors.adminRating,
         }
       })
       .from(products)

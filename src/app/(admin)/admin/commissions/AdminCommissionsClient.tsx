@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { formatDateTime } from "@/lib/utils";
 import styles from "./admin-commissions.module.css";
 
 interface Commission {
@@ -137,7 +138,7 @@ export default function AdminCommissionsClient() {
                     <td className={styles.ref}>
                       <Link href={`/admin/orders/${c.orderId}`} style={{ color: "var(--green)" }}>{c.orderNumber}</Link>
                     </td>
-                    <td>{new Date(c.createdAt).toLocaleDateString("en-IN")}</td>
+                    <td>{formatDateTime(c.createdAt)}</td>
                     <td>{c.storeName ?? `Vendor #${c.vendorId}`}</td>
                     <td className={styles.amt}>₹{(c.grossAmount / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</td>
                     <td>{(c.commissionRate / 100).toFixed(1)}%</td>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,14 +12,23 @@ import type { ProductWithVariants } from "@/types";
 import { ProductReviews } from "./ProductReviews";
 import styles from "./product-detail.module.css";
 
+interface VendorInfo {
+  id: number;
+  storeName: string | null;
+  storeSlug: string | null;
+  logoUrl: string | null;
+  rating: string | null;
+  adminRating: number | null;
+}
+
 interface ProductDetailClientProps {
-  product: ProductWithVariants & { 
-    longDesc?: string | null; 
-    metaTitle?: string | null; 
-    metaDesc?: string | null; 
-    sortOrder: number; 
+  product: ProductWithVariants & {
+    longDesc?: string | null;
+    metaTitle?: string | null;
+    metaDesc?: string | null;
+    sortOrder: number;
     sku: string;
-    vendor?: { storeName: string | null; storeSlug: string | null } | null;
+    vendor?: VendorInfo | null;
   };
   related: ProductWithVariants[];
   canEdit?: boolean;

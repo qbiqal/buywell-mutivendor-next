@@ -68,7 +68,17 @@ async function main() {
     console.error('[startup] CMS content seed warning:', err.message);
   }
 
-  // ── 4. Start Next.js standalone server ────────────────────────────────────
+  // ── 4. Seed Indian GST rates and HSN codes (idempotent) ───────────────────
+  console.log('[startup] Seeding GST tax rates and HSN codes...');
+  try {
+    const { execSync } = require('child_process');
+    execSync('node ' + path.join(__dirname, 'gst-seed.js'), { stdio: 'inherit', env: process.env });
+    console.log('[startup] GST seed complete.');
+  } catch (err) {
+    console.error('[startup] GST seed warning:', err.message);
+  }
+
+  // ── 6. Start Next.js standalone server ────────────────────────────────────
   console.log('[startup] Starting Next.js server on port', process.env.PORT || 3000);
   require('./server.js');
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { MediaUploader, type UploadedFile } from "@/components/media/MediaUploader";
 import styles from "./vendor-product-form.module.css";
 
@@ -26,6 +27,7 @@ interface Variant {
   stock: number;
   weight: string | null;
   sku: string;
+  imageUrl?: string | null;
 }
 
 interface NewVariantState {
@@ -35,13 +37,14 @@ interface NewVariantState {
   stock: string;
   weight: string;
   sku: string;
+  imageUrl: string;
 }
 
 interface Props {
   productId?: string;
 }
 
-const EMPTY_VARIANT: NewVariantState = { name: "", priceInr: "", mrpInr: "", stock: "0", weight: "", sku: "" };
+const EMPTY_VARIANT: NewVariantState = { name: "", priceInr: "", mrpInr: "", stock: "0", weight: "", sku: "", imageUrl: "" };
 
 export default function VendorProductFormClient({ productId }: Props) {
   const router = useRouter();
@@ -61,7 +64,14 @@ export default function VendorProductFormClient({ productId }: Props) {
   const [savingVariant, setSavingVariant] = useState(false);
   const [newVariant,    setNewVariant]    = useState<NewVariantState>(EMPTY_VARIANT);
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
-  const [editVariantForm,  setEditVariantForm]  = useState<NewVariantState>(EMPTY_VARIANT);
+  const [editVariantForm,  setEditVariantForm]  = useState<NewVariantState>({ ...EMPTY_VARIANT });
+  const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
 
   useEffect(() => {
     if (!productId) return;
@@ -145,6 +155,7 @@ export default function VendorProductFormClient({ productId }: Props) {
           mrpInr:   newVariant.mrpInr ? Math.round(parseFloat(newVariant.mrpInr) * 100) : null,
           stock:    parseInt(newVariant.stock || "0", 10),
           weight:   newVariant.weight.trim() || null,
+          imageUrl: newVariant.imageUrl?.trim() || null,
         }),
       });
       const data = await res.json();
@@ -158,7 +169,7 @@ export default function VendorProductFormClient({ productId }: Props) {
   }
 
   async function handleDeleteVariant(variantId: string) {
-    if (!productId || !confirm("Remove this variant?")) return;
+    if (!productId || !(await openConfirm("Remove Variant", "Are you sure you want to remove this variant? This cannot be undone."))) return;
     const res = await fetch(`/api/vendor/products/${productId}/variants/${variantId}`, { method: "DELETE" });
     if (res.ok) {
       setVariants((v) => v.filter((x) => x.id !== variantId));
@@ -177,6 +188,7 @@ export default function VendorProductFormClient({ productId }: Props) {
       mrpInr:   v.mrpInr != null ? String(v.mrpInr / 100) : "",
       stock:    String(v.stock),
       weight:   v.weight ?? "",
+      imageUrl: v.imageUrl ?? "",
     });
   }
 
@@ -194,6 +206,7 @@ export default function VendorProductFormClient({ productId }: Props) {
           mrpInr:   editVariantForm.mrpInr ? Math.round(parseFloat(editVariantForm.mrpInr) * 100) : null,
           stock:    parseInt(editVariantForm.stock || "0", 10),
           weight:   editVariantForm.weight.trim() || null,
+          imageUrl: editVariantForm.imageUrl?.trim() || null,
         }),
       });
       const data = await res.json();
@@ -318,7 +331,15 @@ export default function VendorProductFormClient({ productId }: Props) {
                       <label className={styles.label}>Weight</label>
                       <input className={styles.input} value={editVariantForm.weight} placeholder="500g" onChange={(e) => setEditVariantForm((f) => ({ ...f, weight: e.target.value }))} />
                     </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>Variant Image URL</label>
+                      <input className={styles.input} value={editVariantForm.imageUrl} placeholder="https://…" onChange={(e) => setEditVariantForm((f) => ({ ...f, imageUrl: e.target.value }))} />
+                    </div>
                   </div>
+                  {editVariantForm.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={editVariantForm.imageUrl} alt="" style={{ width: 64, height: 64, objectFit: "cover", borderRadius: 6, marginBottom: 8, border: "1px solid var(--border)" }} />
+                  )}
                   <div className={styles.variantActions}>
                     <button type="button" className={styles.saveBtn} onClick={() => handleSaveVariantEdit(v.id)} disabled={savingVariant}>
                       {savingVariant ? "Saving…" : "Save"}
@@ -370,6 +391,10 @@ export default function VendorProductFormClient({ productId }: Props) {
                   <label className={styles.label}>Weight</label>
                   <input className={styles.input} placeholder="500g" value={newVariant.weight} onChange={(e) => setNewVariant((f) => ({ ...f, weight: e.target.value }))} />
                 </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Variant Image URL</label>
+                  <input className={styles.input} value={newVariant.imageUrl} placeholder="https://…" onChange={(e) => setNewVariant((f) => ({ ...f, imageUrl: e.target.value }))} />
+                </div>
               </div>
               <div className={styles.variantActions}>
                 <button type="button" className={styles.saveBtn} onClick={handleAddVariant} disabled={savingVariant}>
@@ -383,6 +408,14 @@ export default function VendorProductFormClient({ productId }: Props) {
           )}
         </div>
       )}
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(s => ({...s, open: false}))}
+        variant="danger"
+      />
     </div>
   );
 }

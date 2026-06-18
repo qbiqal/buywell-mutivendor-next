@@ -14,6 +14,14 @@ export function formatDate(date: Date | string | null, opts?: Intl.DateTimeForma
   });
 }
 
+export function formatDateTime(date: Date | string | null): string {
+  if (!date) return "—";
+  return new Date(date).toLocaleString("en-IN", {
+    day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: true,
+  });
+}
+
 export function slugify(str: string): string {
   return str
     .toLowerCase()
