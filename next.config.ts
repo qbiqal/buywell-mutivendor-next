@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "pub-*.r2.dev" },
     ],
   },
+  // Route /uploads/* through an API handler so files on the Docker-volume-mounted
+  // public/uploads/ directory are served correctly. Next.js standalone refuses to
+  // serve static files from a different filesystem device (the named volume), so
+  // we bypass that restriction with an API route that uses fs.readFile directly.
+  async rewrites() {
+    return [
+      { source: "/uploads/:path*", destination: "/api/media/serve/:path*" },
+    ];
+  },
   serverExternalPackages: ["pg"],
 };
 
