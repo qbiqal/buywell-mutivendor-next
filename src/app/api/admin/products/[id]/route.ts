@@ -52,6 +52,7 @@ export async function PUT(
       name, slug, category, categoryId, subCategory, description, longDesc, sku,
       isActive, isFeatured, sortOrder, metaTitle, metaDesc, seoKeywords,
       ogImageUrl, canonicalUrl, noIndex, noFollow, tags, variants, images,
+      hsnCode, taxRateId,
     } = body;
 
     // Update product
@@ -75,6 +76,8 @@ export async function PUT(
       ...(noIndex     !== undefined && { noIndex: noIndex === true }),
       ...(noFollow    !== undefined && { noFollow: noFollow === true }),
       ...(tags        !== undefined && { tags: parseList(tags) }),
+      ...(hsnCode     !== undefined && { hsnCode: hsnCode || null }),
+      ...(taxRateId   !== undefined && { taxRateId: taxRateId ? Number(taxRateId) : null }),
       updatedAt: new Date(),
     }).where(eq(products.id, id));
     if (tags !== undefined) await ensureTags("product", parseList(tags));

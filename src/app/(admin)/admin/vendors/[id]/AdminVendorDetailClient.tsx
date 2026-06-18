@@ -66,6 +66,8 @@ export default function AdminVendorDetailClient({ id }: { id: string }) {
       if (data.success) {
         setVendor(data.vendor);
         setCommission(data.vendor.commissionOverride != null ? String(data.vendor.commissionOverride) : "");
+        setAdminRating(data.vendor.adminRating ?? 0);
+        setAdminRatingNote(data.vendor.adminRatingNote ?? "");
       }
     } finally {
       setLoading(false);
@@ -116,6 +118,22 @@ export default function AdminVendorDetailClient({ id }: { id: string }) {
     } finally {
       setActioning(false);
     }
+  }
+
+  async function saveAdminRating() {
+    setActioning(true);
+    try {
+      const res = await fetch(`/api/admin/vendors/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminRating: adminRating || null, adminRatingNote: adminRatingNote || null }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error || "Save failed."); return; }
+      toast.success("Admin rating saved.");
+      load();
+    } catch { toast.error("Network error."); }
+    finally { setActioning(false); }
   }
 
   if (loading) return <div className={styles.loading}>Loading…</div>;

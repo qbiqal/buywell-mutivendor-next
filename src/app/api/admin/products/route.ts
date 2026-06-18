@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
       name, slug, category, categoryId, subCategory, description, longDesc, sku,
       isActive, isFeatured, sortOrder, metaTitle, metaDesc, seoKeywords,
       ogImageUrl, canonicalUrl, noIndex, noFollow, tags, variants = [], images = [],
+      hsnCode, taxRateId,
     } = body;
 
     if (!name || !slug || !sku) {
@@ -133,6 +134,8 @@ export async function POST(req: NextRequest) {
       noIndex: noIndex === true,
       noFollow: noFollow === true,
       tags: parseList(tags),
+      hsnCode: hsnCode || null,
+      taxRateId: taxRateId ? Number(taxRateId) : null,
     });
     await ensureTags("product", parseList(tags));
 
