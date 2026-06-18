@@ -58,7 +58,7 @@ export function ProductCard({ product, listMode = false }: ProductCardProps) {
     ? Math.round(((variant.mrpInr - variant.priceInr) / variant.mrpInr) * 100)
     : 0;
 
-  const categoryLabel = product.category || "product";
+  const categoryLabel = product.categoryName ?? product.subCategory ?? product.category ?? "product";
 
   return (
     <div className={[styles.card, listMode ? styles.listCard : ""].join(" ")}>

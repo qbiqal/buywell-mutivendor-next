@@ -46,9 +46,7 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
   // Product fields
   const [name,        setName]        = useState("");
   const [slug,        setSlug]        = useState("");
-  const [category,    setCategory]    = useState("honey");
   const [categoryId,  setCategoryId]  = useState("");
-  const [subCategory, setSubCategory] = useState("");
   const [description, setDescription] = useState("");
   const [longDesc,    setLongDesc]    = useState("");
   const [sku,         setSku]         = useState("");
@@ -82,9 +80,9 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
       .then((d) => {
         if (!d.success) { showError("Product not found"); router.push("/admin/products"); return; }
         const p = d.data;
-        setName(p.name); setSlug(p.slug); setCategory(p.category);
+        setName(p.name); setSlug(p.slug);
         setCategoryId(p.categoryId ?? "");
-        setSubCategory(p.subCategory ?? ""); setDescription(p.description ?? "");
+        setDescription(p.description ?? "");
         setLongDesc(p.longDesc ?? ""); setSku(p.sku);
         setIsActive(p.isActive); setIsFeatured(p.isFeatured);
         setSortOrder(p.sortOrder); setMetaTitle(p.metaTitle ?? "");
@@ -132,7 +130,7 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
     setSaving(true);
     try {
       const payload = {
-        name, slug, category, categoryId: categoryId || null, subCategory: subCategory || null,
+        name, slug, categoryId: categoryId || null,
         description: description || null, longDesc: longDesc || null, sku,
         isActive, isFeatured, sortOrder: Number(sortOrder),
         metaTitle: metaTitle || null, metaDesc: metaDesc || null,
@@ -199,23 +197,12 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
             <CardBody className={styles.cardFields}>
               <Input label="Product Name *" value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="Tulsi Honey" required />
               <Input label="URL Slug *" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="tulsi-honey" required />
-              <div className={styles.row}>
-                <div className={styles.col}>
-                  <label className={styles.label}>Category *</label>
-                  <select className={styles.select} value={category} onChange={(e) => setCategory(e.target.value)}>
-                    <option value="honey">Honey</option>
-                    <option value="ghee">A2 Ghee</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <Input label="Sub-category" value={subCategory} onChange={(e) => setSubCategory(e.target.value)} placeholder="tulsi / karanj / moringa / a2-bilona" />
-              </div>
               <NestedCategoryPicker
                 endpoint="/api/admin/products/categories"
                 value={categoryId}
                 onChange={setCategoryId}
-                label="Nested Product Category"
-                emptyLabel="Use legacy category only"
+                label="Category"
+                emptyLabel="No category"
                 defaultColor="#2D7D46"
               />
               <Input label="SKU *" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="HNY-TLS-001" required />

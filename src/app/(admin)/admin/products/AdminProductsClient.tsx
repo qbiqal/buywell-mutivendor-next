@@ -11,13 +11,6 @@ import { DataTableFilters, type DataTableFilterField } from "@/components/admin/
 import type { ProductWithVariants } from "@/types";
 import styles from "./admin-products.module.css";
 
-const CATEGORY_FILTERS = [
-  { value: "",      label: "All categories" },
-  { value: "honey", label: "Honey" },
-  { value: "ghee",  label: "Ghee" },
-  { value: "other", label: "Other" },
-];
-
 const STATUS_FILTERS = [
   { value: "", label: "All statuses" },
   { value: "active", label: "Active" },
@@ -34,10 +27,10 @@ export default function AdminProductsClient() {
   const router  = useRouter();
   const { success, error: showError } = useToast();
   const [products,  setProducts]  = useState<ProductWithVariants[]>([]);
+  const [catNameMap, setCatNameMap] = useState<Map<string, string>>(new Map());
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState("");
   const deferredSearch = useDeferredValue(search);
-  const [category,  setCategory]  = useState("");
   const [status,    setStatus]    = useState("");
   const [featured,  setFeatured]  = useState("");
   const [dateFrom,  setDateFrom]  = useState("");
@@ -50,11 +43,22 @@ export default function AdminProductsClient() {
   const [total,     setTotal]     = useState(0);
   const LIMIT = 20;
 
+  // Load categories once for badge display
+  useEffect(() => {
+    fetch("/api/products/categories")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) {
+          setCatNameMap(new Map((d.data as Array<{ id: string; name: string }>).map((c) => [c.id, c.name])));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     setLoading(true);
     const q = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
     if (deferredSearch) q.set("search", deferredSearch);
-    if (category) q.set("category", category);
     if (status) q.set("status", status);
     if (featured) q.set("featured", featured);
     if (dateFrom) q.set("dateFrom", dateFrom);
@@ -67,7 +71,7 @@ export default function AdminProductsClient() {
       .then((r) => r.json())
       .then((d) => { if (d.success) { setProducts(d.data); setTotal(d.pagination.total); } })
       .finally(() => setLoading(false));
-  }, [deferredSearch, category, status, featured, dateFrom, dateTo, minPrice, maxPrice, minStock, maxStock, page]);
+  }, [deferredSearch, status, featured, dateFrom, dateTo, minPrice, maxPrice, minStock, maxStock, page]);
 
   async function toggleActive(id: string, isActive: boolean) {
     const res  = await fetch(`/api/admin/products/${id}`, {
@@ -94,7 +98,6 @@ export default function AdminProductsClient() {
 
   const pages = Math.ceil(total / LIMIT);
   const filterFields: DataTableFilterField[] = [
-    { key: "category", label: "Category", type: "select", value: category, options: CATEGORY_FILTERS, onChange: (value) => { setCategory(value); setPage(1); } },
     { key: "status", label: "Status", type: "select", value: status, options: STATUS_FILTERS, onChange: (value) => { setStatus(value); setPage(1); } },
     { key: "featured", label: "Featured", type: "select", value: featured, options: FEATURED_FILTERS, onChange: (value) => { setFeatured(value); setPage(1); } },
     { key: "dateFrom", label: "Created From", type: "date", value: dateFrom, onChange: (value) => { setDateFrom(value); setPage(1); } },
@@ -107,7 +110,6 @@ export default function AdminProductsClient() {
 
   function resetFilters() {
     setSearch("");
-    setCategory("");
     setStatus("");
     setFeatured("");
     setDateFrom("");
@@ -144,7 +146,7 @@ export default function AdminProductsClient() {
         exportRows={products.map((product) => ({
           name: product.name,
           slug: product.slug,
-          category: product.subCategory ?? product.category,
+          category: catNameMap.get(product.categoryId ?? "") ?? product.category,
           sku: product.sku,
           active: product.isActive ? "Yes" : "No",
           featured: product.isFeatured ? "Yes" : "No",
@@ -202,8 +204,8 @@ export default function AdminProductsClient() {
                       </div>
                     </td>
                     <td>
-                      <Badge variant={p.category === "honey" ? "warning" : "success"}>
-                        {p.subCategory ?? p.category}
+                      <Badge variant="success">
+                        {catNameMap.get(p.categoryId ?? "") ?? p.category}
                       </Badge>
                       {p.isFeatured && <Badge variant="info" className={styles.featuredBadge}>Featured</Badge>}
                     </td>

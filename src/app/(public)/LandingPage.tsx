@@ -43,16 +43,17 @@ export default async function LandingPage() {
 
     withCache("query:products:featured", CACHE_TTL.QUERY, async () =>
       db.select({
-        id:          products.id,
-        name:        products.name,
-        slug:        products.slug,
-        category:    products.category,
-        subCategory: products.subCategory,
-        description: products.description,
-        imageUrl:    productImages.url,
+        id:           products.id,
+        name:         products.name,
+        slug:         products.slug,
+        category:     products.category,
+        categoryName: productCategories.name,
+        description:  products.description,
+        imageUrl:     productImages.url,
       })
       .from(products)
       .leftJoin(productImages, and(eq(productImages.productId, products.id), eq(productImages.isPrimary, true)))
+      .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
       .where(and(eq(products.isActive, true), eq(products.isFeatured, true)))
       .orderBy(asc(products.sortOrder))
       .limit(6)
@@ -60,16 +61,17 @@ export default async function LandingPage() {
 
     withCache("query:products:latest:landing", CACHE_TTL.QUERY, async () => {
       const rows = await db.select({
-        id:          products.id,
-        name:        products.name,
-        slug:        products.slug,
-        category:    products.category,
-        subCategory: products.subCategory,
-        description: products.description,
-        imageUrl:    productImages.url,
+        id:           products.id,
+        name:         products.name,
+        slug:         products.slug,
+        category:     products.category,
+        categoryName: productCategories.name,
+        description:  products.description,
+        imageUrl:     productImages.url,
       })
       .from(products)
       .leftJoin(productImages, and(eq(productImages.productId, products.id), eq(productImages.isPrimary, true)))
+      .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
       .where(eq(products.isActive, true))
       .orderBy(desc(products.createdAt))
       .limit(16);

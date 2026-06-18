@@ -108,15 +108,15 @@ export async function POST(req: NextRequest) {
       ogImageUrl, canonicalUrl, noIndex, noFollow, tags, variants = [], images = [],
     } = body;
 
-    if (!name || !slug || !category || !sku) {
-      throw new ValidationError("name, slug, category and sku are required");
+    if (!name || !slug || !sku) {
+      throw new ValidationError("name, slug and sku are required");
     }
 
     const productId = crypto.randomUUID();
 
     await db.insert(products).values({
       id: productId,
-      name, slug, category,
+      name, slug, category: category || "other",
       categoryId: categoryId || null,
       subCategory: subCategory || null,
       description: description || null,

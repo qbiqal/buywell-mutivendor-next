@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { products, productVariants, productImages } from "@/lib/db/schema";
+import { products, productVariants, productImages, productCategories } from "@/lib/db/schema";
 import { eq, and, asc, desc, ilike, or } from "drizzle-orm";
 import { withCache, CACHE_TTL } from "@/lib/cache";
 import { handleApiError } from "@/lib/errors";
@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
     if (moduleResult) return moduleResult;
 
     const { searchParams } = req.nextUrl;
-    const category   = searchParams.get("category");    // legacy string slug
     const categoryId = searchParams.get("categoryId");  // FK to product_categories
     const featured   = searchParams.get("featured") === "true";
     const search     = searchParams.get("search")?.trim() ?? "";
@@ -25,11 +24,10 @@ export async function GET(req: NextRequest) {
 
     // Don't cache when filters are applied — too many combinations
     const hasFilters = !!(search || categoryId || minPrice || maxPrice || inStock || sort !== "default");
-    const cacheKey   = `query:products:${category ?? "all"}:${featured}`;
+    const cacheKey   = `query:products:all:${featured}`;
 
     const fetchProducts = async () => {
       const conditions = [eq(products.isActive, true)];
-      if (category && !categoryId) conditions.push(eq(products.category, category));
       if (categoryId) conditions.push(eq(products.categoryId, categoryId));
       if (featured)   conditions.push(eq(products.isFeatured, true));
       if (search)     conditions.push(
@@ -97,9 +95,21 @@ export async function GET(req: NextRequest) {
       return result;
     };
 
-    const allProducts = hasFilters
+    const rawProducts = hasFilters
       ? await fetchProducts()
       : await withCache(cacheKey, CACHE_TTL.QUERY, fetchProducts);
+
+    // Attach categoryName from nested product_categories
+    const allCats = await withCache("query:product-categories:public", CACHE_TTL.QUERY, () =>
+      db.select({ id: productCategories.id, name: productCategories.name })
+        .from(productCategories)
+        .where(eq(productCategories.isActive, true))
+    );
+    const catNameMap = new Map(allCats.map((c) => [c.id, c.name]));
+    const allProducts = rawProducts.map((p) => ({
+      ...p,
+      categoryName: catNameMap.get(p.categoryId ?? "") ?? null,
+    }));
 
     const total  = allProducts.length;
     const offset = (page - 1) * limit;

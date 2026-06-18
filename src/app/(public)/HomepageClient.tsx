@@ -19,7 +19,7 @@ interface Product {
   name: string;
   slug: string;
   category: string;
-  subCategory: string | null;
+  categoryName?: string | null;
   description: string | null;
   imageUrl: string | null | undefined;
   priceMin?: number;
@@ -122,7 +122,7 @@ function HomepageProductCard({ product: p }: { product: Product }) {
           )}
         </div>
         <div className={styles.productCardBody}>
-          <p className={styles.productCardCategory}>{p.subCategory ?? p.category}</p>
+          <p className={styles.productCardCategory}>{p.categoryName ?? p.category}</p>
           <h3 className={styles.productCardName}>{p.name}</h3>
           {p.description && (
             <p className={styles.productCardDesc}>

@@ -59,6 +59,8 @@ export interface ProductWithVariants {
   name: string;
   slug: string;
   category: string;
+  categoryId?: string | null;
+  categoryName?: string | null;
   subCategory?: string | null;
   description?: string | null;
   longDesc?: string | null;
