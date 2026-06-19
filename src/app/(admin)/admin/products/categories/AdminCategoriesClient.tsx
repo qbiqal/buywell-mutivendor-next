@@ -1,0 +1,385 @@
+"use client";
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Spinner } from "@/components/ui/Spinner";
+import { useToast } from "@/components/ui/Toast";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import styles from "./admin-categories.module.css";
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  color: string | null;
+  description: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+const EMPTY_FORM = {
+  name: "",
+  slug: "",
+  parentId: "",
+  color: "#2D7D46",
+  description: "",
+  seoTitle: "",
+  seoDescription: "",
+  sortOrder: "0",
+  isActive: true,
+};
+
+function toSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 120);
+}
+
+export default function AdminCategoriesClient() {
+  const { success, error: showError } = useToast();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({
+    open: false, title: "", message: "", onConfirm: () => {},
+  });
+
+  async function loadCategories() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/products/categories");
+      const data = await res.json();
+      if (data.success) setCategories(data.data);
+      else showError("Failed to load categories");
+    } catch {
+      showError("Network error loading categories");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadCategories(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function openCreate() {
+    setEditId(null);
+    setForm({ ...EMPTY_FORM });
+    setShowForm(true);
+  }
+
+  function openEdit(cat: Category) {
+    setEditId(cat.id);
+    setForm({
+      name: cat.name,
+      slug: cat.slug,
+      parentId: cat.parentId ?? "",
+      color: cat.color ?? "#2D7D46",
+      description: cat.description ?? "",
+      seoTitle: cat.seoTitle ?? "",
+      seoDescription: cat.seoDescription ?? "",
+      sortOrder: String(cat.sortOrder),
+      isActive: cat.isActive,
+    });
+    setShowForm(true);
+  }
+
+  function cancelForm() {
+    setShowForm(false);
+    setEditId(null);
+    setForm({ ...EMPTY_FORM });
+  }
+
+  function handleNameChange(name: string) {
+    setForm((f) => ({ ...f, name, slug: editId ? f.slug : toSlug(name) }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim()) { showError("Category name is required"); return; }
+    setSaving(true);
+    try {
+      const payload = {
+        ...(editId ? { id: editId } : {}),
+        name: form.name.trim(),
+        slug: form.slug.trim() || toSlug(form.name),
+        parentId: form.parentId || null,
+        color: form.color,
+        description: form.description.trim() || null,
+        seoTitle: form.seoTitle.trim() || null,
+        seoDescription: form.seoDescription.trim() || null,
+        sortOrder: parseInt(form.sortOrder, 10) || 0,
+        isActive: form.isActive,
+      };
+      const res = await fetch("/api/admin/products/categories", {
+        method: editId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        success(editId ? "Category updated" : "Category created");
+        cancelForm();
+        await loadCategories();
+      } else {
+        showError(data.error ?? "Save failed");
+      }
+    } catch {
+      showError("Network error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function toggleActive(cat: Category) {
+    try {
+      const res = await fetch("/api/admin/products/categories", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: cat.id, isActive: !cat.isActive }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCategories((prev) => prev.map((c) => c.id === cat.id ? { ...c, isActive: !cat.isActive } : c));
+        success(!cat.isActive ? "Category activated" : "Category deactivated");
+      } else showError("Update failed");
+    } catch { showError("Network error"); }
+  }
+
+  function openDelete(cat: Category) {
+    setConfirmState({
+      open: true,
+      title: "Delete Category",
+      message: `Delete category "${cat.name}"? Products using this category will need to be re-categorised. This cannot be undone.`,
+      onConfirm: async () => {
+        setConfirmState((s) => ({ ...s, open: false }));
+        try {
+          const res = await fetch(`/api/admin/products/categories?id=${cat.id}`, { method: "DELETE" });
+          const data = await res.json();
+          if (data.success) { success("Category deleted"); await loadCategories(); }
+          else showError(data.error ?? "Delete failed");
+        } catch { showError("Network error"); }
+      },
+    });
+  }
+
+  const parentMap = new Map(categories.map((c) => [c.id, c.name]));
+  const topLevel = categories.filter((c) => !c.parentId);
+
+  return (
+    <div className={styles.content}>
+      <div className={styles.pageHeader}>
+        <div>
+          <h1 className="admin-page-title">Product Categories</h1>
+          <p className="admin-page-subtitle">{categories.length} categor{categories.length !== 1 ? "ies" : "y"} total</p>
+        </div>
+        <Button variant="primary" onClick={openCreate}>+ Add Category</Button>
+      </div>
+
+      {/* Create / Edit Form */}
+      {showForm && (
+        <div className={styles.formCard}>
+          <h2 className={styles.formTitle}>{editId ? "Edit Category" : "New Category"}</h2>
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Name *</label>
+                <input
+                  className={styles.input}
+                  value={form.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  placeholder="e.g. Honey"
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Slug</label>
+                <input
+                  className={styles.input}
+                  value={form.slug}
+                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                  placeholder="auto-generated from name"
+                />
+              </div>
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Parent Category</label>
+                <select
+                  className={styles.select}
+                  value={form.parentId}
+                  onChange={(e) => setForm((f) => ({ ...f, parentId: e.target.value }))}
+                >
+                  <option value="">— None (top-level) —</option>
+                  {topLevel.filter((c) => c.id !== editId).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Color</label>
+                <div className={styles.colorRow}>
+                  <input
+                    type="color"
+                    className={styles.colorInput}
+                    value={form.color}
+                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                  />
+                  <input
+                    className={styles.input}
+                    value={form.color}
+                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                    placeholder="#2D7D46"
+                    style={{ maxWidth: 120 }}
+                  />
+                </div>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Sort Order</label>
+                <input
+                  type="number"
+                  className={styles.input}
+                  value={form.sortOrder}
+                  onChange={(e) => setForm((f) => ({ ...f, sortOrder: e.target.value }))}
+                  min={0}
+                  style={{ maxWidth: 100 }}
+                />
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Description</label>
+              <textarea
+                className={styles.textarea}
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                rows={2}
+                placeholder="Optional short description"
+              />
+            </div>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>SEO Title</label>
+                <input
+                  className={styles.input}
+                  value={form.seoTitle}
+                  onChange={(e) => setForm((f) => ({ ...f, seoTitle: e.target.value }))}
+                  placeholder="Optional"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>SEO Description</label>
+                <input
+                  className={styles.input}
+                  value={form.seoDescription}
+                  onChange={(e) => setForm((f) => ({ ...f, seoDescription: e.target.value }))}
+                  placeholder="Optional"
+                />
+              </div>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={form.isActive}
+                  onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+                />
+                Active (visible in shop filters)
+              </label>
+            </div>
+
+            <div className={styles.formActions}>
+              <Button type="submit" variant="primary" disabled={saving}>
+                {saving ? "Saving…" : editId ? "Update Category" : "Create Category"}
+              </Button>
+              <Button type="button" variant="secondary" onClick={cancelForm} disabled={saving}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Table */}
+      {loading ? (
+        <div className={styles.loadingWrap}><Spinner size="lg" /></div>
+      ) : categories.length === 0 ? (
+        <div className={styles.empty}>
+          <p>No categories yet.</p>
+          <Button variant="secondary" onClick={openCreate}>Create First Category</Button>
+        </div>
+      ) : (
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Color</th>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>Parent</th>
+                <th>Sort</th>
+                <th>Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categories.map((cat) => (
+                <tr key={cat.id}>
+                  <td>
+                    <span
+                      className={styles.colorSwatch}
+                      style={{ background: cat.color ?? "#2D7D46" }}
+                      title={cat.color ?? "#2D7D46"}
+                    />
+                  </td>
+                  <td>
+                    <span className={styles.catName}>{cat.name}</span>
+                    {cat.description && <span className={styles.catDesc}>{cat.description}</span>}
+                  </td>
+                  <td><code className={styles.slug}>{cat.slug}</code></td>
+                  <td>
+                    {cat.parentId ? (
+                      <Badge variant="info">{parentMap.get(cat.parentId) ?? cat.parentId}</Badge>
+                    ) : (
+                      <span className={styles.topLevel}>Top level</span>
+                    )}
+                  </td>
+                  <td><span className={styles.sortOrder}>{cat.sortOrder}</span></td>
+                  <td>
+                    <button
+                      onClick={() => toggleActive(cat)}
+                      className={[styles.toggleBtn, cat.isActive ? styles.toggleActive : styles.toggleInactive].join(" ")}
+                    >
+                      {cat.isActive ? "Active" : "Inactive"}
+                    </button>
+                  </td>
+                  <td>
+                    <div className={styles.actions}>
+                      <button onClick={() => openEdit(cat)} className={styles.actionBtn} title="Edit">✏️</button>
+                      <button onClick={() => openDelete(cat)} className={[styles.actionBtn, styles.deleteBtn].join(" ")} title="Delete">🗑</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <ConfirmModal
+        isOpen={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState((s) => ({ ...s, open: false }))}
+        variant="danger"
+      />
+    </div>
+  );
+}

@@ -115,6 +115,7 @@
 .productMeta  { min-width: 0; }
 
 .featuredBadge { margin-left: 6px; }
+.vendorLink { text-decoration: none; }
 
 .variantCount { display: block; font-weight: 600; color: var(--text-primary); }
 .stockIn  { display: block; font-size: 12px; color: #16a34a; margin-top: 2px; }

@@ -29,11 +29,15 @@ export default function AdminProductsClient() {
   const { success, error: showError } = useToast();
   const [products,  setProducts]  = useState<ProductWithVariants[]>([]);
   const [catNameMap, setCatNameMap] = useState<Map<string, string>>(new Map());
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [vendorList, setVendorList] = useState<Array<{ id: number; storeName: string | null }>>([]);
   const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState("");
   const deferredSearch = useDeferredValue(search);
   const [status,    setStatus]    = useState("");
   const [featured,  setFeatured]  = useState("");
+  const [vendor,    setVendor]    = useState("");
+  const [category,  setCategory]  = useState("");
   const [dateFrom,  setDateFrom]  = useState("");
   const [dateTo,    setDateTo]    = useState("");
   const [minPrice,  setMinPrice]  = useState("");
@@ -52,15 +56,21 @@ export default function AdminProductsClient() {
     });
   }
 
-  // Load categories once for badge display
+  // Load categories and vendors once for filters and badge display
   useEffect(() => {
     fetch("/api/products/categories")
       .then((r) => r.json())
       .then((d) => {
         if (d.success) {
-          setCatNameMap(new Map((d.data as Array<{ id: string; name: string }>).map((c) => [c.id, c.name])));
+          const cats = d.data as Array<{ id: string; name: string }>;
+          setCatNameMap(new Map(cats.map((c) => [c.id, c.name])));
+          setCategories(cats);
         }
       })
+      .catch(() => {});
+    fetch("/api/admin/vendors?limit=100")
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setVendorList(d.vendors ?? []); })
       .catch(() => {});
   }, []);
 
@@ -70,6 +80,8 @@ export default function AdminProductsClient() {
     if (deferredSearch) q.set("search", deferredSearch);
     if (status) q.set("status", status);
     if (featured) q.set("featured", featured);
+    if (vendor) q.set("vendor", vendor);
+    if (category) q.set("categoryId", category);
     if (dateFrom) q.set("dateFrom", dateFrom);
     if (dateTo) q.set("dateTo", dateTo);
     if (minPrice) q.set("minPrice", minPrice);
@@ -89,7 +101,7 @@ export default function AdminProductsClient() {
       })
       .catch(() => setLoadError("Network error. Could not reach the products API."))
       .finally(() => setLoading(false));
-  }, [deferredSearch, status, featured, dateFrom, dateTo, minPrice, maxPrice, minStock, maxStock, page]);
+  }, [deferredSearch, status, featured, vendor, category, dateFrom, dateTo, minPrice, maxPrice, minStock, maxStock, page]);
 
   async function toggleActive(id: string, isActive: boolean) {
     const res  = await fetch(`/api/admin/products/${id}`, {
@@ -115,9 +127,20 @@ export default function AdminProductsClient() {
   }
 
   const pages = Math.ceil(total / LIMIT);
+  const categoryFilterOptions = [
+    { value: "", label: "All categories" },
+    ...categories.map((c) => ({ value: c.id, label: c.name })),
+  ];
+  const vendorFilterOptions = [
+    { value: "", label: "All vendors" },
+    { value: "admin", label: "Admin (no vendor)" },
+    ...vendorList.map((v) => ({ value: String(v.id), label: v.storeName ?? `Vendor #${v.id}` })),
+  ];
   const filterFields: DataTableFilterField[] = [
     { key: "status", label: "Status", type: "select", value: status, options: STATUS_FILTERS, onChange: (value) => { setStatus(value); setPage(1); } },
     { key: "featured", label: "Featured", type: "select", value: featured, options: FEATURED_FILTERS, onChange: (value) => { setFeatured(value); setPage(1); } },
+    { key: "categoryId", label: "Category", type: "select", value: category, options: categoryFilterOptions, onChange: (value) => { setCategory(value); setPage(1); } },
+    { key: "vendor", label: "Vendor", type: "select", value: vendor, options: vendorFilterOptions, onChange: (value) => { setVendor(value); setPage(1); } },
     { key: "dateFrom", label: "Created From", type: "date", value: dateFrom, onChange: (value) => { setDateFrom(value); setPage(1); } },
     { key: "dateTo", label: "Created To", type: "date", value: dateTo, onChange: (value) => { setDateTo(value); setPage(1); } },
     { key: "minPrice", label: "Min Price (₹)", type: "number", min: 0, step: 1, value: minPrice, placeholder: "0", onChange: (value) => { setMinPrice(value); setPage(1); } },
@@ -130,6 +153,8 @@ export default function AdminProductsClient() {
     setSearch("");
     setStatus("");
     setFeatured("");
+    setVendor("");
+    setCategory("");
     setDateFrom("");
     setDateTo("");
     setMinPrice("");
@@ -234,7 +259,9 @@ export default function AdminProductsClient() {
                     </td>
                     <td>
                       {p.vendorId ? (
-                        <Badge variant="info">Vendor#{p.vendorId}</Badge>
+                        <Link href={`/admin/vendors/${p.vendorId}`} className={styles.vendorLink}>
+                          <Badge variant="info">{p.vendorName ?? `Vendor #${p.vendorId}`}</Badge>
+                        </Link>
                       ) : (
                         <Badge variant="success">Admin</Badge>
                       )}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { contentTags, products, productVariants, productImages } from "@/lib/db/schema";
-import { eq, and, asc, ilike, or, sql, desc, gte, lte, type SQL } from "drizzle-orm";
+import { contentTags, products, productVariants, productImages, vendors } from "@/lib/db/schema";
+import { eq, and, asc, ilike, or, sql, desc, gte, lte, isNull, inArray, type SQL } from "drizzle-orm";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError, ValidationError } from "@/lib/errors";
 import { invalidateByPrefix } from "@/lib/cache";
@@ -22,9 +22,11 @@ export async function GET(req: NextRequest) {
     if (moduleResult) return moduleResult;
 
     const { searchParams } = req.nextUrl;
-    const search   = searchParams.get("search");
-    const category = searchParams.get("category");
-    const status   = searchParams.get("status");
+    const search        = searchParams.get("search");
+    const category      = searchParams.get("category");
+    const categoryIdFilter = searchParams.get("categoryId");
+    const vendorFilter  = searchParams.get("vendor");
+    const status        = searchParams.get("status");
     const featured = searchParams.get("featured");
     const dateFrom = searchParams.get("dateFrom");
     const dateTo   = searchParams.get("dateTo");
@@ -38,6 +40,9 @@ export async function GET(req: NextRequest) {
 
     const conditions: SQL[] = [];
     if (category) conditions.push(eq(products.category, category));
+    if (categoryIdFilter) conditions.push(eq(products.categoryId, categoryIdFilter));
+    if (vendorFilter === "admin") conditions.push(isNull(products.vendorId));
+    else if (vendorFilter) { const vid = parseInt(vendorFilter); if (!isNaN(vid)) conditions.push(eq(products.vendorId, vid)); }
     if (status === "active") conditions.push(eq(products.isActive, true));
     if (status === "inactive") conditions.push(eq(products.isActive, false));
     if (featured === "true") conditions.push(eq(products.isFeatured, true));
@@ -74,7 +79,7 @@ export async function GET(req: NextRequest) {
         .where(conditions.length > 0 ? and(...conditions) : undefined),
     ]);
 
-    // Attach first image for each product (for table thumbnails)
+    // Attach variants + images for each product
     const withImages = await Promise.all(rows.map(async (p) => {
       const [variants, images] = await Promise.all([
         db.select().from(productVariants).where(eq(productVariants.productId, p.id)).orderBy(asc(productVariants.sortOrder)),
@@ -83,10 +88,24 @@ export async function GET(req: NextRequest) {
       return { ...p, variants, images };
     }));
 
+    // Batch-fetch vendor names for all products that have a vendorId
+    const vendorIds = [...new Set(withImages.map((p) => p.vendorId).filter((id): id is number => id != null))];
+    const vendorMap = new Map<number, { storeName: string | null; storeSlug: string | null }>();
+    if (vendorIds.length > 0) {
+      const vendorRows = await db.select({ id: vendors.id, storeName: vendors.storeName, storeSlug: vendors.storeSlug })
+        .from(vendors)
+        .where(inArray(vendors.id, vendorIds));
+      for (const v of vendorRows) vendorMap.set(v.id, { storeName: v.storeName, storeSlug: v.storeSlug });
+    }
+    const withVendors = withImages.map((p) => {
+      const v = p.vendorId != null ? vendorMap.get(p.vendorId) : undefined;
+      return { ...p, vendorName: v?.storeName ?? null, vendorStoreSlug: v?.storeSlug ?? null };
+    });
+
     const total = Number(countRows[0]?.count ?? 0);
     return NextResponse.json({
       success: true,
-      data: withImages,
+      data: withVendors,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (err) {

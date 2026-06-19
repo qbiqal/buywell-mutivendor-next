@@ -84,6 +84,7 @@ export const APP_MODULES: AppModule[] = [
     adminNav: [
       { label: "Orders", href: "/admin/orders", icon: "📦", badge: "orders" },
       { label: "Products", href: "/admin/products", icon: "🛍️" },
+      { label: "Categories", href: "/admin/products/categories", icon: "🗂️" },
       { label: "Reviews", href: "/admin/reviews", icon: "⭐" },
       { label: "Refunds", href: "/admin/refunds", icon: "↩️" },
       { label: "Vendors", href: "/admin/vendors", icon: "🏪" },
