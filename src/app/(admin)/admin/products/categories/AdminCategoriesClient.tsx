@@ -123,7 +123,20 @@ export default function AdminCategoriesClient() {
   }
 
   function handleNameChange(name: string) {
-    setForm((f) => ({ ...f, name, slug: editId ? f.slug : toSlug(name) }));
+    setForm((f) => ({ 
+      ...f, 
+      name, 
+      slug: editId ? f.slug : toSlug(name),
+      seoTitle: name
+    }));
+  }
+
+  function handleDescriptionChange(desc: string) {
+    setForm(f => ({
+      ...f,
+      description: desc,
+      seoDescription: desc.slice(0, 160)
+    }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -350,7 +363,7 @@ export default function AdminCategoriesClient() {
               <textarea
                 className={styles.textarea}
                 value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                onChange={(e) => handleDescriptionChange(e.target.value)}
                 rows={2}
                 placeholder="Optional short description"
               />

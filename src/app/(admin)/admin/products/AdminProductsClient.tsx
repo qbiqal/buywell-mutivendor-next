@@ -131,8 +131,17 @@ export default function AdminProductsClient() {
     if (!(await openConfirm("Delete Product", `Delete "${name}"? This cannot be undone.`))) return;
     const res  = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
     const data = await res.json();
-    if (data.success) { success("Product deleted"); setProducts((p) => p.filter((x) => x.id !== id)); }
-    else showError("Delete failed");
+    if (data.success) {
+      if (data.data?.archived) {
+        success("Product has orders, so it was archived (set to inactive) instead.");
+        setProducts((p) => p.map((x) => x.id === id ? { ...x, isActive: false } : x));
+      } else {
+        success("Product deleted"); 
+        setProducts((p) => p.filter((x) => x.id !== id)); 
+      }
+    } else {
+      showError("Delete failed");
+    }
   }
 
   async function handleBulkDelete() {

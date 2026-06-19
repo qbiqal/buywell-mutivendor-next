@@ -102,12 +102,20 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId]);
 
-  // Auto-slug from name
+  // Auto-slug and SEO from name
   function handleNameChange(val: string) {
     setName(val);
     if (mode === "new") {
       setSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
     }
+    setMetaTitle(val);
+    const words = val.replace(/[^a-zA-Z0-9\s]/g, "").split(" ").filter(w => w.length > 2).map(w => w.toLowerCase());
+    if (words.length > 0) setSeoKeywords(words);
+  }
+
+  function handleDescriptionChange(val: string) {
+    setDescription(val);
+    setMetaDesc(val.slice(0, 160));
   }
 
   // Load existing product for edit
@@ -258,7 +266,7 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
               />
               <Input label="SKU *" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="HNY-TLS-001" required />
               <TagSelector moduleKey="product" value={tags} onChange={setTags} label="Product Tags" placeholder="Search or create colorful product tags" />
-              <Textarea label="Short Description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief product description (shown on cards)" rows={3} />
+              <Textarea label="Short Description" value={description} onChange={(e) => handleDescriptionChange(e.target.value)} placeholder="Brief product description (shown on cards)" rows={3} />
               <Textarea label="Full Description (HTML)" value={longDesc} onChange={(e) => setLongDesc(e.target.value)} placeholder="<p>Rich text / HTML allowed…</p>" rows={8} />
             </CardBody>
           </Card>

@@ -107,6 +107,18 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
     }
   }
 
+  function handleTitleChange(val: string) {
+    setTitle(val);
+    setMetaTitle(val);
+    const words = val.replace(/[^a-zA-Z0-9\s]/g, "").split(" ").filter(w => w.length > 2).map(w => w.toLowerCase());
+    if (words.length > 0) setSeoKeywords(words);
+  }
+
+  function handleExcerptChange(val: string) {
+    setExcerpt(val);
+    setMetaDesc(val.slice(0, 160));
+  }
+
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
 
   const seoValue: SeoPanelValue = {
@@ -133,7 +145,7 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
       <div className={styles.layout}>
         {/* Main content */}
         <div className={styles.main}>
-          <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Post title..." className={styles.titleInput} />
+          <Input label="Title" value={title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Post title..." className={styles.titleInput} />
 
           {/* Cover image */}
           <div className={styles.section}>
@@ -209,7 +221,7 @@ export default function BlogEditorClient({ postId }: BlogEditorProps) {
           </div>
 
           <div className={styles.sideCard}>
-            <Input label="Excerpt" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} placeholder="Short summary..." />
+            <Input label="Excerpt" value={excerpt} onChange={(e) => handleExcerptChange(e.target.value)} placeholder="Short summary..." />
             <div style={{ marginTop: 12 }}>
               <TagSelector moduleKey="blog" value={tags} onChange={setTags} label="SEO Tags" placeholder="Search or create blog tags" />
             </div>

@@ -4,6 +4,7 @@ import { productCategories } from "@/lib/db/schema";
 import { inArray } from "drizzle-orm";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError } from "@/lib/errors";
+import { invalidateByPrefix } from "@/lib/cache";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest) {
     // You could optionally check if these categories are used in products, and error out
     // But for simplicity of bulk delete, we'll just delete them. Products with these category IDs will have dangling IDs or fallback.
     await db.delete(productCategories).where(inArray(productCategories.id, selectedIds));
+    await invalidateByPrefix("query:categories:");
 
     return NextResponse.json({ success: true, count: selectedIds.length });
   } catch (err) {

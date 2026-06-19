@@ -41,8 +41,8 @@ export default async function LandingPage() {
         .limit(12)
     ),
 
-    withCache("query:products:featured", CACHE_TTL.QUERY, async () =>
-      db.select({
+    withCache("query:products:featured", CACHE_TTL.QUERY, async () => {
+      const rows = await db.select({
         id:           products.id,
         name:         products.name,
         slug:         products.slug,
@@ -56,8 +56,10 @@ export default async function LandingPage() {
       .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
       .where(and(eq(products.isActive, true), eq(products.isFeatured, true)))
       .orderBy(asc(products.sortOrder))
-      .limit(6)
-    ),
+      .limit(6);
+      const seen = new Set<string>();
+      return rows.filter((r) => { if (seen.has(r.id)) return false; seen.add(r.id); return true; });
+    }),
 
     withCache("query:products:latest:landing", CACHE_TTL.QUERY, async () => {
       const rows = await db.select({

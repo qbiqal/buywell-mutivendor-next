@@ -4,6 +4,7 @@ import { blogPosts } from "@/lib/db/schema";
 import { eq, and, inArray, ilike, or, gte, lte, type SQL } from "drizzle-orm";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError } from "@/lib/errors";
+import { invalidateByPrefix } from "@/lib/cache";
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
     }
 
     await db.delete(blogPosts).where(inArray(blogPosts.id, idsToDelete));
+    await invalidateByPrefix("query:blog:");
 
     return NextResponse.json({ success: true, count: idsToDelete.length });
   } catch (err) {
