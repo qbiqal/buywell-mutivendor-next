@@ -1,0 +1,78 @@
+'use strict';
+
+const { Pool } = require('pg');
+const { randomUUID } = require('crypto');
+const { CATEGORIES } = require('./category-data.js');
+
+module.exports = async function syncCategories() {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 1,
+    idleTimeoutMillis: 10000,
+  });
+
+  try {
+    // 1. Check if the seed is already applied by checking for 'food-grocery'
+    const { rows: [existingFood] } = await pool.query(
+      "SELECT id FROM product_categories WHERE slug = 'food-grocery'"
+    );
+
+    if (existingFood) {
+      console.log('[category-sync] 72 categories already seeded. Skipping.');
+      return;
+    }
+
+    console.log('[category-sync] 72 categories missing. Wiping old categories and syncing...');
+
+    // 2. Wipe existing categories
+    await pool.query('DELETE FROM product_categories');
+
+    // 3. Build rate map
+    const ratesRes = await pool.query('SELECT id, total_rate FROM tax_rates WHERE is_active = true');
+    const rateMap = {};
+    for (const row of ratesRes.rows) {
+      const pct = Math.round(row.total_rate / 100);
+      if (!(pct in rateMap)) rateMap[pct] = row.id;
+    }
+    for (const row of ratesRes.rows) {
+      if (row.total_rate === 0) rateMap[0] = row.id;
+      if (row.total_rate === 300) rateMap[3] = row.id;
+    }
+
+    let parentInserted = 0, childInserted = 0;
+
+    for (const cat of CATEGORIES) {
+      const parentId = randomUUID();
+      const taxRateId = rateMap[cat.gstRate ?? -1] ?? null;
+
+      await pool.query(`
+        INSERT INTO product_categories
+          (id, name, slug, color, description, hsn_code, tax_rate_id,
+           show_on_homepage, show_on_shop, sort_order, is_active, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,now(),now())
+      `, [parentId, cat.name, cat.slug, cat.color, cat.description ?? null,
+          cat.hsnCode ?? null, taxRateId,
+          cat.showOnHomepage ?? false, cat.showOnShop ?? true, cat.sortOrder ?? 0]);
+
+      parentInserted++;
+
+      for (const child of (cat.children ?? [])) {
+        const childTaxRateId = rateMap[child.gstRate ?? -1] ?? null;
+        await pool.query(`
+          INSERT INTO product_categories
+            (id, name, slug, parent_id, color, description, hsn_code, tax_rate_id,
+             show_on_homepage, show_on_shop, sort_order, is_active, created_at, updated_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false,true,$9,true,now(),now())
+        `, [randomUUID(), child.name, child.slug, parentId,
+            cat.color, null, child.hsnCode ?? null, childTaxRateId,
+            child.sortOrder ?? 0]);
+        childInserted++;
+      }
+    }
+
+    console.log(`[category-sync] Successfully synced ${parentInserted} parents and ${childInserted} children.`);
+
+  } finally {
+    await pool.end();
+  }
+};
