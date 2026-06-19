@@ -179,3 +179,11 @@
 }
 .actionBtn:hover { background: var(--bg-secondary); }
 .deleteBtn:hover { background: #fee2e2; }
+
+/* HSN / GST badges in table */
+.hsnBadge { font-size: 12px; background: #eff6ff; color: #1d4ed8; border-radius: 4px; padding: 2px 7px; font-family: monospace; margin-right: 6px; }
+.gstBadge { font-size: 11px; background: #dcfce7; color: #15803d; border-radius: 4px; padding: 2px 7px; font-weight: 700; }
+.noHsn { color: var(--text-secondary); font-size: 12px; }
+
+/* Helper hint under inputs */
+.hint { display: block; font-size: 11px; color: var(--text-secondary); margin-top: 4px; }

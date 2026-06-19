@@ -55,28 +55,82 @@
 .select:focus { outline: none; border-color: var(--accent); }
 
 /* Variants */
+/* Variant accordion */
 .variantBlock {
-  background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  background: var(--bg-card);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .variantBlock:last-child { margin-bottom: 0; }
-.variantHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.variantNum { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-.removeVariantBtn {
-  font-size: 12px;
-  color: #ef4444;
-  background: none;
+.variantOpen {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.variantAccordion {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--bg-secondary);
   border: none;
   cursor: pointer;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
-  transition: background 0.12s;
+  text-align: left;
+  transition: background 0.15s;
 }
-.removeVariantBtn:hover { background: #fee2e2; }
+.variantAccordion:hover { background: var(--bg-primary); }
+.variantOpen .variantAccordion { background: color-mix(in srgb, var(--accent) 6%, var(--bg-secondary)); }
+
+.variantChevron {
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--text-secondary);
+  line-height: 1;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  display: inline-block;
+  transform: rotate(0deg);
+}
+.chevronOpen { transform: rotate(90deg); color: var(--accent); }
+
+.variantNum { font-size: 14px; font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
+.variantSummary { font-size: 12px; color: var(--text-secondary); flex: 1; min-width: 0; truncate: ellipsis; white-space: nowrap; overflow: hidden; }
+.variantSummaryEmpty { font-size: 12px; color: var(--text-tertiary, var(--text-secondary)); font-style: italic; flex: 1; }
+
+.removeVariantBtn {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #ef4444;
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.12s, border-color 0.12s;
+  line-height: 1;
+}
+.removeVariantBtn:hover { background: #fee2e2; border-color: #fca5a5; }
+
+/* Animated body */
+.variantBody {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.variantBodyOpen { grid-template-rows: 1fr; }
+.variantBodyInner {
+  overflow: hidden;
+  padding: 0 16px;
+  transition: padding 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.variantBodyOpen .variantBodyInner { padding: 16px; }
+
 .variantFields {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

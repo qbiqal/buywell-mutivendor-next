@@ -41,8 +41,9 @@ const EMPTY_VARIANT: Variant = { name: "", priceInr: 0, mrpInr: 0, weight: "", s
 export default function ProductFormClient({ mode, productId }: ProductFormClientProps) {
   const router = useRouter();
   const { success, error: showError } = useToast();
-  const [loading,  setLoading]  = useState(mode === "edit");
-  const [saving,   setSaving]   = useState(false);
+  const [loading,     setLoading]     = useState(mode === "edit");
+  const [saving,      setSaving]      = useState(false);
+  const [openVariant, setOpenVariant] = useState(0);
 
   // Product fields
   const [name,        setName]        = useState("");
@@ -83,6 +84,23 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
     }, 300);
     return () => clearTimeout(t);
   }, [hsnSearch]);
+
+  // Auto-populate HSN + tax from selected category
+  useEffect(() => {
+    if (!categoryId) return;
+    fetch(`/api/admin/products/categories`)
+      .then(r => r.json())
+      .then(d => {
+        if (!d.success) return;
+        const cat = (d.data as Array<{ id: string; hsnCode?: string | null; taxRateId?: number | null }>)
+          .find(c => c.id === categoryId);
+        if (!cat) return;
+        if (cat.hsnCode) { setHsnCode(cat.hsnCode); setHsnSearch(cat.hsnCode); }
+        if (cat.taxRateId) setTaxRateId(cat.taxRateId);
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryId]);
 
   // Auto-slug from name
   function handleNameChange(val: string) {
@@ -126,8 +144,16 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, productId]);
 
-  function addVariant() { setVariants((v) => [...v, { ...EMPTY_VARIANT }]); }
-  function removeVariant(i: number) { setVariants((v) => v.filter((_, idx) => idx !== i)); }
+  function addVariant() {
+    setVariants((v) => { setOpenVariant(v.length); return [...v, { ...EMPTY_VARIANT }]; });
+  }
+  function removeVariant(i: number) {
+    setVariants((v) => {
+      const next = v.filter((_, idx) => idx !== i);
+      setOpenVariant((o) => o >= next.length ? Math.max(0, next.length - 1) : o === i ? Math.max(0, i - 1) : o > i ? o - 1 : o);
+      return next;
+    });
+  }
   function updateVariant(i: number, field: keyof Variant, val: string | number | boolean) {
     setVariants((v) => v.map((vv, idx) => idx === i ? { ...vv, [field]: val } : vv));
   }
@@ -246,41 +272,75 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
               </div>
             </CardHeader>
             <CardBody>
-              {variants.map((v, i) => (
-                <div key={i} className={styles.variantBlock}>
-                  <div className={styles.variantHeader}>
-                    <span className={styles.variantNum}>Variant {i + 1}</span>
-                    {variants.length > 1 && (
-                      <button type="button" onClick={() => removeVariant(i)} className={styles.removeVariantBtn}>Remove</button>
-                    )}
-                  </div>
-                  <div className={styles.variantFields}>
-                    <Input label="Name *" value={v.name} onChange={(e) => updateVariant(i, "name", e.target.value)} placeholder="500g" />
-                    <Input label="SKU *" value={v.sku} onChange={(e) => updateVariant(i, "sku", e.target.value)} placeholder="HNY-TLS-500G" />
-                    <Input label="Price (₹) *" type="number" min="0" step="0.01" value={v.priceInr || ""} onChange={(e) => updateVariant(i, "priceInr", e.target.value)} placeholder="299" />
-                    <Input label="MRP (₹)" type="number" min="0" step="0.01" value={v.mrpInr || ""} onChange={(e) => updateVariant(i, "mrpInr", e.target.value)} placeholder="350" />
-                    <Input label="Weight" value={v.weight} onChange={(e) => updateVariant(i, "weight", e.target.value)} placeholder="500g" />
-                    <Input label="Stock" type="number" min="0" value={v.stock || ""} onChange={(e) => updateVariant(i, "stock", parseInt(e.target.value) || 0)} placeholder="100" />
-                  </div>
-                  <div className={styles.variantImageRow}>
-                    <span className={styles.variantImageLabel}>Variant Image</span>
-                    {v.imageUrl ? (
-                      <div className={styles.variantImagePreview}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={v.imageUrl} alt={v.name} className={styles.variantThumb} />
-                        <button type="button" onClick={() => updateVariant(i, "imageUrl", "")} className={styles.removeVariantImgBtn}>✕ Remove</button>
+              {variants.map((v, i) => {
+                const isOpen = openVariant === i;
+                return (
+                  <div key={i} className={[styles.variantBlock, isOpen ? styles.variantOpen : ""].join(" ")}>
+                    {/* Accordion header — always visible */}
+                    <button
+                      type="button"
+                      className={styles.variantAccordion}
+                      onClick={() => setOpenVariant(isOpen ? -1 : i)}
+                      aria-expanded={isOpen}
+                    >
+                      <span className={[styles.variantChevron, isOpen ? styles.chevronOpen : ""].join(" ")}>›</span>
+                      <span className={styles.variantNum}>
+                        {v.name ? v.name : `Variant ${i + 1}`}
+                      </span>
+                      {!isOpen && v.priceInr > 0 && (
+                        <span className={styles.variantSummary}>
+                          ₹{Number(v.priceInr).toLocaleString("en-IN")}
+                          {v.stock > 0 ? ` · ${v.stock} in stock` : " · Out of stock"}
+                          {v.imageUrl && " · 📷"}
+                        </span>
+                      )}
+                      {!isOpen && !v.name && (
+                        <span className={styles.variantSummaryEmpty}>Click to fill details</span>
+                      )}
+                      {variants.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); removeVariant(i); }}
+                          className={styles.removeVariantBtn}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </button>
+
+                    {/* Animated body */}
+                    <div className={[styles.variantBody, isOpen ? styles.variantBodyOpen : ""].join(" ")}>
+                      <div className={styles.variantBodyInner}>
+                        <div className={styles.variantFields}>
+                          <Input label="Name *" value={v.name} onChange={(e) => updateVariant(i, "name", e.target.value)} placeholder="500g" />
+                          <Input label="SKU *" value={v.sku} onChange={(e) => updateVariant(i, "sku", e.target.value)} placeholder="HNY-TLS-500G" />
+                          <Input label="Price (₹) *" type="number" min="0" step="0.01" value={v.priceInr || ""} onChange={(e) => updateVariant(i, "priceInr", e.target.value)} placeholder="299" />
+                          <Input label="MRP (₹)" type="number" min="0" step="0.01" value={v.mrpInr || ""} onChange={(e) => updateVariant(i, "mrpInr", e.target.value)} placeholder="350" />
+                          <Input label="Weight" value={v.weight} onChange={(e) => updateVariant(i, "weight", e.target.value)} placeholder="500g" />
+                          <Input label="Stock" type="number" min="0" value={v.stock || ""} onChange={(e) => updateVariant(i, "stock", parseInt(e.target.value) || 0)} placeholder="100" />
+                        </div>
+                        <div className={styles.variantImageRow}>
+                          <span className={styles.variantImageLabel}>Variant Image</span>
+                          {v.imageUrl ? (
+                            <div className={styles.variantImagePreview}>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={v.imageUrl} alt={v.name} className={styles.variantThumb} />
+                              <button type="button" onClick={() => updateVariant(i, "imageUrl", "")} className={styles.removeVariantImgBtn}>✕ Remove</button>
+                            </div>
+                          ) : (
+                            <MediaUploader
+                              folder="products/variants"
+                              aspectRatio={4 / 3}
+                              recommendedDimensions={{ width: 800, height: 600, label: "Variant image: 800×600px (4:3)" }}
+                              onUpload={(files) => { if (files[0]) updateVariant(i, "imageUrl", files[0].url); }}
+                            />
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <MediaUploader
-                        folder="products/variants"
-                        aspectRatio={4 / 3}
-                        recommendedDimensions={{ width: 800, height: 600, label: "Variant image: 800×600px (4:3)" }}
-                        onUpload={(files) => { if (files[0]) updateVariant(i, "imageUrl", files[0].url); }}
-                      />
-                    )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </CardBody>
           </Card>
 

@@ -91,6 +91,8 @@ export const productCategories = pgTable("product_categories", {
   description:    text("description"),
   seoTitle:       text("seo_title"),
   seoDescription: text("seo_description"),
+  hsnCode:        text("hsn_code"),
+  taxRateId:      integer("tax_rate_id"),
   sortOrder:      integer("sort_order").default(0).notNull(),
   isActive:       boolean("is_active").default(true).notNull(),
   createdAt:      timestamp("created_at").defaultNow().notNull(),

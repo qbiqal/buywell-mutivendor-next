@@ -16,10 +16,14 @@ interface Category {
   description: string | null;
   seoTitle: string | null;
   seoDescription: string | null;
+  hsnCode: string | null;
+  taxRateId: number | null;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
 }
+
+interface TaxRate { id: number; name: string; rate: string; }
 
 const EMPTY_FORM = {
   name: "",
@@ -29,6 +33,8 @@ const EMPTY_FORM = {
   description: "",
   seoTitle: "",
   seoDescription: "",
+  hsnCode: "",
+  taxRateId: "",
   sortOrder: "0",
   isActive: true,
 };
@@ -48,6 +54,7 @@ export default function AdminCategoriesClient() {
   const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({
     open: false, title: "", message: "", onConfirm: () => {},
   });
+  const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
 
   async function loadCategories() {
     setLoading(true);
@@ -63,7 +70,10 @@ export default function AdminCategoriesClient() {
     }
   }
 
-  useEffect(() => { loadCategories(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    loadCategories();
+    fetch("/api/admin/tax/rates").then(r => r.json()).then(d => { if (d.success) setTaxRates(d.taxRates ?? []); }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function openCreate() {
     setEditId(null);
@@ -81,6 +91,8 @@ export default function AdminCategoriesClient() {
       description: cat.description ?? "",
       seoTitle: cat.seoTitle ?? "",
       seoDescription: cat.seoDescription ?? "",
+      hsnCode: cat.hsnCode ?? "",
+      taxRateId: cat.taxRateId ? String(cat.taxRateId) : "",
       sortOrder: String(cat.sortOrder),
       isActive: cat.isActive,
     });
@@ -111,6 +123,8 @@ export default function AdminCategoriesClient() {
         description: form.description.trim() || null,
         seoTitle: form.seoTitle.trim() || null,
         seoDescription: form.seoDescription.trim() || null,
+        hsnCode: form.hsnCode.trim() || null,
+        taxRateId: form.taxRateId ? parseInt(form.taxRateId, 10) : null,
         sortOrder: parseInt(form.sortOrder, 10) || 0,
         isActive: form.isActive,
       };
@@ -283,6 +297,35 @@ export default function AdminCategoriesClient() {
               </div>
             </div>
 
+            {/* GST / HSN defaults — auto-populate the product form when this category is selected */}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Default HSN Code</label>
+                <input
+                  className={styles.input}
+                  value={form.hsnCode}
+                  onChange={(e) => setForm((f) => ({ ...f, hsnCode: e.target.value }))}
+                  placeholder="e.g. 0409 (Honey), 8517 (Phones)"
+                  maxLength={8}
+                />
+                <span className={styles.hint}>Auto-fills HSN on products in this category</span>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Default GST Tax Rate</label>
+                <select
+                  className={styles.select}
+                  value={form.taxRateId}
+                  onChange={(e) => setForm((f) => ({ ...f, taxRateId: e.target.value }))}
+                >
+                  <option value="">— Select rate —</option>
+                  {taxRates.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name} ({r.rate}%)</option>
+                  ))}
+                </select>
+                <span className={styles.hint}>Auto-fills GST rate on products in this category</span>
+              </div>
+            </div>
+
             <div className={styles.formGroup}>
               <label className={styles.checkboxLabel}>
                 <input
@@ -323,6 +366,7 @@ export default function AdminCategoriesClient() {
                 <th>Name</th>
                 <th>Slug</th>
                 <th>Parent</th>
+                <th>HSN / GST</th>
                 <th>Sort</th>
                 <th>Active</th>
                 <th>Actions</th>
@@ -348,6 +392,18 @@ export default function AdminCategoriesClient() {
                       <Badge variant="info">{parentMap.get(cat.parentId) ?? cat.parentId}</Badge>
                     ) : (
                       <span className={styles.topLevel}>Top level</span>
+                    )}
+                  </td>
+                  <td>
+                    {cat.hsnCode ? (
+                      <div>
+                        <code className={styles.hsnBadge}>{cat.hsnCode}</code>
+                        {cat.taxRateId && taxRates.find(r => r.id === cat.taxRateId) && (
+                          <span className={styles.gstBadge}>{taxRates.find(r => r.id === cat.taxRateId)!.rate}% GST</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className={styles.noHsn}>—</span>
                     )}
                   </td>
                   <td><span className={styles.sortOrder}>{cat.sortOrder}</span></td>
