@@ -58,6 +58,12 @@ export default function AdminCategoriesClient() {
   const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({
     open: false, title: "", message: "", onConfirm: () => {},
   });
+
+  function openConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
+    });
+  }
   const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
 
   // Bulk Selection
