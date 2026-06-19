@@ -12,7 +12,20 @@ export async function GET() {
     if (moduleResult) return moduleResult;
 
     const data = await withCache("query:product-categories:public", CACHE_TTL.QUERY, async () =>
-      db.select().from(productCategories)
+      db.select({
+        id:          productCategories.id,
+        name:        productCategories.name,
+        slug:        productCategories.slug,
+        parentId:    productCategories.parentId,
+        color:       productCategories.color,
+        description: productCategories.description,
+        hsnCode:     productCategories.hsnCode,
+        taxRateId:   productCategories.taxRateId,
+        sortOrder:   productCategories.sortOrder,
+        isActive:    productCategories.isActive,
+        createdAt:   productCategories.createdAt,
+        updatedAt:   productCategories.updatedAt,
+      }).from(productCategories)
         .where(eq(productCategories.isActive, true))
         .orderBy(asc(productCategories.sortOrder), asc(productCategories.name))
     );

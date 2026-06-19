@@ -36,6 +36,9 @@ export default function ShopClient() {
   const [meta,        setMeta]        = useState<ProductMeta>({ total: 0, page: 1, limit: 24, pages: 1 });
   const [viewMode,    setViewMode]    = useState<"grid" | "list">("grid");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showAllShopCats, setShowAllShopCats] = useState(false);
+
+  const SHOP_CAT_LIMIT = 8;
 
   // Filters
   const [search,     setSearch]     = useState("");
@@ -181,7 +184,7 @@ export default function ShopClient() {
                       All Products
                     </button>
                   </li>
-                  {topLevel.map((cat) => {
+                  {(showAllShopCats ? topLevel : topLevel.slice(0, SHOP_CAT_LIMIT)).map((cat) => {
                     const children = categories.filter((c) => c.parentId === cat.id);
                     return (
                       <li key={cat.id}>
@@ -209,6 +212,18 @@ export default function ShopClient() {
                       </li>
                     );
                   })}
+                  {topLevel.length > SHOP_CAT_LIMIT && (
+                    <li>
+                      <button
+                        className={styles.catItem}
+                        style={{ color: "var(--green)", fontWeight: 600 }}
+                        onClick={() => setShowAllShopCats((v) => !v)}
+                      >
+                        <span className={styles.catDot} style={{ background: "transparent", border: "1.5px solid var(--green)" }} />
+                        {showAllShopCats ? "▲ Show Less" : `▼ +${topLevel.length - SHOP_CAT_LIMIT} More`}
+                      </button>
+                    </li>
+                  )}
                 </ul>
               </div>
             )}

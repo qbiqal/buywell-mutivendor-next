@@ -11,6 +11,9 @@ interface Category {
   slug: string;
   icon?: string | null;
   color?: string | null;
+  description?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
   productCount?: number;
 }
 
@@ -43,20 +46,190 @@ interface HomepageClientProps {
   testimonials: Testimonial[];
 }
 
+// Comprehensive icon map for all 13 Indian e-commerce top-level categories + subcategories
 const CATEGORY_ICONS: Record<string, string> = {
-  honey: "🍯", ghee: "🧈", spices: "🌶️", oils: "🫙", snacks: "🍿",
-  beverages: "🍵", grains: "🌾", pulses: "🫘", dairy: "🥛", fruits: "🍎",
-  vegetables: "🥦", beauty: "✨", health: "💊", clothing: "👕", electronics: "📱",
-  home: "🏠", sports: "⚽", books: "📚", toys: "🧸", other: "📦",
-  womens: "👗", mens: "👔", kids: "🧒", baby: "🍼", toddlers: "🍼",
-  pet: "🐾", phone: "📱", gadgets: "🔌", kitchen: "🍳", fashion: "👗",
+  // Food & Grocery
+  "food":        "🥘",
+  "grocery":     "🛒",
+  "honey":       "🍯",
+  "ghee":        "🧈",
+  "butter":      "🧈",
+  "spice":       "🌶️",
+  "masala":      "🌶️",
+  "oil":         "🫙",
+  "snack":       "🍿",
+  "namkeen":     "🍿",
+  "beverage":    "🍵",
+  "tea":         "🍵",
+  "coffee":      "☕",
+  "juice":       "🧃",
+  "grain":       "🌾",
+  "rice":        "🍚",
+  "millet":      "🌾",
+  "cereal":      "🥣",
+  "flour":       "🌾",
+  "pulse":       "🫘",
+  "lentil":      "🫘",
+  "jaggery":     "🍬",
+  "sugar":       "🍬",
+  "salt":        "🧂",
+  "dairy":       "🥛",
+  "egg":         "🥚",
+  "pickle":      "🫙",
+  "jam":         "🍓",
+  "sauce":       "🫙",
+  "condiment":   "🫙",
+  "bakery":      "🥖",
+  "bread":       "🍞",
+  "dry fruit":   "🥜",
+  "nut":         "🥜",
+  "protein":     "💪",
+  // Ayurveda & Herbal
+  "ayurveda":    "🌿",
+  "herbal":      "🌿",
+  "medicine":    "💊",
+  "tonic":       "🍶",
+  "immunity":    "🛡️",
+  "digestive":   "🫁",
+  "liver":       "💊",
+  "diabetic":    "💊",
+  "pain":        "🩹",
+  "joint":       "🦴",
+  "supplement":  "💊",
+  "essential oil":"🌸",
+  "extract":     "🌸",
+  "kadha":       "🍵",
+  "stress":      "🧘",
+  "sleep":       "😴",
+  "weight":      "⚖️",
+  // Personal Care & Beauty
+  "personal care":"✨",
+  "beauty":      "✨",
+  "hair oil":    "💆",
+  "serum":       "💆",
+  "shampoo":     "🧴",
+  "conditioner": "🧴",
+  "hair color":  "🎨",
+  "hair":        "💆",
+  "face wash":   "🧼",
+  "moisturis":   "🧴",
+  "skin":        "✨",
+  "cosmetic":    "💄",
+  "lipstick":    "💄",
+  "perfume":     "🌹",
+  "deodorant":   "🌹",
+  "soap":        "🧼",
+  "cream":       "🧴",
+  // Home & Living
+  "home":        "🏠",
+  "living":      "🛋️",
+  "kitchen":     "🍳",
+  "cookware":    "🍳",
+  "bedding":     "🛏️",
+  "furniture":   "🪑",
+  "lighting":    "💡",
+  "cleaning":    "🧹",
+  "storage":     "📦",
+  "decor":       "🖼️",
+  // Baby & Kids
+  "baby":        "🍼",
+  "kid":         "🧒",
+  "toddler":     "🧒",
+  "infant":      "👶",
+  "diaper":      "🍼",
+  "toy":         "🧸",
+  "stroller":    "🛒",
+  // Electronics
+  "electronic":  "📱",
+  "phone":       "📱",
+  "mobile":      "📱",
+  "laptop":      "💻",
+  "computer":    "💻",
+  "tablet":      "📟",
+  "gadget":      "🔌",
+  "camera":      "📷",
+  "tv":          "📺",
+  "audio":       "🎵",
+  "headphone":   "🎧",
+  "earphone":    "🎧",
+  "charger":     "🔌",
+  "accessory":   "🔌",
+  // Fashion & Clothing
+  "fashion":     "👗",
+  "clothing":    "👕",
+  "ethnic":      "👘",
+  "saree":       "👘",
+  "kurta":       "👘",
+  "shirt":       "👔",
+  "trouser":     "👖",
+  "dress":       "👗",
+  "jeans":       "👖",
+  "footwear":    "👟",
+  "shoe":        "👟",
+  "sandal":      "🩴",
+  "bag":         "👜",
+  "wallet":      "👛",
+  "watch":       "⌚",
+  "sunglass":    "🕶️",
+  // Books & Stationery
+  "book":        "📚",
+  "stationery":  "✏️",
+  "pen":         "🖊️",
+  "notebook":    "📓",
+  "art":         "🎨",
+  "craft":       "✂️",
+  // Sports & Fitness
+  "sport":       "⚽",
+  "fitness":     "💪",
+  "gym":         "🏋️",
+  "yoga":        "🧘",
+  "cycling":     "🚴",
+  "cricket":     "🏏",
+  "badminton":   "🏸",
+  "outdoor":     "🏕️",
+  "trekking":    "🏔️",
+  // Agriculture & Gardening
+  "agriculture": "🌱",
+  "garden":      "🌻",
+  "plant":       "🪴",
+  "seed":        "🌱",
+  "fertilizer":  "🌿",
+  "farming":     "🌾",
+  // Jewellery & Accessories
+  "jewellery":   "💍",
+  "jewelry":     "💍",
+  "ring":        "💍",
+  "necklace":    "📿",
+  "bracelet":    "📿",
+  "earring":     "👂",
+  "silver":      "🥈",
+  "gold":        "🥇",
+  // Pet Care
+  "pet":         "🐾",
+  "dog":         "🐶",
+  "cat":         "🐱",
+  "bird":        "🐦",
+  "aquarium":    "🐠",
+  // Office Supplies
+  "office":      "🗂️",
+  "printer":     "🖨️",
+  "file":        "📁",
+  "organiser":   "📂",
+  // Generic fallbacks
+  "womens":      "👗",
+  "mens":        "👔",
+  "other":       "📦",
 };
+
+const HERO_CATEGORY_LIMIT = 8;
 
 function getCategoryIcon(name: string, icon?: string | null): string {
   if (icon) return icon;
-  const key = name.toLowerCase().replace(/\s+/g, "");
-  for (const [k, v] of Object.entries(CATEGORY_ICONS)) {
-    if (key.includes(k)) return v;
+  const nameLower = name.toLowerCase();
+  // Try full phrase matches first (longer keys win)
+  const sortedKeys = Object.keys(CATEGORY_ICONS).sort((a, b) => b.length - a.length);
+  for (const k of sortedKeys) {
+    if (nameLower.includes(k)) return CATEGORY_ICONS[k];
   }
   return "🛍️";
 }
@@ -146,6 +319,8 @@ export function HomepageClient({
 }: HomepageClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [catOpen, setCatOpen] = useState(false);
+  const [showAllCats, setShowAllCats] = useState(false);
+  const [showAllGridCats, setShowAllGridCats] = useState(false);
   const latestScrollRef = useRef<HTMLDivElement>(null);
 
   function handleSearch(e: React.FormEvent) {
@@ -182,7 +357,7 @@ export function HomepageClient({
 
             <div className={[styles.heroCategoryBody, catOpen ? styles.heroCategoryBodyOpen : ""].join(" ")}>
               <nav className={styles.heroCategoryList}>
-                {categories.map((cat) => (
+                {(showAllCats ? categories : categories.slice(0, HERO_CATEGORY_LIMIT)).map((cat) => (
                   <Link
                     key={cat.id}
                     href={`/shop?category=${cat.slug}`}
@@ -194,6 +369,16 @@ export function HomepageClient({
                     <span className={styles.heroCatArrow}>›</span>
                   </Link>
                 ))}
+                {categories.length > HERO_CATEGORY_LIMIT && (
+                  <button
+                    className={[styles.heroCategoryItem, styles.heroCatShowMore].join(" ")}
+                    onClick={() => setShowAllCats((v) => !v)}
+                    type="button"
+                  >
+                    <span className={styles.heroCatIcon}>{showAllCats ? "▲" : "▼"}</span>
+                    <span className={styles.heroCatName}>{showAllCats ? "Show Less" : `+${categories.length - HERO_CATEGORY_LIMIT} More`}</span>
+                  </button>
+                )}
                 <Link href="/shop" className={[styles.heroCategoryItem, styles.heroCatAll].join(" ")}>
                   <span className={styles.heroCatIcon}>🛒</span>
                   <span className={styles.heroCatName}>All Categories</span>
@@ -246,7 +431,7 @@ export function HomepageClient({
               <Link href="/shop" className={styles.viewAll}>All Products →</Link>
             </motion.div>
             <motion.div className={styles.categoryGrid} variants={staggerContainer}>
-              {categories.map((cat) => (
+              {(showAllGridCats ? categories : categories.slice(0, 12)).map((cat) => (
                 <motion.div key={cat.id} variants={fadeUp}>
                   <Link
                     href={`/shop?category=${cat.slug}`}
@@ -265,21 +450,34 @@ export function HomepageClient({
                 </Link>
               </motion.div>
             </motion.div>
+            {categories.length > 12 && (
+              <motion.div className={styles.showMoreWrap} variants={fadeUp}>
+                <button
+                  className={styles.showMoreBtn}
+                  onClick={() => setShowAllGridCats((v) => !v)}
+                  type="button"
+                >
+                  {showAllGridCats ? "▲ Show Less" : `▼ Show All ${categories.length} Categories`}
+                </button>
+              </motion.div>
+            )}
           </div>
         </AnimatedSection>
       )}
 
       {/* ── Featured Products ── */}
-      {featuredProducts.length > 0 && (
-        <AnimatedSection className={styles.section}>
-          <div className={styles.container}>
-            <motion.div className={styles.sectionHead} variants={fadeUp}>
-              <div>
-                <span className={styles.eyebrow}>Editor&apos;s picks</span>
-                <h2 className={styles.sectionTitle}>Featured Products</h2>
-              </div>
+      <AnimatedSection className={styles.section}>
+        <div className={styles.container}>
+          <motion.div className={styles.sectionHead} variants={fadeUp}>
+            <div>
+              <span className={styles.eyebrow}>Editor&apos;s picks</span>
+              <h2 className={styles.sectionTitle}>Featured Products</h2>
+            </div>
+            {featuredProducts.length > 0 && (
               <Link href="/shop?featured=true" className={styles.viewAll}>View all →</Link>
-            </motion.div>
+            )}
+          </motion.div>
+          {featuredProducts.length > 0 ? (
             <motion.div className={styles.productGrid} variants={staggerContainer}>
               {featuredProducts.map((p) => (
                 <motion.div key={p.id} variants={fadeUp}>
@@ -287,9 +485,15 @@ export function HomepageClient({
                 </motion.div>
               ))}
             </motion.div>
-          </div>
-        </AnimatedSection>
-      )}
+          ) : (
+            <motion.div className={styles.emptySection} variants={fadeUp}>
+              <span className={styles.emptyIcon}>🛍️</span>
+              <p className={styles.emptyText}>No featured products yet.<br />Check back soon — our sellers are adding amazing products!</p>
+              <Link href="/shop" className={styles.emptyBtn}>Browse All Products →</Link>
+            </motion.div>
+          )}
+        </div>
+      </AnimatedSection>
 
       {/* ── Promo Banners ── */}
       {promoBanners.length > 0 && (
@@ -315,20 +519,22 @@ export function HomepageClient({
       )}
 
       {/* ── Latest Products Carousel ── */}
-      {latestProducts.length > 0 && (
-        <AnimatedSection className={styles.section}>
-          <div className={styles.container}>
-            <motion.div className={styles.sectionHead} variants={fadeUp}>
-              <div>
-                <span className={styles.eyebrow}>Just arrived</span>
-                <h2 className={styles.sectionTitle}>New Arrivals</h2>
-              </div>
+      <AnimatedSection className={styles.section}>
+        <div className={styles.container}>
+          <motion.div className={styles.sectionHead} variants={fadeUp}>
+            <div>
+              <span className={styles.eyebrow}>Just arrived</span>
+              <h2 className={styles.sectionTitle}>New Arrivals</h2>
+            </div>
+            {latestProducts.length > 0 && (
               <div className={styles.carouselControls}>
                 <button className={styles.carouselBtn} onClick={() => scrollLatest("left")} aria-label="Scroll left">‹</button>
                 <button className={styles.carouselBtn} onClick={() => scrollLatest("right")} aria-label="Scroll right">›</button>
                 <Link href="/shop" className={styles.viewAll}>View all →</Link>
               </div>
-            </motion.div>
+            )}
+          </motion.div>
+          {latestProducts.length > 0 ? (
             <motion.div className={styles.latestScroll} ref={latestScrollRef} variants={fadeIn}>
               {latestProducts.map((p) => (
                 <div key={p.id} className={styles.latestItem}>
@@ -336,9 +542,15 @@ export function HomepageClient({
                 </div>
               ))}
             </motion.div>
-          </div>
-        </AnimatedSection>
-      )}
+          ) : (
+            <motion.div className={styles.emptySection} variants={fadeUp}>
+              <span className={styles.emptyIcon}>📦</span>
+              <p className={styles.emptyText}>No products listed yet.<br />Our marketplace is growing — come back soon!</p>
+              <Link href="/become-vendor" className={styles.emptyBtn}>Start Selling on BuyWell →</Link>
+            </motion.div>
+          )}
+        </div>
+      </AnimatedSection>
 
       {/* ── Features Grid ── */}
       <AnimatedSection className={styles.featuresSection}>

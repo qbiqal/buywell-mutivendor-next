@@ -36,10 +36,18 @@ export default async function LandingPage() {
       ),
 
       withCache("query:categories:active", CACHE_TTL.QUERY, async () =>
-        db.select().from(productCategories)
+        db.select({
+          id:          productCategories.id,
+          name:        productCategories.name,
+          slug:        productCategories.slug,
+          color:       productCategories.color,
+          description: productCategories.description,
+          sortOrder:   productCategories.sortOrder,
+          isActive:    productCategories.isActive,
+        }).from(productCategories)
           .where(and(eq(productCategories.isActive, true), isNull(productCategories.parentId)))
           .orderBy(asc(productCategories.sortOrder))
-          .limit(12)
+          .limit(50)
       ),
 
       withCache("query:products:featured", CACHE_TTL.QUERY, async () => {
