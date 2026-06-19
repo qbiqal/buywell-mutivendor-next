@@ -171,6 +171,7 @@ export const orders = pgTable("orders", {
   bwUserId:       integer("bw_user_id"),                       // BuyWell Global user ID
   secondaryGateway: text("secondary_gateway"),                 // razorpay | offline_qr
   secondaryGatewayRef: text("secondary_gateway_ref"),          // Razorpay payment ID etc.
+  isDeleted:      boolean("is_deleted").default(false).notNull(),
   createdAt:      timestamp("created_at").defaultNow().notNull(),
   updatedAt:      timestamp("updated_at").defaultNow().notNull(),
 });

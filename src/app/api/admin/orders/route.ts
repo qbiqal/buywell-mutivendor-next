@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     const limit    = Math.min(50, parseInt(searchParams.get("limit") ?? "20"));
     const offset   = (page - 1) * limit;
 
-    const conditions: SQL[] = [];
+    const conditions: SQL[] = [eq(orders.isDeleted, false)];
     if (status) conditions.push(eq(orders.status, status));
     if (paymentStatus) conditions.push(eq(orders.paymentStatus, paymentStatus));
     if (sample === "true") conditions.push(eq(orders.isSampleRequest, true));

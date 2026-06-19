@@ -50,6 +50,8 @@ export default function AdminOrdersClient() {
   const [maxAmount, setMaxAmount] = useState("");
   const [page,     setPage]     = useState(1);
   const [total,    setTotal]    = useState(0);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
   const LIMIT = 20;
 
   useEffect(() => {
@@ -68,6 +70,48 @@ export default function AdminOrdersClient() {
       .then((d) => { if (d.success) { setOrders(d.data); setTotal(d.pagination.total); } })
       .finally(() => setLoading(false));
   }, [status, deferredSearch, paymentStatus, sample, dateFrom, dateTo, minAmount, maxAmount, page]);
+
+  function toggleSelectAll() {
+    if (selectedIds.size === orders.length && orders.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(orders.map((o) => o.id)));
+    }
+  }
+
+  function toggleSelect(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Are you sure you want to soft-delete ${selectedIds.size} orders?`)) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/admin/orders/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: Array.from(selectedIds) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Orders deleted successfully");
+        setOrders((prev) => prev.filter((o) => !selectedIds.has(o.id)));
+        setSelectedIds(new Set());
+      } else {
+        alert("Failed to delete orders: " + data.error);
+      }
+    } catch (err: any) {
+      alert("Error: " + err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   const filterFields: DataTableFilterField[] = [
     { key: "status", label: "Order Status", type: "select", value: status, options: STATUS_FILTERS, onChange: (value) => { setStatus(value); setPage(1); } },
@@ -94,8 +138,20 @@ export default function AdminOrdersClient() {
   return (
     <div className={styles.content}>
       <div className="admin-page-header">
-        <h1 className="admin-page-title">Orders</h1>
-        <p className="admin-page-subtitle">Manage and verify all customer orders</p>
+        <div>
+          <h1 className="admin-page-title">Orders</h1>
+          <p className="admin-page-subtitle">Manage and verify all customer orders</p>
+        </div>
+        {selectedIds.size > 0 && (
+          <button 
+            className="btn btn-danger" 
+            onClick={handleBulkDelete}
+            disabled={isDeleting}
+            style={{ padding: "8px 16px", background: "#ef4444", color: "white", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: "bold" }}
+          >
+            {isDeleting ? "Deleting..." : `Delete Selected (${selectedIds.size})`}
+          </button>
+        )}
       </div>
 
       <DataTableFilters
@@ -127,6 +183,13 @@ export default function AdminOrdersClient() {
             <table className={styles.table}>
               <thead>
                 <tr>
+                  <th style={{ width: "40px" }}>
+                    <input 
+                      type="checkbox" 
+                      checked={orders.length > 0 && selectedIds.size === orders.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th>Order #</th>
                   <th>Customer</th>
                   <th>Amount</th>
@@ -138,9 +201,16 @@ export default function AdminOrdersClient() {
               </thead>
               <tbody>
                 {orders.length === 0 ? (
-                  <tr><td colSpan={7} className={styles.empty}>No orders found</td></tr>
+                  <tr><td colSpan={8} className={styles.empty}>No orders found</td></tr>
                 ) : orders.map((order) => (
                   <tr key={order.id} onClick={() => router.push(`/admin/orders/${order.id}`)} className={styles.clickRow}>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.has(order.id)}
+                        onChange={(e) => toggleSelect(order.id, e as any)}
+                      />
+                    </td>
                     <td className={styles.orderNum}>{order.orderNumber}</td>
                     <td>
                       <p>{order.guestName ?? "—"}</p>

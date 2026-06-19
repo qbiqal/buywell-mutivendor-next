@@ -78,15 +78,8 @@ async function main() {
     console.error('[startup] GST seed warning:', err.message);
   }
 
-  // ── 5. Seed curated Indian e-commerce category tree (idempotent) ──────────
-  console.log('[startup] Seeding product category tree...');
-  try {
-    await require('./category-seed.js')();
-    console.log('[startup] Category seed complete.');
-  } catch (err) {
-    console.error('[startup] Category seed warning:', err.message);
-  }
-
+  // ── 5. Category seed is now an explicit action via the Admin panel ──────
+  console.log('[startup] Skipping category seed (moved to Admin Panel UI).');
   // ── 6. Start Next.js standalone server ────────────────────────────────────
   console.log('[startup] Starting Next.js server on port', process.env.PORT || 3000);
   require('./server.js');

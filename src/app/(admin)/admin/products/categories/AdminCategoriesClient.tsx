@@ -256,6 +256,27 @@ export default function AdminCategoriesClient() {
     }
   }
 
+  const [isResetting, setIsResetting] = useState(false);
+  async function handleResetCategories() {
+    if (!(await openConfirm("Reset to Default Categories", "This will wipe all existing categories and re-seed the 72+ curated Indian e-commerce categories with proper HSN codes and GST mapping. Products linked to old categories will lose their category assignment. Proceed?"))) return;
+
+    setIsResetting(true);
+    try {
+      const res = await fetch("/api/admin/products/categories/reset", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        success(data.message);
+        await loadCategories();
+      } else {
+        showError(data.error || "Reset failed");
+      }
+    } catch (err) {
+      showError("Network error during reset");
+    } finally {
+      setIsResetting(false);
+    }
+  }
+
   function toggleSelectAll(checked: boolean) {
     setSelectAll(checked);
     if (checked) {
@@ -283,7 +304,12 @@ export default function AdminCategoriesClient() {
           <h1 className="admin-page-title">Product Categories</h1>
           <p className="admin-page-subtitle">{categories.length} categor{categories.length !== 1 ? "ies" : "y"} total</p>
         </div>
-        <Button variant="primary" onClick={openCreate}>+ Add Category</Button>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <Button variant="danger" onClick={handleResetCategories} disabled={isResetting || loading}>
+            {isResetting ? "Resetting..." : "Reset 72 Categories"}
+          </Button>
+          <Button variant="primary" onClick={openCreate}>+ Add Category</Button>
+        </div>
       </div>
 
       {/* Create / Edit Form */}

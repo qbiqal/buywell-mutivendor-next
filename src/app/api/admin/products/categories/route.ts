@@ -15,7 +15,20 @@ export async function GET(req: NextRequest) {
     const moduleResult = await requireModuleApi("ecommerce");
     if (moduleResult) return moduleResult;
 
-    const rows = await db.select().from(productCategories).orderBy(asc(productCategories.sortOrder), asc(productCategories.name));
+    const rows = await db.select({
+      id:          productCategories.id,
+      name:        productCategories.name,
+      slug:        productCategories.slug,
+      parentId:    productCategories.parentId,
+      color:       productCategories.color,
+      description: productCategories.description,
+      hsnCode:     productCategories.hsnCode,
+      taxRateId:   productCategories.taxRateId,
+      sortOrder:   productCategories.sortOrder,
+      isActive:    productCategories.isActive,
+      createdAt:   productCategories.createdAt,
+      updatedAt:   productCategories.updatedAt,
+    }).from(productCategories).orderBy(asc(productCategories.sortOrder), asc(productCategories.name));
     return NextResponse.json({ success: true, data: rows });
   } catch (err) {
     return handleApiError(err);
