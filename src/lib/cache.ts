@@ -93,6 +93,7 @@ export const cacheInvalidate = {
     invalidateByPrefix("query:products"),
     invalidateByPrefix("query:product:"),
     invalidateByPrefix("query:related:"),
+    invalidateByPrefix("query:categories"),
     invalidateByPrefix("page:shop"),
     invalidateByPrefix("page:cms:landing"),
   ]),
