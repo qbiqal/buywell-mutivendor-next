@@ -18,7 +18,7 @@ interface VendorInfo {
   storeSlug: string | null;
   logoUrl: string | null;
   rating: string | null;
-  adminRating: number | null;
+  adminRating?: number | null;
 }
 
 interface ProductDetailClientProps {

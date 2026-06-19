@@ -44,6 +44,7 @@ export default function AdminProductsClient() {
   const [total,     setTotal]     = useState(0);
   const LIMIT = 20;
   const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   function openConfirm(title: string, message: string): Promise<boolean> {
     return new Promise((resolve) => {
@@ -77,7 +78,16 @@ export default function AdminProductsClient() {
     if (maxStock) q.set("maxStock", maxStock);
     fetch(`/api/admin/products?${q}`)
       .then((r) => r.json())
-      .then((d) => { if (d.success) { setProducts(d.data); setTotal(d.pagination.total); } })
+      .then((d) => {
+        if (d.success) {
+          setProducts(d.data);
+          setTotal(d.pagination.total);
+          setLoadError(null);
+        } else {
+          setLoadError(d.error ?? "Failed to load products. The database may need a migration — check container logs.");
+        }
+      })
+      .catch(() => setLoadError("Network error. Could not reach the products API."))
       .finally(() => setLoading(false));
   }, [deferredSearch, status, featured, dateFrom, dateTo, minPrice, maxPrice, minStock, maxStock, page]);
 
@@ -164,14 +174,19 @@ export default function AdminProductsClient() {
       />
 
       {/* Table */}
+      {loadError && (
+        <div className={styles.apiError}>
+          <strong>Error loading products:</strong> {loadError}
+        </div>
+      )}
       {loading ? (
         <div className={styles.loadingWrap}><Spinner size="lg" /></div>
-      ) : products.length === 0 ? (
+      ) : !loadError && products.length === 0 ? (
         <div className={styles.empty}>
           <p>No products found.</p>
           <Button variant="secondary" onClick={() => router.push("/admin/products/new")}>Add Your First Product</Button>
         </div>
-      ) : (
+      ) : loadError ? null : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>

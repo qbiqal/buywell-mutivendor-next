@@ -91,6 +91,8 @@ export async function invalidateByPrefix(prefix: string): Promise<number> {
 export const cacheInvalidate = {
   products: () => Promise.all([
     invalidateByPrefix("query:products"),
+    invalidateByPrefix("query:product:"),
+    invalidateByPrefix("query:related:"),
     invalidateByPrefix("page:shop"),
     invalidateByPrefix("page:cms:landing"),
   ]),
