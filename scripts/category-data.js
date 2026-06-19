@@ -18,8 +18,10 @@ const { randomUUID } = require('crypto');
 
 // ── Category data ─────────────────────────────────────────────────────────────
 // gstRate: percentage (0 / 3 / 5 / 12 / 18 / 28) — converted to basis points for DB lookup
-// showOnHomepage: featured top-level categories shown in homepage grid
-// showOnShop:     shown in shop page sidebar filters (all sub-cats default true)
+// showOnHomepage:    featured top-level categories shown in old homepage grid (legacy)
+// showOnShop:        shown in shop page sidebar filters (all sub-cats default true)
+// showOnHeroSidebar: shown in the left-sidebar category panel on the homepage hero
+// showOnShopWidget:  shown in "Shop by Category" grid widget on homepage
 
 const CATEGORIES = [
   // ── 1. Food & Grocery ──────────────────────────────────────────────────────
@@ -30,6 +32,8 @@ const CATEGORIES = [
     description: 'Fresh and packaged food, organic staples, spices, beverages and more',
     showOnHomepage: true,
     showOnShop: true,
+    showOnHeroSidebar: true,
+    showOnShopWidget: true,
     sortOrder: 1,
     children: [
       { name: 'Honey & Bee Products',          slug: 'honey-bee-products',          hsnCode: '0409', gstRate: 5,  sortOrder: 1  },
@@ -63,6 +67,8 @@ const CATEGORIES = [
     description: 'Authentic Ayurvedic medicines, herbal supplements and natural wellness',
     showOnHomepage: true,
     showOnShop: true,
+    showOnHeroSidebar: true,
+    showOnShopWidget: true,
     sortOrder: 2,
     children: [
       { name: 'Ayurvedic Medicines',           slug: 'ayurvedic-medicines',          hsnCode: '3004', gstRate: 12, sortOrder: 1  },
@@ -90,6 +96,8 @@ const CATEGORIES = [
     description: 'Hair care, skin care, grooming and cosmetics',
     showOnHomepage: true,
     showOnShop: true,
+    showOnHeroSidebar: true,
+    showOnShopWidget: true,
     sortOrder: 3,
     children: [
       { name: 'Hair Oils & Serums',            slug: 'hair-oils-serums',             hsnCode: '3305', gstRate: 18, sortOrder: 1  },
@@ -120,6 +128,8 @@ const CATEGORIES = [
     description: 'Kitchen essentials, home decor, cleaning and spiritual products',
     showOnHomepage: true,
     showOnShop: true,
+    showOnHeroSidebar: true,
+    showOnShopWidget: true,
     sortOrder: 4,
     children: [
       { name: 'Kitchen Utensils & Cookware',   slug: 'kitchen-utensils-cookware',    hsnCode: '7323', gstRate: 12, sortOrder: 1  },
@@ -150,6 +160,8 @@ const CATEGORIES = [
     description: 'Baby care, nutrition, clothing and toys for infants and children',
     showOnHomepage: true,
     showOnShop: true,
+    showOnHeroSidebar: true,
+    showOnShopWidget: false,
     sortOrder: 5,
     children: [
       { name: 'Baby Skin Care',                slug: 'baby-skin-care',               hsnCode: '3304', gstRate: 18, sortOrder: 1  },
@@ -174,6 +186,8 @@ const CATEGORIES = [
     description: 'Smartphones, laptops, smart home devices and accessories',
     showOnHomepage: true,
     showOnShop: true,
+    showOnHeroSidebar: true,
+    showOnShopWidget: true,
     sortOrder: 6,
     children: [
       { name: 'Smartphones & Mobiles',         slug: 'smartphones-mobiles',          hsnCode: '8517', gstRate: 18, sortOrder: 1  },
@@ -201,6 +215,8 @@ const CATEGORIES = [
     description: "Men's, women's and kids' clothing, footwear and fashion accessories",
     showOnHomepage: true,
     showOnShop: true,
+    showOnHeroSidebar: true,
+    showOnShopWidget: true,
     sortOrder: 7,
     children: [
       { name: "Men's Clothing",                slug: 'mens-clothing',                hsnCode: '6203', gstRate: 12, sortOrder: 1  },
@@ -228,6 +244,8 @@ const CATEGORIES = [
     description: 'Books, educational materials, stationery and art supplies',
     showOnHomepage: false,
     showOnShop: true,
+    showOnHeroSidebar: false,
+    showOnShopWidget: false,
     sortOrder: 8,
     children: [
       { name: 'Fiction & Novels',              slug: 'fiction-novels',               hsnCode: '4901', gstRate: 0,  sortOrder: 1 },
@@ -250,6 +268,8 @@ const CATEGORIES = [
     description: 'Gym equipment, yoga gear, sports accessories and fitness nutrition',
     showOnHomepage: false,
     showOnShop: true,
+    showOnHeroSidebar: false,
+    showOnShopWidget: false,
     sortOrder: 9,
     children: [
       { name: 'Gym & Fitness Equipment',       slug: 'gym-fitness-equipment',        hsnCode: '9506', gstRate: 12, sortOrder: 1  },
@@ -273,6 +293,8 @@ const CATEGORIES = [
     description: 'Seeds, organic inputs, gardening tools and farming accessories',
     showOnHomepage: false,
     showOnShop: true,
+    showOnHeroSidebar: false,
+    showOnShopWidget: false,
     sortOrder: 10,
     children: [
       { name: 'Seeds & Planting Material',     slug: 'seeds-planting-material',      hsnCode: '1209', gstRate: 0,  sortOrder: 1 },
@@ -295,6 +317,8 @@ const CATEGORIES = [
     description: 'Gold, silver, fashion jewellery, watches and accessories',
     showOnHomepage: true,
     showOnShop: true,
+    showOnHeroSidebar: false,
+    showOnShopWidget: true,
     sortOrder: 11,
     children: [
       { name: 'Gold Jewellery',                slug: 'gold-jewellery',               hsnCode: '7113', gstRate: 3,  sortOrder: 1  },
@@ -318,6 +342,8 @@ const CATEGORIES = [
     description: 'Pet food, grooming, accessories and health products for all pets',
     showOnHomepage: false,
     showOnShop: true,
+    showOnHeroSidebar: false,
+    showOnShopWidget: false,
     sortOrder: 12,
     children: [
       { name: 'Dog Food & Treats',             slug: 'dog-food-treats',              hsnCode: '2309', gstRate: 5,  sortOrder: 1 },
@@ -338,6 +364,8 @@ const CATEGORIES = [
     description: 'Office stationery, furniture, electronics and organisation products',
     showOnHomepage: false,
     showOnShop: true,
+    showOnHeroSidebar: false,
+    showOnShopWidget: false,
     sortOrder: 13,
     children: [
       { name: 'Paper & Printing Supplies',     slug: 'paper-printing-supplies',      hsnCode: '4802', gstRate: 12, sortOrder: 1 },
@@ -347,6 +375,7 @@ const CATEGORIES = [
       { name: 'Office Furniture',              slug: 'office-furniture',             hsnCode: '9403', gstRate: 18, sortOrder: 5 },
       { name: 'Whiteboards & Notice Boards',   slug: 'whiteboards-notice-boards',    hsnCode: '9403', gstRate: 18, sortOrder: 6 },
       { name: 'Toners & Ink Cartridges',       slug: 'toners-ink-cartridges',        hsnCode: '8443', gstRate: 18, sortOrder: 7 },
+    ],
   },
 ];
 

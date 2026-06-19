@@ -24,10 +24,20 @@ module.exports = async function syncCategories() {
 
     console.log('[category-sync] 72 categories missing. Wiping old categories and syncing...');
 
-    // 2. Wipe existing categories
+    // 2. Ensure all new columns exist before inserting (self-sufficient regardless of migration state)
+    await pool.query(`
+      ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS hsn_code text;
+      ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS tax_rate_id integer;
+      ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS show_on_homepage boolean NOT NULL DEFAULT false;
+      ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS show_on_shop boolean NOT NULL DEFAULT true;
+      ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS show_on_hero_sidebar boolean NOT NULL DEFAULT false;
+      ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS show_on_shop_widget boolean NOT NULL DEFAULT false;
+    `);
+
+    // 3. Wipe existing categories
     await pool.query('DELETE FROM product_categories');
 
-    // 3. Build rate map
+    // 4. Build rate map
     const ratesRes = await pool.query('SELECT id, total_rate FROM tax_rates WHERE is_active = true');
     const rateMap = {};
     for (const row of ratesRes.rows) {
@@ -48,11 +58,14 @@ module.exports = async function syncCategories() {
       await pool.query(`
         INSERT INTO product_categories
           (id, name, slug, color, description, hsn_code, tax_rate_id,
-           show_on_homepage, show_on_shop, sort_order, is_active, created_at, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,now(),now())
+           show_on_homepage, show_on_shop, show_on_hero_sidebar, show_on_shop_widget,
+           sort_order, is_active, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true,now(),now())
       `, [parentId, cat.name, cat.slug, cat.color, cat.description ?? null,
           cat.hsnCode ?? null, taxRateId,
-          cat.showOnHomepage ?? false, cat.showOnShop ?? true, cat.sortOrder ?? 0]);
+          cat.showOnHomepage ?? false, cat.showOnShop ?? true,
+          cat.showOnHeroSidebar ?? false, cat.showOnShopWidget ?? false,
+          cat.sortOrder ?? 0]);
 
       parentInserted++;
 
@@ -61,8 +74,9 @@ module.exports = async function syncCategories() {
         await pool.query(`
           INSERT INTO product_categories
             (id, name, slug, parent_id, color, description, hsn_code, tax_rate_id,
-             show_on_homepage, show_on_shop, sort_order, is_active, created_at, updated_at)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false,true,$9,true,now(),now())
+             show_on_homepage, show_on_shop, show_on_hero_sidebar, show_on_shop_widget,
+             sort_order, is_active, created_at, updated_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false,true,false,false,$9,true,now(),now())
         `, [randomUUID(), child.name, child.slug, parentId,
             cat.color, null, child.hsnCode ?? null, childTaxRateId,
             child.sortOrder ?? 0]);

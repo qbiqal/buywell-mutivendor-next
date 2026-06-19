@@ -40,7 +40,8 @@ interface Testimonial {
 interface HomepageClientProps {
   heroBanners: HeroBanner[];
   promoBanners: HeroBanner[];
-  categories: Category[];
+  heroCategories: Category[];
+  shopCategories: Category[];
   featuredProducts: Product[];
   latestProducts: Product[];
   testimonials: Testimonial[];
@@ -221,8 +222,6 @@ const CATEGORY_ICONS: Record<string, string> = {
   "other":       "📦",
 };
 
-const HERO_CATEGORY_LIMIT = 8;
-
 function getCategoryIcon(name: string, icon?: string | null): string {
   if (icon) return icon;
   const nameLower = name.toLowerCase();
@@ -312,15 +311,14 @@ function HomepageProductCard({ product: p }: { product: Product }) {
 export function HomepageClient({
   heroBanners,
   promoBanners,
-  categories,
+  heroCategories,
+  shopCategories,
   featuredProducts,
   latestProducts,
   testimonials,
 }: HomepageClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [catOpen, setCatOpen] = useState(false);
-  const [showAllCats, setShowAllCats] = useState(false);
-  const [showAllGridCats, setShowAllGridCats] = useState(false);
   const latestScrollRef = useRef<HTMLDivElement>(null);
 
   function handleSearch(e: React.FormEvent) {
@@ -357,7 +355,7 @@ export function HomepageClient({
 
             <div className={[styles.heroCategoryBody, catOpen ? styles.heroCategoryBodyOpen : ""].join(" ")}>
               <nav className={styles.heroCategoryList}>
-                {(showAllCats ? categories : categories.slice(0, HERO_CATEGORY_LIMIT)).map((cat) => (
+                {heroCategories.map((cat) => (
                   <Link
                     key={cat.id}
                     href={`/shop?category=${cat.slug}`}
@@ -369,16 +367,6 @@ export function HomepageClient({
                     <span className={styles.heroCatArrow}>›</span>
                   </Link>
                 ))}
-                {categories.length > HERO_CATEGORY_LIMIT && (
-                  <button
-                    className={[styles.heroCategoryItem, styles.heroCatShowMore].join(" ")}
-                    onClick={() => setShowAllCats((v) => !v)}
-                    type="button"
-                  >
-                    <span className={styles.heroCatIcon}>{showAllCats ? "▲" : "▼"}</span>
-                    <span className={styles.heroCatName}>{showAllCats ? "Show Less" : `+${categories.length - HERO_CATEGORY_LIMIT} More`}</span>
-                  </button>
-                )}
                 <Link href="/categories" className={[styles.heroCategoryItem, styles.heroCatAll].join(" ")}>
                   <span className={styles.heroCatIcon}>🗂️</span>
                   <span className={styles.heroCatName}>All Categories</span>
@@ -420,7 +408,7 @@ export function HomepageClient({
       </section>
 
       {/* ── Category Grid ── */}
-      {categories.length > 0 && (
+      {shopCategories.length > 0 && (
         <AnimatedSection className={styles.categorySection}>
           <div className={styles.container}>
             <motion.div className={styles.sectionHead} variants={fadeUp}>
@@ -428,10 +416,10 @@ export function HomepageClient({
                 <span className={styles.eyebrow}>Browse by category</span>
                 <h2 className={styles.sectionTitle}>Shop by Category</h2>
               </div>
-              <Link href="/shop" className={styles.viewAll}>All Products →</Link>
+              <Link href="/categories" className={styles.viewAll}>All Categories →</Link>
             </motion.div>
             <motion.div className={styles.categoryGrid} variants={staggerContainer}>
-              {(showAllGridCats ? categories : categories.slice(0, 12)).map((cat) => (
+              {shopCategories.map((cat) => (
                 <motion.div key={cat.id} variants={fadeUp}>
                   <Link
                     href={`/shop?category=${cat.slug}`}
@@ -444,19 +432,17 @@ export function HomepageClient({
                 </motion.div>
               ))}
               <motion.div variants={fadeUp}>
-                <Link href="/shop" className={[styles.categoryCard, styles.categoryCardAll].join(" ")}>
-                  <span className={styles.categoryCardIcon}>🛒</span>
-                  <span className={styles.categoryCardName}>All Products</span>
+                <Link href="/categories" className={[styles.categoryCard, styles.categoryCardAll].join(" ")}>
+                  <span className={styles.categoryCardIcon}>🗂️</span>
+                  <span className={styles.categoryCardName}>All Categories</span>
                 </Link>
               </motion.div>
             </motion.div>
-            {categories.length > 12 && (
-              <motion.div className={styles.showMoreWrap} variants={fadeUp}>
-                <Link href="/categories" className={styles.showMoreBtn} style={{ textDecoration: "none", display: "inline-flex" }}>
-                  ▼ View All {categories.length} Categories
-                </Link>
-              </motion.div>
-            )}
+            <motion.div className={styles.showMoreWrap} variants={fadeUp}>
+              <Link href="/categories" className={styles.showMoreBtn} style={{ textDecoration: "none", display: "inline-flex" }}>
+                ▼ View All Categories
+              </Link>
+            </motion.div>
           </div>
         </AnimatedSection>
       )}

@@ -20,6 +20,8 @@ interface Category {
   taxRateId: number | null;
   showOnHomepage: boolean;
   showOnShop: boolean;
+  showOnHeroSidebar: boolean;
+  showOnShopWidget: boolean;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -39,6 +41,8 @@ const EMPTY_FORM = {
   taxRateId: "",
   showOnHomepage: false,
   showOnShop: true,
+  showOnHeroSidebar: false,
+  showOnShopWidget: false,
   sortOrder: "0",
   isActive: true,
 };
@@ -110,6 +114,8 @@ export default function AdminCategoriesClient() {
       taxRateId: cat.taxRateId ? String(cat.taxRateId) : "",
       showOnHomepage: cat.showOnHomepage,
       showOnShop: cat.showOnShop,
+      showOnHeroSidebar: cat.showOnHeroSidebar,
+      showOnShopWidget: cat.showOnShopWidget,
       sortOrder: String(cat.sortOrder),
       isActive: cat.isActive,
     });
@@ -157,6 +163,8 @@ export default function AdminCategoriesClient() {
         taxRateId: form.taxRateId ? parseInt(form.taxRateId, 10) : null,
         showOnHomepage: form.showOnHomepage,
         showOnShop: form.showOnShop,
+        showOnHeroSidebar: form.showOnHeroSidebar,
+        showOnShopWidget: form.showOnShopWidget,
         sortOrder: parseInt(form.sortOrder, 10) || 0,
         isActive: form.isActive,
       };
@@ -195,7 +203,7 @@ export default function AdminCategoriesClient() {
     } catch { showError("Network error"); }
   }
 
-  async function patchVisibility(cat: Category, field: 'showOnHomepage' | 'showOnShop', value: boolean) {
+  async function patchVisibility(cat: Category, field: 'showOnHomepage' | 'showOnShop' | 'showOnHeroSidebar' | 'showOnShopWidget', value: boolean) {
     try {
       const res = await fetch('/api/admin/products/categories', {
         method: 'PATCH',
@@ -470,6 +478,22 @@ export default function AdminCategoriesClient() {
                 />
                 Show on Shop Page
               </label>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={form.showOnHeroSidebar}
+                  onChange={(e) => setForm((f) => ({ ...f, showOnHeroSidebar: e.target.checked }))}
+                />
+                Hero Sidebar
+              </label>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={form.showOnShopWidget}
+                  onChange={(e) => setForm((f) => ({ ...f, showOnShopWidget: e.target.checked }))}
+                />
+                Shop Widget
+              </label>
             </div>
 
             <div className={styles.formActions}>
@@ -583,7 +607,21 @@ export default function AdminCategoriesClient() {
                         onClick={() => patchVisibility(cat, 'showOnShop', !cat.showOnShop)}
                         className={[styles.visBadge, cat.showOnShop ? styles.visOn : styles.visOff].join(" ")}
                       >
-                        🛍 {cat.showOnShop ? "Shop" : "Shop"}
+                        🛍 Shop
+                      </button>
+                      <button
+                        title="Toggle hero sidebar"
+                        onClick={() => patchVisibility(cat, 'showOnHeroSidebar', !cat.showOnHeroSidebar)}
+                        className={[styles.visBadge, cat.showOnHeroSidebar ? styles.visOn : styles.visOff].join(" ")}
+                      >
+                        🏆 Hero
+                      </button>
+                      <button
+                        title="Toggle shop widget"
+                        onClick={() => patchVisibility(cat, 'showOnShopWidget', !cat.showOnShopWidget)}
+                        className={[styles.visBadge, cat.showOnShopWidget ? styles.visOn : styles.visOff].join(" ")}
+                      >
+                        🛒 Widget
                       </button>
                     </div>
                   </td>

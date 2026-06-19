@@ -15,20 +15,7 @@ export async function GET(req: NextRequest) {
     const moduleResult = await requireModuleApi("ecommerce");
     if (moduleResult) return moduleResult;
 
-    const rows = await db.select({
-      id:          productCategories.id,
-      name:        productCategories.name,
-      slug:        productCategories.slug,
-      parentId:    productCategories.parentId,
-      color:       productCategories.color,
-      description: productCategories.description,
-      hsnCode:     productCategories.hsnCode,
-      taxRateId:   productCategories.taxRateId,
-      sortOrder:   productCategories.sortOrder,
-      isActive:    productCategories.isActive,
-      createdAt:   productCategories.createdAt,
-      updatedAt:   productCategories.updatedAt,
-    }).from(productCategories).orderBy(asc(productCategories.sortOrder), asc(productCategories.name));
+    const rows = await db.select().from(productCategories).orderBy(asc(productCategories.sortOrder), asc(productCategories.name));
     return NextResponse.json({ success: true, data: rows });
   } catch (err) {
     return handleApiError(err);
@@ -58,6 +45,8 @@ export async function POST(req: NextRequest) {
       taxRateId: body.taxRateId ? parseInt(String(body.taxRateId), 10) : null,
       showOnHomepage: body.showOnHomepage === true,
       showOnShop: body.showOnShop !== false,
+      showOnHeroSidebar: body.showOnHeroSidebar === true,
+      showOnShopWidget: body.showOnShopWidget === true,
       sortOrder: parseInt(String(body.sortOrder ?? "0"), 10),
       isActive: body.isActive !== false,
     }).returning();
@@ -93,6 +82,8 @@ export async function PATCH(req: NextRequest) {
       taxRateId: body.taxRateId !== undefined ? (body.taxRateId ? parseInt(String(body.taxRateId), 10) : null) : existing.taxRateId,
       showOnHomepage: body.showOnHomepage !== undefined ? body.showOnHomepage === true : existing.showOnHomepage,
       showOnShop: body.showOnShop !== undefined ? body.showOnShop !== false : existing.showOnShop,
+      showOnHeroSidebar: body.showOnHeroSidebar !== undefined ? body.showOnHeroSidebar === true : (existing as any).showOnHeroSidebar ?? false,
+      showOnShopWidget: body.showOnShopWidget !== undefined ? body.showOnShopWidget === true : (existing as any).showOnShopWidget ?? false,
       sortOrder: body.sortOrder !== undefined ? parseInt(String(body.sortOrder || "0"), 10) : existing.sortOrder,
       isActive: body.isActive !== undefined ? body.isActive === true : existing.isActive,
       updatedAt: new Date(),

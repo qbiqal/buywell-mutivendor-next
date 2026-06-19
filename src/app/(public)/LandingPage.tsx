@@ -12,7 +12,7 @@ export default async function LandingPage() {
 
     const now = new Date();
 
-    const [heroBanners, promoBanners, categories, featuredProducts, latestProductsRaw, featuredTestimonials] = await Promise.all([
+    const [heroBanners, promoBanners, heroCategories, shopCategories, featuredProducts, latestProductsRaw, featuredTestimonials] = await Promise.all([
       withCache("query:cms:banners:hero", CACHE_TTL.QUERY, async () =>
         db.select().from(homepageBanners).where(
           and(
@@ -35,7 +35,7 @@ export default async function LandingPage() {
         ).orderBy(asc(homepageBanners.sortOrder)).limit(2)
       ),
 
-      withCache("query:categories:active", CACHE_TTL.QUERY, async () =>
+      withCache("query:categories:hero-sidebar", CACHE_TTL.QUERY, async () =>
         db.select({
           id:          productCategories.id,
           name:        productCategories.name,
@@ -45,9 +45,24 @@ export default async function LandingPage() {
           sortOrder:   productCategories.sortOrder,
           isActive:    productCategories.isActive,
         }).from(productCategories)
-          .where(and(eq(productCategories.isActive, true), isNull(productCategories.parentId)))
+          .where(and(eq(productCategories.isActive, true), isNull(productCategories.parentId), eq(productCategories.showOnHeroSidebar, true)))
           .orderBy(asc(productCategories.sortOrder))
-          .limit(50)
+          .limit(7)
+      ),
+
+      withCache("query:categories:shop-widget", CACHE_TTL.QUERY, async () =>
+        db.select({
+          id:          productCategories.id,
+          name:        productCategories.name,
+          slug:        productCategories.slug,
+          color:       productCategories.color,
+          description: productCategories.description,
+          sortOrder:   productCategories.sortOrder,
+          isActive:    productCategories.isActive,
+        }).from(productCategories)
+          .where(and(eq(productCategories.isActive, true), isNull(productCategories.parentId), eq(productCategories.showOnShopWidget, true)))
+          .orderBy(asc(productCategories.sortOrder))
+          .limit(12)
       ),
 
       withCache("query:products:featured", CACHE_TTL.QUERY, async () => {
@@ -159,7 +174,8 @@ export default async function LandingPage() {
         <HomepageClient
           heroBanners={heroBanners}
           promoBanners={promoBanners}
-          categories={categories}
+          heroCategories={heroCategories}
+          shopCategories={shopCategories}
           featuredProducts={featuredProducts}
           latestProducts={latestProductsRaw}
           testimonials={featuredTestimonials}
