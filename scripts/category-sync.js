@@ -12,19 +12,7 @@ module.exports = async function syncCategories() {
   });
 
   try {
-    // 1. Check if the seed is already applied by checking for 'food-grocery'
-    const { rows: [existingFood] } = await pool.query(
-      "SELECT id FROM product_categories WHERE slug = 'food-grocery'"
-    );
-
-    if (existingFood) {
-      console.log('[category-sync] 72 categories already seeded. Skipping.');
-      return;
-    }
-
-    console.log('[category-sync] 72 categories missing. Wiping old categories and syncing...');
-
-    // 2. Ensure all new columns exist before inserting (self-sufficient regardless of migration state)
+    // 1. Ensure all columns exist first (self-sufficient regardless of migration state)
     await pool.query(`
       ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS hsn_code text;
       ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS tax_rate_id integer;
@@ -33,6 +21,19 @@ module.exports = async function syncCategories() {
       ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS show_on_hero_sidebar boolean NOT NULL DEFAULT false;
       ALTER TABLE product_categories ADD COLUMN IF NOT EXISTS show_on_shop_widget boolean NOT NULL DEFAULT false;
     `);
+
+    // 2. Check if seed is current: food-grocery must exist AND have hero sidebar enabled
+    //    If categories exist but lack the new flags, force a re-seed.
+    const { rows: [check] } = await pool.query(
+      "SELECT id, show_on_hero_sidebar FROM product_categories WHERE slug = 'food-grocery' LIMIT 1"
+    );
+
+    if (check && check.show_on_hero_sidebar === true) {
+      console.log('[category-sync] Categories already seeded and up to date. Skipping.');
+      return;
+    }
+
+    console.log('[category-sync] Syncing categories (new flags or first run)...');
 
     // 3. Wipe existing categories
     await pool.query('DELETE FROM product_categories');
