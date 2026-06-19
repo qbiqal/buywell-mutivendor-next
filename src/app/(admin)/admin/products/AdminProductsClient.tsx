@@ -50,6 +50,11 @@ export default function AdminProductsClient() {
   const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Bulk Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   function openConfirm(title: string, message: string): Promise<boolean> {
     return new Promise((resolve) => {
       setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
@@ -101,6 +106,10 @@ export default function AdminProductsClient() {
       })
       .catch(() => setLoadError("Network error. Could not reach the products API."))
       .finally(() => setLoading(false));
+
+    // Reset selection when filters change (except page)
+    setSelectedIds(new Set());
+    setSelectAllMatching(false);
   }, [deferredSearch, status, featured, vendor, category, dateFrom, dateTo, minPrice, maxPrice, minStock, maxStock, page]);
 
   async function toggleActive(id: string, isActive: boolean) {
@@ -124,6 +133,59 @@ export default function AdminProductsClient() {
     const data = await res.json();
     if (data.success) { success("Product deleted"); setProducts((p) => p.filter((x) => x.id !== id)); }
     else showError("Delete failed");
+  }
+
+  async function handleBulkDelete() {
+    const totalCount = selectAllMatching ? total : selectedIds.size;
+    if (!(await openConfirm("Bulk Delete", `Are you sure you want to delete ${totalCount} product(s)? This action cannot be undone.`))) return;
+    
+    setIsBulkDeleting(true);
+    try {
+      const res = await fetch("/api/admin/products/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete",
+          selectedIds: Array.from(selectedIds),
+          selectAll: selectAllMatching,
+          filters: { search: deferredSearch, status, featured, vendor, categoryId: category, dateFrom, dateTo, minPrice, maxPrice, minStock, maxStock }
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        success(`Successfully deleted ${data.count} product(s). ${data.archived > 0 ? `(${data.archived} archived instead due to orders)` : ""}`);
+        setSelectedIds(new Set());
+        setSelectAllMatching(false);
+        // Refresh products
+        setPage(1);
+        setProducts((p) => [...p]); // Trigger refresh or you can reload the page
+        router.refresh();
+        setTimeout(() => window.location.reload(), 500);
+      } else {
+        showError(data.error || "Bulk delete failed");
+      }
+    } catch (err) {
+      showError("Network error during bulk delete");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  }
+
+  function toggleSelectAll(checked: boolean) {
+    setSelectAllMatching(checked);
+    if (checked) {
+      setSelectedIds(new Set(products.map(p => p.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }
+
+  function toggleSelect(id: string, checked: boolean) {
+    setSelectAllMatching(false); // If manually changing one, disable the "select all matching" flag
+    const newSelected = new Set(selectedIds);
+    if (checked) newSelected.add(id);
+    else newSelected.delete(id);
+    setSelectedIds(newSelected);
   }
 
   const pages = Math.ceil(total / LIMIT);
@@ -198,6 +260,18 @@ export default function AdminProductsClient() {
         }))}
       />
 
+      {/* Bulk Actions Banner */}
+      {(selectedIds.size > 0 || selectAllMatching) && (
+        <div className={styles.bulkBanner} style={{ padding: '12px', background: '#e0e7ff', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <strong>{selectAllMatching ? total : selectedIds.size}</strong> product(s) selected.
+          </div>
+          <Button variant="danger" onClick={handleBulkDelete} disabled={isBulkDeleting}>
+            {isBulkDeleting ? <Spinner size="sm" /> : "Delete Selected"}
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
       {loadError && (
         <div className={styles.apiError}>
@@ -216,6 +290,15 @@ export default function AdminProductsClient() {
           <table className={styles.table}>
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectAllMatching || (products.length > 0 && selectedIds.size === products.length)}
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    title="Select all matching products"
+                  />
+                </th>
                 <th>Product</th>
                 <th>Category</th>
                 <th>Uploaded By</th>
@@ -234,6 +317,14 @@ export default function AdminProductsClient() {
                 const totalStock = p.variants.reduce((sum, v) => sum + v.stock, 0);
                 return (
                   <tr key={p.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(p.id) || selectAllMatching}
+                        onChange={(e) => toggleSelect(p.id, e.target.checked)}
+                        style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                      />
+                    </td>
                     <td>
                       <div className={styles.productCell}>
                         <div className={styles.productImg}>

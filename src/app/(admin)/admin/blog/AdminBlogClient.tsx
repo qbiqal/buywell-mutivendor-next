@@ -36,6 +36,11 @@ export default function AdminBlogClient() {
   const deferredSearch = useDeferredValue(search);
   const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
 
+  // Bulk Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   function openConfirm(title: string, message: string): Promise<boolean> {
     return new Promise((resolve) => {
       setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
@@ -71,6 +76,9 @@ export default function AdminBlogClient() {
         if (postsJson.success) setPosts(postsJson.data);
       })
       .finally(() => setLoading(false));
+
+    setSelectedIds(new Set());
+    setSelectAllMatching(false);
   }, [deferredSearch, status, categoryId, featured, dateFrom, dateTo, minViews, maxViews, minReadTime, maxReadTime]);
 
   const filterFields = useMemo(() => [
@@ -139,6 +147,56 @@ export default function AdminBlogClient() {
     else showError("Delete failed");
   }
 
+  async function handleBulkDelete() {
+    const totalCount = selectAllMatching ? "all matching" : selectedIds.size;
+    if (!(await openConfirm("Bulk Delete", `Are you sure you want to delete ${totalCount} post(s)? This action cannot be undone.`))) return;
+    
+    setIsBulkDeleting(true);
+    try {
+      const res = await fetch("/api/admin/blog/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete",
+          selectedIds: Array.from(selectedIds),
+          selectAll: selectAllMatching,
+          filters: { search: deferredSearch, status, categoryId, featured, dateFrom, dateTo, minViews, maxViews, minReadTime, maxReadTime }
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        success(`Successfully deleted ${data.count} post(s).`);
+        setSelectedIds(new Set());
+        setSelectAllMatching(false);
+        router.refresh();
+        setTimeout(() => window.location.reload(), 500);
+      } else {
+        showError(data.error || "Bulk delete failed");
+      }
+    } catch (err) {
+      showError("Network error during bulk delete");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  }
+
+  function toggleSelectAll(checked: boolean) {
+    setSelectAllMatching(checked);
+    if (checked) {
+      setSelectedIds(new Set(posts.map(p => p.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }
+
+  function toggleSelect(id: string, checked: boolean) {
+    setSelectAllMatching(false);
+    const newSelected = new Set(selectedIds);
+    if (checked) newSelected.add(id);
+    else newSelected.delete(id);
+    setSelectedIds(newSelected);
+  }
+
   async function saveCategory() {
     if (!categoryForm.name.trim()) { showError("Category name is required"); return; }
     const payload = {
@@ -204,6 +262,17 @@ export default function AdminBlogClient() {
         }))}
       />
 
+      {(selectedIds.size > 0 || selectAllMatching) && (
+        <div className={styles.bulkBanner} style={{ padding: '12px', background: '#e0e7ff', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <strong>{selectAllMatching ? "All matching" : selectedIds.size}</strong> post(s) selected.
+          </div>
+          <Button variant="danger" onClick={handleBulkDelete} disabled={isBulkDeleting}>
+            {isBulkDeleting ? <Spinner size="sm" /> : "Delete Selected"}
+          </Button>
+        </div>
+      )}
+
       <section className={styles.categoryPanel}>
         <div className={styles.categoryHeader}>
           <h2>Categories</h2>
@@ -252,7 +321,13 @@ export default function AdminBlogClient() {
       ) : view === "grid" ? (
         <div className={styles.grid}>
           {posts.map((post) => (
-            <div key={post.id} className={styles.blogCard}>
+            <div key={post.id} className={styles.blogCard} style={{ position: "relative" }}>
+              <input
+                type="checkbox"
+                checked={selectedIds.has(post.id) || selectAllMatching}
+                onChange={(e) => toggleSelect(post.id, e.target.checked)}
+                style={{ position: "absolute", top: "12px", left: "12px", zIndex: 10, cursor: "pointer", width: "18px", height: "18px" }}
+              />
               <div className={styles.cardCover}>
                 {post.coverImageUrl ? (
                   <Image src={post.coverImageUrl} alt={post.title} fill style={{ objectFit: "cover" }} />
@@ -274,10 +349,30 @@ export default function AdminBlogClient() {
       ) : (
         <div className={styles.listView}>
           <table className={styles.table}>
-            <thead><tr><th>Title</th><th>Status</th><th>Published</th><th>Views</th><th></th></tr></thead>
+            <thead>
+              <tr>
+                <th style={{ width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectAllMatching || (posts.length > 0 && selectedIds.size === posts.length)}
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                  />
+                </th>
+                <th>Title</th><th>Status</th><th>Published</th><th>Views</th><th></th>
+              </tr>
+            </thead>
             <tbody>
               {posts.map((post) => (
                 <tr key={post.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(post.id) || selectAllMatching}
+                      onChange={(e) => toggleSelect(post.id, e.target.checked)}
+                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    />
+                  </td>
                   <td className={styles.postTitle}>{post.title}</td>
                   <td><Badge statusKey={post.status}>{post.status}</Badge></td>
                   <td className={styles.date}>{post.publishedAt ? formatDateTime(post.publishedAt) : "—"}</td>

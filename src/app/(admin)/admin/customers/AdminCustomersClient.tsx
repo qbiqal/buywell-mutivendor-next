@@ -58,6 +58,11 @@ export default function AdminCustomersClient() {
   const LIMIT = 20;
   const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
 
+  // Bulk Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
+  const [isBulkDisabling, setIsBulkDisabling] = useState(false);
+
   function openConfirm(title: string, message: string): Promise<boolean> {
     return new Promise((resolve) => {
       setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
@@ -85,6 +90,9 @@ export default function AdminCustomersClient() {
         }
       })
       .finally(() => setLoading(false));
+      
+    setSelectedIds(new Set());
+    setSelectAllMatching(false);
   }, [deferredSearch, status, verified, dateFrom, dateTo, minOrders, maxOrders, minSpend, maxSpend, page]);
 
   async function setCustomerActive(id: string, isActive: boolean) {
@@ -100,6 +108,57 @@ export default function AdminCustomersClient() {
     }
     setCustomers((rows) => rows.map((row) => row.id === id ? { ...row, isActive } : row));
     success(isActive ? "Customer reactivated" : "Customer deactivated");
+  }
+
+  async function handleBulkDisable() {
+    const totalCount = selectAllMatching ? total : selectedIds.size;
+    if (!(await openConfirm("Bulk Disable", `Are you sure you want to disable ${totalCount} customer(s)? They will not be able to log in.`))) return;
+    
+    setIsBulkDisabling(true);
+    try {
+      const res = await fetch("/api/admin/customers/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "disable",
+          selectedIds: Array.from(selectedIds),
+          selectAll: selectAllMatching,
+          filters: { search: deferredSearch, status, verified, dateFrom, dateTo, minOrders, maxOrders, minSpend, maxSpend }
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        success(`Successfully disabled ${data.count} customer(s).`);
+        setSelectedIds(new Set());
+        setSelectAllMatching(false);
+        setPage(1);
+        router.refresh();
+        setTimeout(() => window.location.reload(), 500);
+      } else {
+        showError(data.error || "Bulk disable failed");
+      }
+    } catch (err) {
+      showError("Network error during bulk disable");
+    } finally {
+      setIsBulkDisabling(false);
+    }
+  }
+
+  function toggleSelectAll(checked: boolean) {
+    setSelectAllMatching(checked);
+    if (checked) {
+      setSelectedIds(new Set(customers.map(c => c.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }
+
+  function toggleSelect(id: string, checked: boolean) {
+    setSelectAllMatching(false);
+    const newSelected = new Set(selectedIds);
+    if (checked) newSelected.add(id);
+    else newSelected.delete(id);
+    setSelectedIds(newSelected);
   }
 
   const pages = Math.ceil(total / LIMIT);
@@ -162,9 +221,27 @@ export default function AdminCustomersClient() {
         <div className={styles.loadingWrap}><Spinner size="lg" /></div>
       ) : (
         <div className={styles.tableWrap}>
+          {(selectedIds.size > 0 || selectAllMatching) && (
+            <div className={styles.bulkBanner} style={{ padding: '12px', background: '#e0e7ff', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <strong>{selectAllMatching ? total : selectedIds.size}</strong> customer(s) selected.
+              </div>
+              <Button variant="danger" onClick={handleBulkDisable} disabled={isBulkDisabling}>
+                {isBulkDisabling ? <Spinner size="sm" /> : "Disable Selected"}
+              </Button>
+            </div>
+          )}
           <table className={styles.table}>
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectAllMatching || (customers.length > 0 && selectedIds.size === customers.length)}
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                  />
+                </th>
                 <th>Customer</th>
                 <th>Phone</th>
                 <th>Orders</th>
@@ -176,11 +253,19 @@ export default function AdminCustomersClient() {
             </thead>
             <tbody>
               {customers.length === 0 ? (
-                <tr><td colSpan={7} className={styles.empty}>No customers found</td></tr>
+                <tr><td colSpan={8} className={styles.empty}>No customers found</td></tr>
               ) : customers.map((customer) => {
                 const name = `${customer.firstName} ${customer.lastName ?? ""}`.trim();
                 return (
                   <tr key={customer.id} onClick={() => router.push(`/admin/customers/${customer.id}`)} className={styles.clickRow}>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(customer.id) || selectAllMatching}
+                        onChange={(e) => toggleSelect(customer.id, e.target.checked)}
+                        style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                      />
+                    </td>
                     <td>
                       <div className={styles.customerCell}>
                         <div className={styles.avatar}>{name.charAt(0).toUpperCase()}</div>

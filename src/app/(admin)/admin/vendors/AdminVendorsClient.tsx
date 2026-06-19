@@ -41,6 +41,11 @@ export default function AdminVendorsClient() {
   const [actioning, setActioning] = useState<number | null>(null);
   const [confirmState, setConfirmState] = useState<{open: boolean; title: string; message: string; onConfirm: () => void}>({open: false, title: "", message: "", onConfirm: () => {}});
 
+  // Bulk Selection
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
+  const [isBulkSuspending, setIsBulkSuspending] = useState(false);
+
   function openConfirm(title: string, message: string): Promise<boolean> {
     return new Promise((resolve) => {
       setConfirmState({ open: true, title, message, onConfirm: () => { setConfirmState(s => ({...s, open: false})); resolve(true); } });
@@ -61,7 +66,11 @@ export default function AdminVendorsClient() {
     }
   }, [search, statusFilter]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    setSelectedIds(new Set());
+    setSelectAllMatching(false);
+  }, [load]);
 
   async function handleAction(id: number, action: string) {
     setActioning(id);
@@ -75,11 +84,58 @@ export default function AdminVendorsClient() {
       if (!res.ok) { toast.error(data.error || "Action failed."); return; }
       toast.success(`Vendor ${action}d.`);
       load();
-    } catch {
-      toast.error("Network error.");
     } finally {
       setActioning(null);
     }
+  }
+
+  async function handleBulkSuspend() {
+    const totalCount = selectAllMatching ? "all matching" : selectedIds.size;
+    if (!(await openConfirm("Bulk Suspend", `Are you sure you want to suspend ${totalCount} vendor(s)? They will not be able to log in to their dashboard.`))) return;
+    
+    setIsBulkSuspending(true);
+    try {
+      const res = await fetch("/api/admin/vendors/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "suspend",
+          selectedIds: Array.from(selectedIds),
+          selectAll: selectAllMatching,
+          filters: { search, status: statusFilter }
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Successfully suspended ${data.count} vendor(s).`);
+        setSelectedIds(new Set());
+        setSelectAllMatching(false);
+        load();
+      } else {
+        toast.error(data.error || "Bulk suspend failed");
+      }
+    } catch (err) {
+      toast.error("Network error during bulk suspend");
+    } finally {
+      setIsBulkSuspending(false);
+    }
+  }
+
+  function toggleSelectAll(checked: boolean) {
+    setSelectAllMatching(checked);
+    if (checked) {
+      setSelectedIds(new Set(vendors.map(v => v.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }
+
+  function toggleSelect(id: number, checked: boolean) {
+    setSelectAllMatching(false);
+    const newSelected = new Set(selectedIds);
+    if (checked) newSelected.add(id);
+    else newSelected.delete(id);
+    setSelectedIds(newSelected);
   }
 
   return (
@@ -114,9 +170,27 @@ export default function AdminVendorsClient() {
         <div className={styles.empty}>No vendors found.</div>
       ) : (
         <div className={styles.tableWrap}>
+          {(selectedIds.size > 0 || selectAllMatching) && (
+            <div className={styles.bulkBanner} style={{ padding: '12px', background: '#e0e7ff', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <strong>{selectAllMatching ? "All matching" : selectedIds.size}</strong> vendor(s) selected.
+              </div>
+              <button className={styles.rejectBtn} onClick={handleBulkSuspend} disabled={isBulkSuspending} style={{ padding: "8px 16px", borderRadius: "6px" }}>
+                {isBulkSuspending ? "Suspending..." : "Suspend Selected"}
+              </button>
+            </div>
+          )}
           <table className={styles.table}>
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectAllMatching || (vendors.length > 0 && selectedIds.size === vendors.length)}
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                  />
+                </th>
                 <th>Store</th>
                 <th>User</th>
                 <th>Status</th>
@@ -132,6 +206,14 @@ export default function AdminVendorsClient() {
                 const st = STATUS_LABELS[v.status] ?? { label: v.status, color: "#6b7280" };
                 return (
                   <tr key={v.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(v.id) || selectAllMatching}
+                        onChange={(e) => toggleSelect(v.id, e.target.checked)}
+                        style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                      />
+                    </td>
                     <td>
                       <div className={styles.storeCell}>
                         {v.logoUrl ? (

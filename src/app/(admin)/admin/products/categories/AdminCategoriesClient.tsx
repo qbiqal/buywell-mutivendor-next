@@ -60,6 +60,11 @@ export default function AdminCategoriesClient() {
   });
   const [taxRates, setTaxRates] = useState<TaxRate[]>([]);
 
+  // Bulk Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   async function loadCategories() {
     setLoading(true);
     try {
@@ -200,6 +205,53 @@ export default function AdminCategoriesClient() {
         } catch { showError("Network error"); }
       },
     });
+  }
+
+  async function handleBulkDelete() {
+    const totalCount = selectAll ? categories.length : selectedIds.size;
+    if (!(await openConfirm("Bulk Delete", `Are you sure you want to delete ${totalCount} category(s)? This action cannot be undone.`))) return;
+    
+    setIsBulkDeleting(true);
+    try {
+      const res = await fetch("/api/admin/products/categories/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete",
+          selectedIds: selectAll ? categories.map(c => c.id) : Array.from(selectedIds),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        success(`Successfully deleted ${data.count} category(s).`);
+        setSelectedIds(new Set());
+        setSelectAll(false);
+        await loadCategories();
+      } else {
+        showError(data.error || "Bulk delete failed");
+      }
+    } catch (err) {
+      showError("Network error during bulk delete");
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  }
+
+  function toggleSelectAll(checked: boolean) {
+    setSelectAll(checked);
+    if (checked) {
+      setSelectedIds(new Set(categories.map(c => c.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  }
+
+  function toggleSelect(id: string, checked: boolean) {
+    setSelectAll(false);
+    const newSelected = new Set(selectedIds);
+    if (checked) newSelected.add(id);
+    else newSelected.delete(id);
+    setSelectedIds(newSelected);
   }
 
   const parentMap = new Map(categories.map((c) => [c.id, c.name]));
@@ -397,9 +449,27 @@ export default function AdminCategoriesClient() {
         </div>
       ) : (
         <div className={styles.tableWrap}>
+          {(selectedIds.size > 0 || selectAll) && (
+            <div className={styles.bulkBanner} style={{ padding: '12px', background: '#e0e7ff', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <strong>{selectAll ? categories.length : selectedIds.size}</strong> category(s) selected.
+              </div>
+              <Button variant="danger" onClick={handleBulkDelete} disabled={isBulkDeleting}>
+                {isBulkDeleting ? <Spinner size="sm" /> : "Delete Selected"}
+              </Button>
+            </div>
+          )}
           <table className={styles.table}>
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectAll || (categories.length > 0 && selectedIds.size === categories.length)}
+                    onChange={(e) => toggleSelectAll(e.target.checked)}
+                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                  />
+                </th>
                 <th>Color</th>
                 <th>Name</th>
                 <th>Slug</th>
@@ -414,6 +484,14 @@ export default function AdminCategoriesClient() {
             <tbody>
               {categories.map((cat) => (
                 <tr key={cat.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(cat.id) || selectAll}
+                      onChange={(e) => toggleSelect(cat.id, e.target.checked)}
+                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    />
+                  </td>
                   <td>
                     <span
                       className={styles.colorSwatch}
