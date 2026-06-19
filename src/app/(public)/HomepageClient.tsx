@@ -379,8 +379,8 @@ export function HomepageClient({
                     <span className={styles.heroCatName}>{showAllCats ? "Show Less" : `+${categories.length - HERO_CATEGORY_LIMIT} More`}</span>
                   </button>
                 )}
-                <Link href="/shop" className={[styles.heroCategoryItem, styles.heroCatAll].join(" ")}>
-                  <span className={styles.heroCatIcon}>🛒</span>
+                <Link href="/categories" className={[styles.heroCategoryItem, styles.heroCatAll].join(" ")}>
+                  <span className={styles.heroCatIcon}>🗂️</span>
                   <span className={styles.heroCatName}>All Categories</span>
                   <span className={styles.heroCatArrow}>›</span>
                 </Link>
@@ -452,13 +452,9 @@ export function HomepageClient({
             </motion.div>
             {categories.length > 12 && (
               <motion.div className={styles.showMoreWrap} variants={fadeUp}>
-                <button
-                  className={styles.showMoreBtn}
-                  onClick={() => setShowAllGridCats((v) => !v)}
-                  type="button"
-                >
-                  {showAllGridCats ? "▲ Show Less" : `▼ Show All ${categories.length} Categories`}
-                </button>
+                <Link href="/categories" className={styles.showMoreBtn} style={{ textDecoration: "none", display: "inline-flex" }}>
+                  ▼ View All {categories.length} Categories
+                </Link>
               </motion.div>
             )}
           </div>

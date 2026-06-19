@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Spinner } from "@/components/ui/Spinner";
 import type { ProductWithVariants } from "@/types";
@@ -36,9 +37,11 @@ export default function ShopClient() {
   const [meta,        setMeta]        = useState<ProductMeta>({ total: 0, page: 1, limit: 24, pages: 1 });
   const [viewMode,    setViewMode]    = useState<"grid" | "list">("grid");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showAllShopCats, setShowAllShopCats] = useState(false);
 
-  const SHOP_CAT_LIMIT = 8;
+  // Lazy-load categories: show 10 at a time, auto-expand on scroll
+  const CATS_PER_PAGE = 10;
+  const [visibleCatsCount, setVisibleCatsCount] = useState(CATS_PER_PAGE);
+  const catLoadMoreRef = useRef<HTMLDivElement>(null);
 
   // Filters
   const [search,     setSearch]     = useState("");
@@ -82,6 +85,22 @@ export default function ShopClient() {
     if (match) { setCategoryId(match.id); setPage(1); }
     setPendingSlug("");
   }, [pendingSlug, categories]);
+
+  // IntersectionObserver: auto-load more categories as user scrolls
+  useEffect(() => {
+    const sentinel = catLoadMoreRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCatsCount((prev) => prev + CATS_PER_PAGE);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [categories]); // re-attach when categories load
 
   const fetchProducts = useCallback(() => {
     setLoading(true);
@@ -184,8 +203,8 @@ export default function ShopClient() {
                       All Products
                     </button>
                   </li>
-                  {(showAllShopCats ? topLevel : topLevel.slice(0, SHOP_CAT_LIMIT)).map((cat) => {
-                    const children = categories.filter((c) => c.parentId === cat.id);
+                  {topLevel.slice(0, visibleCatsCount).map((cat) => {
+                    const catChildren = categories.filter((c) => c.parentId === cat.id);
                     return (
                       <li key={cat.id}>
                         <button
@@ -195,9 +214,9 @@ export default function ShopClient() {
                           <span className={styles.catDot} style={{ background: cat.color ?? "#0d7659" }} />
                           {cat.name}
                         </button>
-                        {children.length > 0 && (
+                        {catChildren.length > 0 && (
                           <ul className={styles.subCatList}>
-                            {children.map((sub) => (
+                            {catChildren.map((sub) => (
                               <li key={sub.id}>
                                 <button
                                   className={[styles.catItem, styles.subCatItem, categoryId === sub.id ? styles.catActive : ""].join(" ")}
@@ -212,21 +231,31 @@ export default function ShopClient() {
                       </li>
                     );
                   })}
-                  {topLevel.length > SHOP_CAT_LIMIT && (
+                  {/* IntersectionObserver sentinel — triggers auto-load */}
+                  {visibleCatsCount < topLevel.length && (
                     <li>
-                      <button
-                        className={styles.catItem}
-                        style={{ color: "var(--green)", fontWeight: 600 }}
-                        onClick={() => setShowAllShopCats((v) => !v)}
-                      >
-                        <span className={styles.catDot} style={{ background: "transparent", border: "1.5px solid var(--green)" }} />
-                        {showAllShopCats ? "▲ Show Less" : `▼ +${topLevel.length - SHOP_CAT_LIMIT} More`}
-                      </button>
+                      <div ref={catLoadMoreRef} className={styles.catLoadMore}>
+                        <span>Loading more…</span>
+                      </div>
                     </li>
                   )}
                 </ul>
+                {/* Manual load-more button as fallback */}
+                {visibleCatsCount < topLevel.length && (
+                  <button
+                    className={styles.catMoreBtn}
+                    onClick={() => setVisibleCatsCount((v) => v + CATS_PER_PAGE)}
+                    type="button"
+                  >
+                    ▼ +{topLevel.length - visibleCatsCount} more categories
+                  </button>
+                )}
+                <Link href="/categories" className={styles.viewAllCatsLink}>
+                  View all categories →
+                </Link>
               </div>
             )}
+
 
             {/* Price range */}
             <div className={styles.filterSection}>
