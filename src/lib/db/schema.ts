@@ -93,6 +93,8 @@ export const productCategories = pgTable("product_categories", {
   seoDescription: text("seo_description"),
   hsnCode:        text("hsn_code"),
   taxRateId:      integer("tax_rate_id"),
+  showOnHomepage: boolean("show_on_homepage").default(false).notNull(),
+  showOnShop:     boolean("show_on_shop").default(true).notNull(),
   sortOrder:      integer("sort_order").default(0).notNull(),
   isActive:       boolean("is_active").default(true).notNull(),
   createdAt:      timestamp("created_at").defaultNow().notNull(),

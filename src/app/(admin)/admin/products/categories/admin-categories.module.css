@@ -187,3 +187,20 @@
 
 /* Helper hint under inputs */
 .hint { display: block; font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Visibility toggle badges */
+.visibilityBadges { display: flex; flex-direction: column; gap: 4px; }
+.visBadge {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+  text-align: center;
+  white-space: nowrap;
+}
+.visOn  { background: #dbeafe; color: #1d4ed8; }
+.visOff { background: var(--bg-secondary); color: var(--text-secondary); opacity: 0.5; }
+.visBadge:hover { opacity: 0.8; }

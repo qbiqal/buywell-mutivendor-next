@@ -18,6 +18,8 @@ interface Category {
   seoDescription: string | null;
   hsnCode: string | null;
   taxRateId: number | null;
+  showOnHomepage: boolean;
+  showOnShop: boolean;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -35,6 +37,8 @@ const EMPTY_FORM = {
   seoDescription: "",
   hsnCode: "",
   taxRateId: "",
+  showOnHomepage: false,
+  showOnShop: true,
   sortOrder: "0",
   isActive: true,
 };
@@ -93,6 +97,8 @@ export default function AdminCategoriesClient() {
       seoDescription: cat.seoDescription ?? "",
       hsnCode: cat.hsnCode ?? "",
       taxRateId: cat.taxRateId ? String(cat.taxRateId) : "",
+      showOnHomepage: cat.showOnHomepage,
+      showOnShop: cat.showOnShop,
       sortOrder: String(cat.sortOrder),
       isActive: cat.isActive,
     });
@@ -125,6 +131,8 @@ export default function AdminCategoriesClient() {
         seoDescription: form.seoDescription.trim() || null,
         hsnCode: form.hsnCode.trim() || null,
         taxRateId: form.taxRateId ? parseInt(form.taxRateId, 10) : null,
+        showOnHomepage: form.showOnHomepage,
+        showOnShop: form.showOnShop,
         sortOrder: parseInt(form.sortOrder, 10) || 0,
         isActive: form.isActive,
       };
@@ -161,6 +169,20 @@ export default function AdminCategoriesClient() {
         success(!cat.isActive ? "Category activated" : "Category deactivated");
       } else showError("Update failed");
     } catch { showError("Network error"); }
+  }
+
+  async function patchVisibility(cat: Category, field: 'showOnHomepage' | 'showOnShop', value: boolean) {
+    try {
+      const res = await fetch('/api/admin/products/categories', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: cat.id, [field]: value }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCategories((prev) => prev.map((c) => c.id === cat.id ? { ...c, [field]: value } : c));
+      } else showError('Update failed');
+    } catch { showError('Network error'); }
   }
 
   function openDelete(cat: Category) {
@@ -326,14 +348,30 @@ export default function AdminCategoriesClient() {
               </div>
             </div>
 
-            <div className={styles.formGroup}>
+            <div className={styles.formRow} style={{ gap: 24 }}>
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   checked={form.isActive}
                   onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
                 />
-                Active (visible in shop filters)
+                Active
+              </label>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={form.showOnHomepage}
+                  onChange={(e) => setForm((f) => ({ ...f, showOnHomepage: e.target.checked }))}
+                />
+                Show on Homepage
+              </label>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={form.showOnShop}
+                  onChange={(e) => setForm((f) => ({ ...f, showOnShop: e.target.checked }))}
+                />
+                Show on Shop Page
               </label>
             </div>
 
@@ -368,6 +406,7 @@ export default function AdminCategoriesClient() {
                 <th>Parent</th>
                 <th>HSN / GST</th>
                 <th>Sort</th>
+                <th>Visibility</th>
                 <th>Active</th>
                 <th>Actions</th>
               </tr>
@@ -407,6 +446,24 @@ export default function AdminCategoriesClient() {
                     )}
                   </td>
                   <td><span className={styles.sortOrder}>{cat.sortOrder}</span></td>
+                  <td>
+                    <div className={styles.visibilityBadges}>
+                      <button
+                        title="Toggle homepage visibility"
+                        onClick={() => patchVisibility(cat, 'showOnHomepage', !cat.showOnHomepage)}
+                        className={[styles.visBadge, cat.showOnHomepage ? styles.visOn : styles.visOff].join(" ")}
+                      >
+                        🏠 {cat.showOnHomepage ? "Home" : "Home"}
+                      </button>
+                      <button
+                        title="Toggle shop page visibility"
+                        onClick={() => patchVisibility(cat, 'showOnShop', !cat.showOnShop)}
+                        className={[styles.visBadge, cat.showOnShop ? styles.visOn : styles.visOff].join(" ")}
+                      >
+                        🛍 {cat.showOnShop ? "Shop" : "Shop"}
+                      </button>
+                    </div>
+                  </td>
                   <td>
                     <button
                       onClick={() => toggleActive(cat)}

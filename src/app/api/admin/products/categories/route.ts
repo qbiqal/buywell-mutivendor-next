@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
       seoDescription: nullableText(body.seoDescription),
       hsnCode: nullableText(body.hsnCode),
       taxRateId: body.taxRateId ? parseInt(String(body.taxRateId), 10) : null,
+      showOnHomepage: body.showOnHomepage === true,
+      showOnShop: body.showOnShop !== false,
       sortOrder: parseInt(String(body.sortOrder ?? "0"), 10),
       isActive: body.isActive !== false,
     }).returning();
@@ -76,6 +78,8 @@ export async function PATCH(req: NextRequest) {
       seoDescription: body.seoDescription !== undefined ? nullableText(body.seoDescription) : existing.seoDescription,
       hsnCode: body.hsnCode !== undefined ? nullableText(body.hsnCode) : existing.hsnCode,
       taxRateId: body.taxRateId !== undefined ? (body.taxRateId ? parseInt(String(body.taxRateId), 10) : null) : existing.taxRateId,
+      showOnHomepage: body.showOnHomepage !== undefined ? body.showOnHomepage === true : existing.showOnHomepage,
+      showOnShop: body.showOnShop !== undefined ? body.showOnShop !== false : existing.showOnShop,
       sortOrder: body.sortOrder !== undefined ? parseInt(String(body.sortOrder || "0"), 10) : existing.sortOrder,
       isActive: body.isActive !== undefined ? body.isActive === true : existing.isActive,
       updatedAt: new Date(),
