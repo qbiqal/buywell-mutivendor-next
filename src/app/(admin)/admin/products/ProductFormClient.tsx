@@ -72,7 +72,7 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
   const [hsnDropdown, setHsnDropdown] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/tax/rates").then(r => r.json()).then(d => { if (d.success) setTaxRates(d.rates); });
+    fetch("/api/admin/tax/rates").then(r => r.json()).then(d => { if (d.success) setTaxRates(d.taxRates ?? []); });
   }, []);
 
   useEffect(() => {
@@ -261,12 +261,24 @@ export default function ProductFormClient({ mode, productId }: ProductFormClient
                     <Input label="MRP (₹)" type="number" min="0" step="0.01" value={v.mrpInr || ""} onChange={(e) => updateVariant(i, "mrpInr", e.target.value)} placeholder="350" />
                     <Input label="Weight" value={v.weight} onChange={(e) => updateVariant(i, "weight", e.target.value)} placeholder="500g" />
                     <Input label="Stock" type="number" min="0" value={v.stock || ""} onChange={(e) => updateVariant(i, "stock", parseInt(e.target.value) || 0)} placeholder="100" />
-                    <Input label="Variant Image URL" value={v.imageUrl ?? ""} onChange={(e) => updateVariant(i, "imageUrl", e.target.value)} placeholder="https://…" />
                   </div>
-                  {v.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={v.imageUrl} alt={v.name} style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 6, marginTop: 8, border: "1px solid var(--border-color)" }} />
-                  )}
+                  <div className={styles.variantImageRow}>
+                    <span className={styles.variantImageLabel}>Variant Image</span>
+                    {v.imageUrl ? (
+                      <div className={styles.variantImagePreview}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={v.imageUrl} alt={v.name} className={styles.variantThumb} />
+                        <button type="button" onClick={() => updateVariant(i, "imageUrl", "")} className={styles.removeVariantImgBtn}>✕ Remove</button>
+                      </div>
+                    ) : (
+                      <MediaUploader
+                        folder="products/variants"
+                        aspectRatio={4 / 3}
+                        recommendedDimensions={{ width: 800, height: 600, label: "Variant image: 800×600px (4:3)" }}
+                        onUpload={(files) => { if (files[0]) updateVariant(i, "imageUrl", files[0].url); }}
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
             </CardBody>
