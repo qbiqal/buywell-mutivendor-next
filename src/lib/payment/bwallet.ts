@@ -96,6 +96,36 @@ export const bwalletGateway = {
     });
   },
 
+  /**
+   * Shares the profit (platform commission) of a product sale with the buyer's upline on BuyWell Global:
+   * 10% referrer + 40% across 16 sponsor levels (the rest stays with the company). Idempotent per key.
+   */
+  async distributeProfit(params: {
+    bwUserId: number;
+    orderNumber: string;
+    profitPaise: number;
+    idempotencyKey: string;
+  }): Promise<{ status: string; recipients?: number }> {
+    const apiUrl = await getSiteConfig('payment_bwallet_api_url');
+    const apiKey = await getSiteConfig('payment_bwallet_api_key');
+    if (!apiUrl || !apiKey) throw new Error('BuyWell Global API configuration missing');
+
+    const res = await fetch(`${apiUrl}/api/marketplace/commission/distribute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Marketplace-Key': apiKey },
+      body: JSON.stringify({
+        bw_user_id: params.bwUserId,
+        order_reference: params.orderNumber,
+        profit_paise: params.profitPaise,
+        idempotency_key: params.idempotencyKey,
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.success) throw new Error(`Profit share failed: ${json.error || res.status}`);
+    return { status: json.data.status, recipients: json.data.recipients };
+  },
+
   async lookupUser(identifier: string, type: 'phone' | 'email') {
     const apiUrl = await getSiteConfig('payment_bwallet_api_url');
     const apiKey = await getSiteConfig('payment_bwallet_api_key');

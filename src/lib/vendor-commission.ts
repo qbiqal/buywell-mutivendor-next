@@ -2,6 +2,7 @@ import { db } from "./db";
 import { sql, eq, inArray } from "drizzle-orm";
 import { orderItems, productVariants, products, vendors, orderVendorSplits, vendorCommissions } from "./db/schema";
 import { getAllSiteConfig } from "./config";
+import { distributeProfitShareForOrder } from "./profit-share";
 
 const DEFAULT_COMMISSION_BPTS = 1000; // 10%
 
@@ -81,5 +82,12 @@ export async function createVendorSplitsForOrder(orderId: string): Promise<void>
     await db.execute(
       sql`UPDATE vendors SET total_sales = total_sales + ${subtotal}, total_orders = total_orders + 1 WHERE id = ${vendorId}`
     );
+  }
+
+  // Share the sale's profit with the buyer's upline on BuyWell Global (non-fatal; admin can retry per order).
+  try {
+    await distributeProfitShareForOrder(orderId);
+  } catch (err) {
+    console.error(`[profit-share] order ${orderId} failed:`, err instanceof Error ? err.message : err);
   }
 }

@@ -4,6 +4,7 @@ import { bwalletGateway } from "@/lib/payment/bwallet";
 import { db } from "@/lib/db";
 import { orders, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { createVendorSplitsForOrder } from "@/lib/vendor-commission";
 
 export async function POST(
   req: NextRequest,
@@ -53,6 +54,11 @@ export async function POST(
       ...(secondaryGateway ? { secondaryGateway } : {}),
       updatedAt: new Date(),
     }).where(eq(orders.id, orderId));
+
+    // Wallet-paid orders were never getting vendor splits/commissions (only the other gateways did).
+    if (isFullPayment) {
+      createVendorSplitsForOrder(orderId).catch((e) => console.error("[vendor-splits] pay-wallet:", e));
+    }
 
     return NextResponse.json({
       success: true,
