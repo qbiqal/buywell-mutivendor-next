@@ -80,6 +80,7 @@ export interface ProductWithVariants {
     stock: number;
     sku: string;
     isActive: boolean;
+    imageUrl?: string | null; // variant-specific image
   }>;
 }
 

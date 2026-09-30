@@ -117,6 +117,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         sku: productVariants.sku,
         isActive: productVariants.isActive,
         sortOrder: productVariants.sortOrder,
+        imageUrl: productVariants.imageUrl,
       }).from(productVariants)
         .where(and(eq(productVariants.productId, p.id), eq(productVariants.isActive, true)))
         .orderBy(asc(productVariants.sortOrder)),
@@ -172,6 +173,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           sku: productVariants.sku,
           isActive: productVariants.isActive,
           sortOrder: productVariants.sortOrder,
+          imageUrl: productVariants.imageUrl,
         }).from(productVariants)
           .where(and(eq(productVariants.productId, rp.id), eq(productVariants.isActive, true)))
           .orderBy(asc(productVariants.sortOrder)).limit(2),

@@ -65,10 +65,31 @@ export default function ProductDetailClient({ product, related, canEdit = false 
   }, [product.vendor?.storeSlug]);
 
   const variant     = activeVariants[selectedIdx];
-  const images    = product.images;
-  // Use variant-specific image if set, otherwise fall back to gallery
-  const displayImageUrl = (variant as (typeof variant & { imageUrl?: string | null }) | undefined)?.imageUrl;
-  const activeImg = displayImageUrl ? { url: displayImageUrl, alt: variant?.name ?? product.name, id: "variant-img" } : (images[activeImgIdx] ?? images[0] ?? null);
+  // Gallery = product images + each active variant's own image (deduplicated by URL).
+  const gallery = (() => {
+    const list: Array<{ id: string; url: string; alt?: string | null; variantIdx?: number }> = product.images.map((img) => ({ ...img }));
+    const seen = new Set(list.map((g) => g.url));
+    activeVariants.forEach((v, idx) => {
+      if (v.imageUrl && !seen.has(v.imageUrl)) {
+        seen.add(v.imageUrl);
+        list.push({ id: `variant-${v.id}`, url: v.imageUrl, alt: `${product.name} - ${v.name}`, variantIdx: idx });
+      }
+    });
+    return list;
+  })();
+  const images = gallery;
+  const activeImg = images[activeImgIdx] ?? images[0] ?? null;
+
+  // Selecting a variant jumps the gallery to that variant's image.
+  function selectVariant(i: number) {
+    setSelectedIdx(i);
+    setQty(1);
+    const url = activeVariants[i]?.imageUrl;
+    if (url) {
+      const idx = gallery.findIndex((g) => g.url === url);
+      if (idx >= 0) setActiveImgIdx(idx);
+    }
+  }
 
   const discount = variant?.mrpInr && variant.mrpInr > variant.priceInr
     ? Math.round(((variant.mrpInr - variant.priceInr) / variant.mrpInr) * 100)
@@ -81,7 +102,7 @@ export default function ProductDetailClient({ product, related, canEdit = false 
       productId:    product.id,
       productName:  product.name,
       variantName:  variant.name,
-      imageUrl:     images[0]?.url,
+      imageUrl:     activeImg?.url ?? images[0]?.url,
       slug:         product.slug,
       quantity:     qty,
       unitPriceInr: variant.priceInr,
@@ -96,7 +117,7 @@ export default function ProductDetailClient({ product, related, canEdit = false 
       productId:    product.id,
       productName:  product.name,
       variantName:  variant.name,
-      imageUrl:     images[0]?.url,
+      imageUrl:     activeImg?.url ?? images[0]?.url,
       slug:         product.slug,
       quantity:     qty,
       unitPriceInr: variant.priceInr,
@@ -188,7 +209,7 @@ export default function ProductDetailClient({ product, related, canEdit = false 
                     <button
                       key={img.id}
                       type="button"
-                      onClick={() => setActiveImgIdx(i)}
+                      onClick={() => { setActiveImgIdx(i); if (img.variantIdx !== undefined) { setSelectedIdx(img.variantIdx); setQty(1); } }}
                       className={[styles.thumb, i === activeImgIdx ? styles.thumbActive : ""].join(" ")}
                       aria-label={`Show ${product.name} image ${i + 1}`}
                       aria-current={i === activeImgIdx ? "true" : undefined}
@@ -294,7 +315,7 @@ export default function ProductDetailClient({ product, related, canEdit = false 
                   {activeVariants.map((v, i) => (
                     <button
                       key={v.id}
-                      onClick={() => { setSelectedIdx(i); setQty(1); }}
+                      onClick={() => selectVariant(i)}
                       className={[styles.variantBtn, i === selectedIdx ? styles.variantActive : ""].join(" ")}
                     >
                       <span className={styles.variantName}>{v.name}</span>
