@@ -196,13 +196,7 @@ async function main() {
     assert(customerCookie, "Customer registration did not return auth cookie");
     const customerHeaders = { headers: { cookie: customerCookie } };
 
-    const verificationCode = registered.data.data.emailVerification?.debugCode as string | undefined;
-    assert(verificationCode, "Registration did not return local email verification debug code");
-    const verifyEmail = await postJson(`${base}/api/auth/verify-email`, {
-      email: tempEmail,
-      code: verificationCode,
-    });
-    assert(verifyEmail.data.success === true, "Email verification failed");
+    assert(registered.data.data.emailVerified === true, "Registration should not require an email OTP");
 
     await expectStatus(`${base}/notifications`, 200, customerHeaders);
     const notificationList = await expectJsonSuccess(`${base}/api/notifications`, customerHeaders);

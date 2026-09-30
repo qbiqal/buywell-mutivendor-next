@@ -29,9 +29,8 @@ export default function RegisterClient() {
       });
       const data = await res.json();
       if (!data.success) { showError(data.error ?? "Registration failed"); return; }
-      success("Account created", "Check your email for the verification code");
-      const query = new URLSearchParams({ email: form.email }).toString();
-      router.push(`/verify-email?${query}`);
+      success("Account created", "Welcome to BuyWell!");
+      router.push("/shop");
       router.refresh();
     } finally {
       setLoading(false);

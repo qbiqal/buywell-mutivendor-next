@@ -6,7 +6,6 @@ import bcrypt from "bcryptjs";
 import { signToken, getTokenCookieOptions } from "@/lib/auth";
 import { handleApiError, ValidationError, AppError } from "@/lib/errors";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
-import { sendEmailVerificationOtp } from "@/lib/otp";
 import { createInAppNotification } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
@@ -49,19 +48,15 @@ export async function POST(req: NextRequest) {
       lastName: lastName?.trim(),
       phone: phone?.trim(),
       role: "customer",
+      emailVerified: true, // no OTP step at signup
     }).returning();
 
-    const emailVerification = await sendEmailVerificationOtp({
-      userId: user.id,
-      email: user.email,
-      firstName: user.firstName,
-    });
     await createInAppNotification({
       userId: user.id,
       type: "account_created",
       title: "Welcome to BuyWell Marketplace",
-      body: "Your account has been created. Verify your email to complete account setup.",
-      link: "/verify-email",
+      body: "Your account has been created. Start shopping!",
+      link: "/shop",
     });
 
     const token = await signToken({
@@ -79,7 +74,6 @@ export async function POST(req: NextRequest) {
         lastName: user.lastName,
         role: user.role,
         emailVerified: user.emailVerified,
-        emailVerification,
       },
     }, { status: 201 });
 
