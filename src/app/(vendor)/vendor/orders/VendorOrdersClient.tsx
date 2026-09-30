@@ -70,6 +70,7 @@ export default function VendorOrdersClient() {
               <th>Order Status</th>
               <th>Split Status</th>
               <th>Date</th>
+              <th>Invoice</th>
             </tr></thead>
             <tbody>
               {orders.map((o) => {
@@ -83,6 +84,7 @@ export default function VendorOrdersClient() {
                     <td><span className={styles.badge} style={{ color: osc, background: osc + "18" }}>{o.orderStatus}</span></td>
                     <td><span className={styles.badge} style={{ color: sc, background: sc + "18" }}>{o.status}</span></td>
                     <td>{formatDateTime(o.createdAt)}</td>
+                    <td><a href={`/api/orders/${o.orderId}/invoice`} target="_blank" rel="noopener noreferrer">📄 Invoice</a></td>
                   </tr>
                 );
               })}

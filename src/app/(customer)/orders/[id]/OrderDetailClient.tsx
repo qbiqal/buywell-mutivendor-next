@@ -89,7 +89,14 @@ export default function OrderDetailClient() {
           <h1 className={styles.title}>{order.orderNumber}</h1>
           <p className={styles.date}>{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
         </div>
-        <Badge statusKey={order.status} dot>{order.status.replace(/_/g, " ")}</Badge>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          {!order.isSampleRequest && (
+            <a href={`/api/orders/${order.id}/invoice`} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, fontSize: 14, textDecoration: "underline" }}>
+              📄 View Invoice
+            </a>
+          )}
+          <Badge statusKey={order.status} dot>{order.status.replace(/_/g, " ")}</Badge>
+        </div>
       </div>
 
       <div className={styles.layout}>
