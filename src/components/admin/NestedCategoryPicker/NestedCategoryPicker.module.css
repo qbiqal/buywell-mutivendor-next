@@ -69,3 +69,108 @@
     grid-template-columns: 1fr;
   }
 }
+
+.combo {
+  position: relative;
+}
+
+.comboTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.comboTrigger > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 14px;
+  font-weight: 400;
+  color: inherit;
+}
+
+.comboTrigger > .placeholder {
+  color: var(--text-secondary);
+}
+
+.comboPanel {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-primary);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+  padding: 8px;
+}
+
+.comboSearch {
+  width: 100%;
+  height: 38px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  padding: 0 10px;
+  margin-bottom: 6px;
+}
+
+.comboSearch:focus {
+  border-color: var(--accent);
+}
+
+.comboList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.comboOption {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.comboOption:hover {
+  background: var(--bg-secondary);
+}
+
+.comboActive {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.comboEmpty {
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 10px 12px;
+}

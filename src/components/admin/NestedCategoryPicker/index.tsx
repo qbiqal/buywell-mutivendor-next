@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./NestedCategoryPicker.module.css";
 
 export interface NestedCategory {
@@ -68,26 +68,14 @@ export function NestedCategoryPicker({
 
   return (
     <div className={styles.wrap}>
-      <label className={styles.field}>
+      <div className={styles.field}>
         <span>{label}</span>
-        <select value={value} onChange={(event) => onChange(event.target.value)}>
-          <option value="">{emptyLabel}</option>
-          {options.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.label}
-            </option>
-          ))}
-        </select>
-      </label>
+        <SearchableSelect options={options} value={value} onChange={onChange} emptyLabel={emptyLabel} />
+      </div>
 
       <div className={styles.creator}>
         <input value={name} onChange={(event) => setName(event.target.value)} placeholder="New category name" />
-        <select value={parentId} onChange={(event) => setParentId(event.target.value)}>
-          <option value="">Top level</option>
-          {options.map((category) => (
-            <option key={category.id} value={category.id}>{category.label}</option>
-          ))}
-        </select>
+        <SearchableSelect options={options} value={parentId} onChange={setParentId} emptyLabel="Top level" />
         <input type="color" value={color} onChange={(event) => setColor(event.target.value)} aria-label="Category color" />
         <button type="button" onClick={createCategory} disabled={saving || !name.trim()}>
           Add
@@ -96,6 +84,8 @@ export function NestedCategoryPicker({
     </div>
   );
 }
+
+type CategoryOption = NestedCategory & { depth: number; path: string };
 
 function flattenCategories(categories: NestedCategory[]) {
   const byParent = new Map<string, NestedCategory[]>();
@@ -106,13 +96,101 @@ function flattenCategories(categories: NestedCategory[]) {
   for (const group of byParent.values()) {
     group.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
   }
-  const result: Array<NestedCategory & { label: string }> = [];
-  function walk(parentId: string, depth: number) {
+  const result: CategoryOption[] = [];
+  function walk(parentId: string, depth: number, trail: string[] = []) {
     for (const category of byParent.get(parentId) ?? []) {
-      result.push({ ...category, label: `${"  ".repeat(depth)}${depth > 0 ? "- " : ""}${category.name}` });
-      walk(category.id, depth + 1);
+      const path = [...trail, category.name];
+      result.push({ ...category, depth, path: path.join(" › ") });
+      walk(category.id, depth + 1, path);
     }
   }
   walk("root", 0);
   return result;
+}
+
+function SearchableSelect({
+  options,
+  value,
+  onChange,
+  emptyLabel,
+}: {
+  options: CategoryOption[];
+  value: string;
+  onChange: (id: string) => void;
+  emptyLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const selected = options.find((o) => o.id === value);
+  const needle = query.trim().toLowerCase();
+  const filtered = needle
+    ? options.filter((o) => o.path.toLowerCase().includes(needle))
+    : options;
+
+  function pick(id: string) {
+    onChange(id);
+    setOpen(false);
+    setQuery("");
+  }
+
+  return (
+    <div className={styles.combo} ref={rootRef}>
+      <button
+        type="button"
+        className={styles.comboTrigger}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className={selected ? undefined : styles.placeholder}>{selected ? selected.path : emptyLabel}</span>
+        <span aria-hidden>▾</span>
+      </button>
+      {open && (
+        <div className={styles.comboPanel}>
+          <input
+            autoFocus
+            className={styles.comboSearch}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setOpen(false);
+              if (e.key === "Enter") { e.preventDefault(); if (filtered[0]) pick(filtered[0].id); }
+            }}
+            placeholder="Search categories…"
+          />
+          <ul className={styles.comboList} role="listbox">
+            <li>
+              <button type="button" className={styles.comboOption} onClick={() => pick("")}>{emptyLabel}</button>
+            </li>
+            {filtered.map((o) => (
+              <li key={o.id}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={o.id === value}
+                  className={`${styles.comboOption} ${o.id === value ? styles.comboActive : ""}`}
+                  style={{ paddingLeft: needle ? 12 : 12 + o.depth * 16 }}
+                  onClick={() => pick(o.id)}
+                >
+                  {needle ? o.path : o.name}
+                </button>
+              </li>
+            ))}
+            {filtered.length === 0 && <li className={styles.comboEmpty}>No categories match “{query}”</li>}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
