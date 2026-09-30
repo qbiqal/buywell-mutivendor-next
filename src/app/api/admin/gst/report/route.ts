@@ -4,6 +4,7 @@ import { orders, orderItems, products, productVariants, vendors, taxRates } from
 import { eq, and, gte, lte, sql, inArray } from "drizzle-orm";
 import { createAdminGuard } from "@/lib/middleware";
 import { handleApiError } from "@/lib/errors";
+import { getSiteConfig } from "@/lib/config";
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,6 +25,8 @@ export async function GET(req: NextRequest) {
       eq(orders.paymentStatus, "verified"),
     ];
 
+    const platformState = ((await getSiteConfig("site_state")) || "Kerala").trim().toLowerCase();
+
     // Fetch orders with their items and product tax info
     const rows = await db
       .select({
@@ -42,6 +45,8 @@ export async function GET(req: NextRequest) {
         igstRate:     taxRates.igstRate,
         vendorId:     products.vendorId,
         storeName:    vendors.storeName,
+        vendorState:  vendors.state,
+        address:      orders.addressSnapshot,
       })
       .from(orders)
       .innerJoin(orderItems, eq(orderItems.orderId, orders.id))
@@ -67,16 +72,20 @@ export async function GET(req: NextRequest) {
       if (!row.taxRateId || !row.totalRate) continue; // skip exempt items
 
       const rate    = row.totalRate;
-      const cgstR   = row.cgstRate ?? 0;
-      const sgstR   = row.sgstRate ?? 0;
-      const igstR   = row.igstRate ?? 0;
       const itemVal = row.itemTotal;
 
       // Back-calculate taxable value: totalInclusive = taxable * (1 + rate/10000)
       const taxable = Math.round(itemVal * 10000 / (10000 + rate));
-      const cgst    = Math.round(taxable * cgstR / 10000);
-      const sgst    = Math.round(taxable * sgstR / 10000);
-      const igst    = Math.round(taxable * igstR / 10000);
+      const tax     = itemVal - taxable;
+
+      // Intra-state supply (buyer state == seller state) => CGST + SGST halves; otherwise IGST.
+      // (tax_rates rows store cgst/sgst/igst side by side, so they must not be summed together.)
+      const buyerState  = String((row.address as Record<string, string> | null)?.state ?? "").trim().toLowerCase();
+      const sellerState = (row.vendorState ?? (row.vendorId ? "" : platformState)).trim().toLowerCase();
+      const intraState  = !!buyerState && buyerState === sellerState;
+      const cgst = intraState ? Math.floor(tax / 2) : 0;
+      const sgst = intraState ? tax - cgst : 0;
+      const igst = intraState ? 0 : tax;
 
       // Order-level aggregation (use first tax rate encountered for summary)
       const key = row.orderId;

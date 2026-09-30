@@ -85,6 +85,8 @@ const BRAND_SETTINGS = [
   "site_email",
   "site_phone",
   "site_address",
+  "site_gstin",
+  "site_state",
   "admin_logo_url",
   "site_logo_url",
 ];
@@ -433,6 +435,8 @@ export default function AdminSettingsClient() {
           <Input label="Email"        value={config.site_email   ?? ""} onChange={set("site_email")}   placeholder="support@buywell.in" type="email" />
           <Input label="Phone / WhatsApp" value={config.site_phone ?? ""} onChange={set("site_phone")} placeholder="+91 9999999999" />
           <Textarea label="Address" value={config.site_address ?? ""} onChange={set("site_address")} placeholder="Bheemanpadi, Kottayam, Kerala – 686003" />
+          <Input label="GSTIN (printed on invoices)" value={config.site_gstin ?? ""} onChange={set("site_gstin")} placeholder="32ABCDE1234F1Z5" />
+          <Input label="Business State (for CGST/SGST vs IGST)" value={config.site_state ?? ""} onChange={set("site_state")} placeholder="Kerala" />
           <div className={styles.logoGrid}>
             <div className={styles.logoPanel}>
               <div>
