@@ -125,6 +125,11 @@ export default function AdminOrderDetailClient() {
         </div>
         <div className={styles.headerActions}>
           <Badge statusKey={order.status} dot>{order.status.replace(/_/g, " ")}</Badge>
+          {!order.isSampleRequest && (
+            <a href={`/api/orders/${order.id}/invoice`} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm">📄 Invoice</Button>
+            </a>
+          )}
           <Button variant="ghost" size="sm" onClick={() => setStatusModal(true)}>Update Status</Button>
         </div>
       </div>
@@ -291,7 +296,7 @@ export default function AdminOrderDetailClient() {
       </div>
 
       {/* Status modal */}
-      <Modal isOpen={statusModal} onClose={() => setStatusModal(false)} title="Update Order Status">
+      <Modal isOpen={statusModal} onClose={() => setStatusModal(false)} title="Update Order Status" closeOnOverlay={false} closeOnEscape={false}>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-secondary)" }}>New Status</label>
@@ -316,11 +321,12 @@ export default function AdminOrderDetailClient() {
           <Button variant="primary" fullWidth loading={saving} onClick={() => updateOrder({ status: newStatus, note: statusNote })}>
             Update Status
           </Button>
+          <Button variant="ghost" fullWidth onClick={() => setStatusModal(false)}>Cancel</Button>
         </div>
       </Modal>
 
       {/* Tracking modal */}
-      <Modal isOpen={trackingModal} onClose={() => setTrackingModal(false)} title="Add Tracking Information">
+      <Modal isOpen={trackingModal} onClose={() => setTrackingModal(false)} title="Add Tracking Information" closeOnOverlay={false} closeOnEscape={false}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <Input label="Courier Name" value={tracking.courier} onChange={(e) => setTracking((p) => ({ ...p, courier: e.target.value }))} placeholder="e.g. Blue Dart, DTDC" />
           <Input label="Tracking Number" value={tracking.number} onChange={(e) => setTracking((p) => ({ ...p, number: e.target.value }))} placeholder="Tracking ID" />
@@ -329,6 +335,7 @@ export default function AdminOrderDetailClient() {
           <Button variant="primary" fullWidth loading={saving} onClick={() => updateOrder({ status: "shipped", trackingNumber: tracking.number, trackingUrl: tracking.url, courier: tracking.courier, estimatedDelivery: tracking.estimatedDelivery })}>
             Save & Mark as Shipped
           </Button>
+          <Button variant="ghost" fullWidth onClick={() => setTrackingModal(false)}>Cancel</Button>
         </div>
       </Modal>
 
